@@ -18,7 +18,7 @@ lib/
 *.m~
 *.asv
 
-# MATLAB/Simulink code generation   
+# MATLAB/Simulink code generation
 slprj/
 codegen/
 
@@ -127,3 +127,7 @@ ehthumbs.db
 Thumbs.db
 Desktop.ini
 $RECYCLE.BIN/
+
+# Node
+node_modules
+npm-debug.log

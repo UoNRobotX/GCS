@@ -1,0 +1,57 @@
+{
+    "name": "gcs-client",
+    "version": "0.0.1",
+    "description": "The client of the GCS",
+    "main": "index.js",
+    "scripts": {
+        "dev": "npm run clean && npm run copy:all && npm run webpack",
+        "create:dir": "node build-scripts/create-dir.js",
+        "copy:images": "cp -r src/images/ ../server/public/assets",
+        "copy:html": "cp src/index.html ../server/public/index.html",
+        "copy:all": "npm run create:dir && npm run copy:images && npm run copy:html",
+        "webpack": "webpack --config webpack.config.js --watch",
+        "webpack:min": "cross-env NODE_ENV=production webpack --progress --hide-modules --config webpack.config.js",
+        "build": "npm run copy:all && npm run webpack:min",
+        "clean": "rm -rf ../server/public"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/UoNRobotX/GCS.git"
+    },
+    "author": "UON",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/UoNRobotX/GCS/issues"
+    },
+    "homepage": "https://github.com/UoNRobotX/GCS#readme",
+    "devDependencies": {
+        "babel-core": "^6.0.0",
+        "babel-loader": "^6.0.0",
+        "babel-plugin-transform-runtime": "^6.0.0",
+        "babel-preset-es2015": "^6.0.0",
+        "babel-preset-stage-2": "^6.0.0",
+        "babel-runtime": "^5.8.0",
+        "cross-env": "^1.0.8",
+        "css-loader": "^0.23.1",
+        "eslint": "^2.3.0",
+        "eslint-config-airbnb": "^6.1.0",
+        "eslint-plugin-html": "^1.4.0",
+        "extract-text-webpack-plugin": "^1.0.1",
+        "file-loader": "^0.8.4",
+        "json-loader": "^0.5.4",
+        "lost": "^6.7.2",
+        "stylus-loader": "^1.5.1",
+        "url-loader": "^0.5.7",
+        "vue-html-loader": "^1.0.0",
+        "vue-loader": "^8.0.0",
+        "vue-style-loader": "^1.0.0",
+        "webpack": "^1.12.14"
+    },
+    "dependencies": {
+        "bluebird": "^3.4.0",
+        "keen-ui": "^0.8.8",
+        "vue": "^1.0.26",
+        "vuex": "^0.8.2",
+        "webpack": "^1.13.1"
+    }
+}
