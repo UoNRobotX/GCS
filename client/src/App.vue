@@ -6,11 +6,11 @@
             </ui-tab>
 
             <ui-tab header="Params">
-                Params
+                <params-view></params-view>
             </ui-tab>
 
             <ui-tab header="Settings">
-                Settings
+                <settings-view></settings-view>
             </ui-tab>
         </ui-tabs>
 
@@ -20,6 +20,8 @@
 
 <script>
 import MapView from 'components/MapView.vue';
+import ParamsView from 'components/ParamsView.vue';
+import SettingsView from 'components/SettingsView.vue';
 import Indicators from 'components/Indicators.vue';
 
 export default {
@@ -29,6 +31,8 @@ export default {
 
     components: {
         MapView,
+        ParamsView,
+        SettingsView,
         Indicators
     }
 };
@@ -67,6 +71,35 @@ body,
 
     .ui-tabs-header-items.text-color-light {
         color: $light-secondary;
+    }
+}
+
+.view {
+    border: none;
+    overflow-x: hidden;
+    overflow-y: auto;
+    background-color: #eee;
+    height: calc(100vh - 48px);
+
+    .page {
+        margin: 0 auto;
+        max-width: 960px;
+        background-color: white;
+        box-shadow: 0 1px 6px #999;
+    }
+
+    .page-header {
+        margin: 0;
+        padding: 16px 24px;
+        border-bottom: 1px solid #EEE;
+        font-weight: normal;
+        font-size: 1.75em;
+        line-height: 1;
+    }
+
+    .page-content {
+        padding: 24px;
+        min-height: 160px;
     }
 }
 </style>
