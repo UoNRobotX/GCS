@@ -5,8 +5,8 @@ import App from 'app/App.vue';
 Vue.use(KeenUI);
 
 var app = new Vue({
-	el: 'body',
-	components: {
-		App
-	}
+    el: 'body',
+    components: {
+        App
+    }
 });
