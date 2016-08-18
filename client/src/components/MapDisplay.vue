@@ -14,13 +14,14 @@ import THREE from 'three';
     //this is done so that it can be referred to by a handler that the API calls when loaded
 let mapData = {
     map: null,
+    element: null,
     load() {
         loadGoogleMapsAPI({
             v: 3,
             key: 'AIzaSyABnCcekyPecGnsA1Rj_NdWjmUafJ1yVqA',
         }).then((googleMaps) => {
-            let mapElement = document.getElementById('map');
-            this.map = new googleMaps.Map(mapElement, {
+            this.element = document.getElementById('map');
+            this.map = new googleMaps.Map(this.element, {
                 center: {lat: 21.308731, lng: -157.888815},
                 zoom: 17,
                 tilt: 0,
@@ -40,13 +41,14 @@ mapData.load();
 //initialise overlay when document is loaded
 let overlayData = {
     renderer: null,
+    element: null,
     load(){
         window.addEventListener('load', () => {
-            let overlayElement = document.getElementById('overlay');
+            this.element = document.getElementById('overlay');
             //set overlay size
             let mapElement = document.getElementById('map');
-            overlayElement.width = mapElement.clientWidth;
-            overlayElement.height = mapElement.clientHeight;
+            this.element.width = mapElement.clientWidth;
+            this.element.height = mapElement.clientHeight;
             //initialise overlay renderer
             function webglAvailable() {
                 try {
@@ -61,21 +63,22 @@ let overlayData = {
             }
             if (webglAvailable()) {
                 this.renderer = new THREE.WebGLRenderer({
-                    canvas: overlayElement,
+                    canvas: this.element,
                     antialias: true,
                     alpha: true,
                 });
                 console.log('WebGL renderer loaded');
             } else {
-                //this.renderer = new THREE.CanvasRenderer({canvas: overlayElement}); //couldn't get this to work
+                //this.renderer = new THREE.CanvasRenderer({canvas: this.element}); //couldn't get this to work
                 console.log('Unable to load WebGL overlay');
                 return;
             }
             //test overlay
+            /*
             let renderer = this.renderer;
-            renderer.setSize(overlayElement.width, overlayElement.height);
+            renderer.setSize(this.element.width, this.element.height);
             let scene = new THREE.Scene();
-            let camera = new THREE.PerspectiveCamera(75, overlayElement.width/overlayElement.height, 0.1, 1000);
+            let camera = new THREE.PerspectiveCamera(75, this.element.width/this.element.height, 0.1, 1000);
             let geometry = new THREE.BoxGeometry(1, 1, 1);
             let material = new THREE.MeshBasicMaterial({color: 0x00ff00});
             let cube = new THREE.Mesh(geometry, material);
@@ -88,11 +91,11 @@ let overlayData = {
                 renderer.render(scene, camera);
             };
             render();
+            */
         });
     }
 };
 overlayData.load();
-
 
 //when window is resized, resize overlay
 window.addEventListener('resize', () => {
@@ -108,6 +111,38 @@ export default {
             mapData: mapData,
             overlayData: overlayData,
         };
+    },
+    events: {
+        'map-center': function(){
+            //center the map on the WAM-V
+            let latLng = {lat: 21.308731, lng: -157.888815};
+            this.mapData.map.panTo(latLng);
+        },
+        'map-zoom-in': function(){
+            this.mapData.map.setZoom(this.mapData.map.getZoom()+1);
+        },
+        'map-zoom-out': function(){
+            this.mapData.map.setZoom(this.mapData.map.getZoom()-1);
+        },
+        'map-type': function(value){
+           this.mapData.map.setMapTypeId(google.maps.MapTypeId[value]);
+        },
+        'map-up': function(){
+            let px = overlayData.element.height/4;
+            this.mapData.map.panBy(0,-px);
+        },
+        'map-left': function(){
+            let px = overlayData.element.width/4;
+            this.mapData.map.panBy(-px,0);
+        },
+        'map-right': function(){
+            let px = overlayData.element.width/4;
+            this.mapData.map.panBy(px,0);
+        },
+        'map-down': function(){
+            let px = overlayData.element.height/4;
+            this.mapData.map.panBy(0,px);
+        },
     }
 };
 </script>

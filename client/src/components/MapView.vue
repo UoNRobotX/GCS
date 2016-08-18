@@ -23,6 +23,32 @@ export default {
             hidden: false,
         };
     },
+    events: {
+         'map-center-event': function(){
+            this.$broadcast('map-center');
+        },
+        'map-zoom-in-event': function(){
+            this.$broadcast('map-zoom-in');
+        },
+        'map-zoom-out-event': function(){
+            this.$broadcast('map-zoom-out');
+        },
+        'map-type-event': function(value){
+            this.$broadcast('map-type', value);
+        },
+        'map-up-event': function(){
+            this.$broadcast('map-up');
+        },
+        'map-left-event': function(){
+            this.$broadcast('map-left');
+        },
+        'map-right-event': function(){
+            this.$broadcast('map-right');
+        },
+        'map-down-event': function(){
+            this.$broadcast('map-down');
+        },
+    },
     components: {
         PlanningControls,
         CommandControls,

@@ -3,20 +3,25 @@
         <table class="map-controls-buttons1" cellpadding="0" cellspacing="0">
             <tr>
                 <td colspan="2">
-                    <button class="map-center-button">Center</button>
+                    <button v-on:click="mapCenterEvent">Center</button>
                 </td>
             </tr>
             <tr>
                 <td>
-                    <button class="map-zoom-in-button">Zoom In</button>
+                    <button v-on:click="mapZoomInEvent">Zoom In</button>
                 </td>
                 <td>
-                    <button class="map-zoom-out-button">Zoom Out</button>
+                    <button v-on:click="mapZoomOutEvent">Zoom Out</button>
                 </td>
             </tr>
             <tr>
                 <td colspan="2">
-                    <button class="map-center-button">Map Type</button>
+                    <select v-on:change="mapTypeEvent">
+                        <option value="SATELLITE"> Satellite Map </option>
+                        <option value="ROADMAP">   Road Map      </option>
+                        <option value="HYBRID">    Hybrid Map    </option>
+                        <option value="TERRAIN">   Terrain Map   </option>
+                    </select>
                 </td>
             </tr>
         </table>
@@ -24,23 +29,23 @@
             <tr>
                 <td></td>
                 <td>
-                    <button class="map-up-button">^</button>
+                    <button v-on:click="mapUpEvent">^</button>
                 </td>
                 <td></td>
             </tr>
             <tr>
                 <td>
-                    <button class="map-left-button">&lt;</button>
+                    <button v-on:click="mapLeftEvent">&lt;</button>
                 </td>
                 <td></td>
                 <td>
-                    <button class="map-right-button">&gt;</button>
+                    <button v-on:click="mapRightEvent">&gt;</button>
                 </td>
             </tr>
             <tr>
                 <td></td>
                 <td>
-                    <button class="map-down-button">v</button>
+                    <button v-on:click="mapDownEvent">v</button>
                 </td>
                 <td></td>
             </tr>
@@ -49,6 +54,37 @@
 </template>
 
 <script>
+export default {
+    data() {
+        return {};
+    },
+    methods: {
+        mapCenterEvent(){
+            this.$dispatch('map-center-event');
+        },
+        mapZoomInEvent(){
+            this.$dispatch('map-zoom-in-event');
+        },
+        mapZoomOutEvent(){
+            this.$dispatch('map-zoom-out-event');
+        },
+        mapTypeEvent(event){
+            this.$dispatch('map-type-event', event.target.value);
+        },
+        mapUpEvent(){
+            this.$dispatch('map-up-event');
+        },
+        mapLeftEvent(){
+            this.$dispatch('map-left-event');
+        },
+        mapRightEvent(){
+            this.$dispatch('map-right-event');
+        },
+        mapDownEvent(){
+            this.$dispatch('map-down-event');
+        },
+    }
+};
 </script>
 
 <style lang="stylus">
@@ -64,7 +100,7 @@
 
 .map-controls-buttons1 {
     float: left;
-    button {
+    button, select {
         width: 100%;
     }
 }
