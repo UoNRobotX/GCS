@@ -1,5 +1,5 @@
 <template>
-	<div class="view settings-view">
+    <div class="view settings-view">
         <div class="page">
             <h1 class="page-header">Settings</h1>
             <div class="page-content">

@@ -1,5 +1,5 @@
 <template>
-	<div class="view map-view">Map</div>
+    <div class="view map-view">Map</div>
 </template>
 
 <script>
