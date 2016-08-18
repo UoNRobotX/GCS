@@ -6,6 +6,7 @@
             <command-controls></command-controls>
         </div>
         <map-display></map-display>
+        <map-controls></map-controls>
     </div>
 </template>
 
@@ -13,6 +14,7 @@
 import PlanningControls from 'components/PlanningControls.vue';
 import CommandControls from 'components/CommandControls.vue';
 import MapDisplay from 'components/MapDisplay.vue';
+import MapControls from 'components/MapControls.vue';
 
 export default {
     data() {
@@ -25,6 +27,7 @@ export default {
         PlanningControls,
         CommandControls,
         MapDisplay,
+        MapControls,
     }
 };
 </script>
