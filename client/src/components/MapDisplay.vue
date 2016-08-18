@@ -26,6 +26,8 @@ let mapData = {
                 mapTypeId: google.maps.MapTypeId.SATELLITE,
                 disableDefaultUI: true,
                 disableDoubleClickZoom: true,
+                draggableCursor: 'pointer',
+                draggingCursor: 'crosshair',
             });
 
             //also set overlay size
@@ -76,5 +78,6 @@ export default {
     top: 48px;
     left: 5cm;
     z-index: 1;
+    pointer-events: none;
 }
 </style>
