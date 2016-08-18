@@ -1,5 +1,8 @@
 <template>
-    <div id="map"></div>
+    <div id="map-display">
+        <div id="map"></div>
+        <canvas id="overlay"></canvas>
+    </div>
 </template>
 
 <script>
@@ -22,7 +25,14 @@ let mapData = {
                 tilt: 0,
                 mapTypeId: google.maps.MapTypeId.SATELLITE,
                 disableDefaultUI: true,
+                disableDoubleClickZoom: true,
             });
+
+            //also set overlay size
+            let overlayElement = document.getElementById('overlay');
+            overlayElement.width = mapElement.clientWidth;
+            overlayElement.height = mapElement.clientHeight;
+
         }).catch((err) => {
             console.log('Unable to load map');
         });
@@ -42,7 +52,21 @@ export default {
 <style lang="stylus">
 @import '~styles/_variables';
 
-#map {
+#map-display {
+    margin-left: 5cm;
     height: 100%;
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+#overlay {
+    position: absolute;
+    top: 48px;
+    left: 5cm;
+    z-index: 1;
 }
 </style>
