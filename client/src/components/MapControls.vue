@@ -59,6 +59,7 @@
     position: absolute;
     bottom: 5%;
     right: 5%;
+    z-index: 3;
 }
 
 .map-controls-buttons1 {
@@ -70,5 +71,8 @@
 
 .map-controls-buttons2 {
     float: right;
+    button {
+        width: 100%;
+    }
 }
 </style>
