@@ -40,6 +40,14 @@ let mapData = {
 }
 mapData.loadMap();
 
+//when window is resized, resize overlay
+window.addEventListener('resize', () => {
+    let mapElement = document.getElementById('map');
+    let overlayElement = document.getElementById('overlay');
+    overlayElement.width = mapElement.clientWidth;
+    overlayElement.height = mapElement.clientHeight;
+});
+
 export default {
     data() {
         return {
