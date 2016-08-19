@@ -72,10 +72,6 @@ export default class MapDisplayData {
         let camera = new THREE.OrthographicCamera(width/-2, width/2, height/2, height/-2, 0.1, 1000);
         camera.position.z = 100;
         scene.add(camera);
-        
-        this.waypoints.push(new Waypoint(this.initialLatLng.lat, this.initialLatLng.lng));
-        scene.add(this.waypoints[0]);
-        
         //start animation loop
         function render(){
             requestAnimationFrame(render);
@@ -102,6 +98,9 @@ export default class MapDisplayData {
         this.renderer = renderer;
         this.scene = scene;
         this.camera = camera;
+        
+        //test waypoint
+        this.addWaypoint(this.initialLatLng.lat, this.initialLatLng.lng);
     }
     center(){
         //should center the map on the WAM-V
@@ -109,7 +108,7 @@ export default class MapDisplayData {
     }
     zoom(inward){
         this.map.setZoom(this.map.getZoom() + (inward ? 1 : -1));
-        this.viewChanged();
+        this.updateScene();
     }
     setMapType(value){
         this.map.setMapTypeId(google.maps.MapTypeId[value]);
@@ -124,7 +123,7 @@ export default class MapDisplayData {
             case 3: this.map.panBy(  0,  dy); break; //down
         }
     }
-    viewChanged(){
+    updateScene(){
         if (this.camera != null){
             this.camera.zoom = (Math.pow(2, this.map.zoom) / Math.pow(2, this.initialZoom));
             this.camera.updateProjectionMatrix();
@@ -134,6 +133,14 @@ export default class MapDisplayData {
             wp.position.x = pos.x;
             wp.position.y = pos.y;
         }
+    }
+    addWaypoint(lat, lng){
+        let wp = new Waypoint(lat, lng);
+        let pos = this.latLng2World(lat, lng);
+        wp.position.x = pos.x;
+        wp.position.y = pos.y;
+        this.waypoints.push(wp);
+        this.scene.add(wp);
     }
     latLng2World(lat, lng){
         let result = new THREE.Vector3(0,0,0);

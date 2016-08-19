@@ -28,18 +28,17 @@ export default {
         }).then(() => {
             //add event listeners
             this.data.map.addListener('click', (e) => {
-                console.log('click at: ' +
-                    e.latLng.lat() + ', ' + e.latLng.lng());
+                this.data.addWaypoint(e.latLng.lat(), e.latLng.lng());
             });
             this.data.map.addListener('dblclick', (e) => {
                 console.log('double click at: ' +
                     e.latLng.lat() + ', ' + e.latLng.lng());
             });
             this.data.map.addListener('zoom_changed', () => {
-                this.data.viewChanged();
+                this.data.updateScene();
             });
             this.data.map.addListener('center_changed', () => {
-                this.data.viewChanged();
+                this.data.updateScene();
             });
         });
     },
