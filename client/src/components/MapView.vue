@@ -18,10 +18,7 @@ import MapControls from 'components/MapControls.vue';
 
 export default {
     data() {
-        return {
-            waypoints: [],
-            hidden: false,
-        };
+        return {};
     },
     events: {
          'map-center-event': function(){

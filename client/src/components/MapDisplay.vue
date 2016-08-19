@@ -8,17 +8,12 @@
 <script>
 import loadGoogleMapsAPI from 'load-google-maps-api';
 import THREE from 'three';
-import MapData from 'js/mapData.js';
-import OverlayData from 'js/overlayData.js';
-
-let mapData = new MapData();
-let overlayData = new OverlayData();
+import MapDisplayData from 'js/mapDisplayData.js';
 
 export default {
     data() {
         return {
-            mapData: mapData,
-            overlayData: overlayData,
+            data: new MapDisplayData()
         };
     },
     ready(){
@@ -27,59 +22,51 @@ export default {
             v: 3,
             key: 'AIzaSyABnCcekyPecGnsA1Rj_NdWjmUafJ1yVqA',
         }).then((googleMaps) => {
-            mapData.load(googleMaps);
+            this.data.load(googleMaps);
         }, (err) => {
             console.log('Unable to load map');
         }).then(() => {
-            overlayData.load();
-        }).then(() => {
             //add event listeners
-            mapData.map.addListener('click', (e) => {
+            this.data.map.addListener('click', (e) => {
                 console.log('click at: ' +
                     e.latLng.lat() + ', ' + e.latLng.lng());
             });
-            mapData.map.addListener('dblclick', (e) => {
+            this.data.map.addListener('dblclick', (e) => {
                 console.log('double click at: ' +
                     e.latLng.lat() + ', ' + e.latLng.lng());
             });
-            mapData.map.addListener('zoom_changed', () => {
-                console.log('zoom change');
+            this.data.map.addListener('zoom_changed', () => {
+                this.data.viewChanged();
             });
-            mapData.map.addListener('center_changed', () => {
-                console.log('center change');
+            this.data.map.addListener('center_changed', () => {
+                this.data.viewChanged();
             });
         });
     },
     events: {
         'map-center': function(){
-            //center the map on the WAM-V
-            let latLng = {lat: 21.308731, lng: -157.888815};
-            this.mapData.map.panTo(latLng);
+            this.data.center();
         },
         'map-zoom-in': function(){
-            this.mapData.map.setZoom(this.mapData.map.getZoom()+1);
+            this.data.zoom(true);
         },
         'map-zoom-out': function(){
-            this.mapData.map.setZoom(this.mapData.map.getZoom()-1);
+            this.data.zoom(false);
         },
         'map-type': function(value){
-            this.mapData.map.setMapTypeId(google.maps.MapTypeId[value]);
+            this.data.setMapType(value);
         },
         'map-up': function(){
-            let px = overlayData.element.height/4;
-            this.mapData.map.panBy(0,-px);
+            this.data.moveMap(0);
         },
         'map-left': function(){
-            let px = overlayData.element.width/4;
-            this.mapData.map.panBy(-px,0);
+            this.data.moveMap(1);
         },
         'map-right': function(){
-            let px = overlayData.element.width/4;
-            this.mapData.map.panBy(px,0);
+            this.data.moveMap(2);
         },
         'map-down': function(){
-            let px = overlayData.element.height/4;
-            this.mapData.map.panBy(0,px);
+            this.data.moveMap(3);
         },
     }
 };
