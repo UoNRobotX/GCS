@@ -14,41 +14,41 @@ import OverlayData from 'js/overlayData.js';
 let mapData = new MapData();
 let overlayData = new OverlayData();
 
-//starting loading the map and overlay
-let loaded = loadGoogleMapsAPI({
-    v: 3,
-    key: 'AIzaSyABnCcekyPecGnsA1Rj_NdWjmUafJ1yVqA',
-}).then((googleMaps) => {
-    mapData.load(googleMaps);
-}, (err) => {
-    console.log('Unable to load map');
-}).then(() => {
-    overlayData.load();
-}).then(() => {
-    let map = mapData.map;
-    //add event listeners
-    map.addListener('click', (e) => {
-        console.log('click at: ' +
-            e.latLng.lat() + ', ' + e.latLng.lng());
-    });
-    map.addListener('dblclick', (e) => {
-        console.log('double click at: ' +
-            e.latLng.lat() + ', ' + e.latLng.lng());
-    });
-    map.addListener('zoom_changed', () => {
-        console.log('zoom change');
-    });
-    map.addListener('center_changed', () => {
-        console.log('center change');
-    });
-});
-
 export default {
     data() {
         return {
             mapData: mapData,
             overlayData: overlayData,
         };
+    },
+    ready(){
+        //starting loading the map and overlay
+        let loaded = loadGoogleMapsAPI({
+            v: 3,
+            key: 'AIzaSyABnCcekyPecGnsA1Rj_NdWjmUafJ1yVqA',
+        }).then((googleMaps) => {
+            mapData.load(googleMaps);
+        }, (err) => {
+            console.log('Unable to load map');
+        }).then(() => {
+            overlayData.load();
+        }).then(() => {
+            //add event listeners
+            mapData.map.addListener('click', (e) => {
+                console.log('click at: ' +
+                    e.latLng.lat() + ', ' + e.latLng.lng());
+            });
+            mapData.map.addListener('dblclick', (e) => {
+                console.log('double click at: ' +
+                    e.latLng.lat() + ', ' + e.latLng.lng());
+            });
+            mapData.map.addListener('zoom_changed', () => {
+                console.log('zoom change');
+            });
+            mapData.map.addListener('center_changed', () => {
+                console.log('center change');
+            });
+        });
     },
     events: {
         'map-center': function(){
