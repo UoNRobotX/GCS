@@ -1,5 +1,6 @@
 import THREE from 'three';
 import Waypoint from 'js/waypoint.js';
+import WamV from 'js/wamv.js';
 
 //this is for using the canvas renderer when WebGL is not available
 import loadCanvasRenderer from 'js/CanvasRenderer.js';
@@ -17,6 +18,7 @@ export default class MapDisplayData {
         this.renderer = null;
         this.scene = null;
         this.camera = null;
+        this.wamv = null;
         this.waypoints = [];
         this.hidden = false;
     }
@@ -72,6 +74,9 @@ export default class MapDisplayData {
         let camera = new THREE.OrthographicCamera(width/-2, width/2, height/2, height/-2, 0.1, 1000);
         camera.position.z = 100;
         scene.add(camera);
+        //add WAM-V
+        this.wamv = new WamV(this.initialLatLng.lat, this.initialLatLng.lng);
+        scene.add(this.wamv);
         //start animation loop
         function render(){
             requestAnimationFrame(render);
@@ -98,9 +103,8 @@ export default class MapDisplayData {
         this.renderer = renderer;
         this.scene = scene;
         this.camera = camera;
-        //
-        //test waypoint
-        this.addWaypoint(this.initialLatLng.lat, this.initialLatLng.lng);
+        //update scene
+        this.updateScene()
     }
     center(){
         //should center the map on the WAM-V
@@ -133,6 +137,9 @@ export default class MapDisplayData {
             wp.position.x = pos.x;
             wp.position.y = pos.y;
         }
+        let pos = this.latLng2World(this.wamv.lat, this.wamv.lng);
+        this.wamv.position.x = pos.x;
+        this.wamv.position.y = pos.y;
     }
     clicked(lat, lng){
         //if a waypoint was clicked, remove it
