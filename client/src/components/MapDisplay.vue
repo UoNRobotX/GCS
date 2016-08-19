@@ -28,7 +28,7 @@ export default {
         }).then(() => {
             //add event listeners
             this.data.map.addListener('click', (e) => {
-                this.data.addWaypoint(e.latLng.lat(), e.latLng.lng());
+                this.data.clicked(e.latLng.lat(), e.latLng.lng());
             });
             this.data.map.addListener('dblclick', (e) => {
                 console.log('double click at: ' +

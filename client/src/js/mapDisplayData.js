@@ -31,7 +31,7 @@ export default class MapDisplayData {
             mapTypeId: google.maps.MapTypeId.SATELLITE,
             disableDefaultUI: true,
             disableDoubleClickZoom: true,
-            draggableCursor: 'pointer',
+            draggableCursor: 'crosshair',
             draggingCursor: 'crosshair',
         });
         //get canvas element
@@ -98,7 +98,7 @@ export default class MapDisplayData {
         this.renderer = renderer;
         this.scene = scene;
         this.camera = camera;
-        
+        //
         //test waypoint
         this.addWaypoint(this.initialLatLng.lat, this.initialLatLng.lng);
     }
@@ -134,16 +134,34 @@ export default class MapDisplayData {
             wp.position.y = pos.y;
         }
     }
-    addWaypoint(lat, lng){
+    clicked(lat, lng){
+        //if a waypoint was clicked, remove it
+        let p = this.latLng2World(lat, lng);
+        for (let i = 0; i < this.waypoints.length; i++){
+            let wp = this.waypoints[i];
+            let q = {x: wp.position.x, y: wp.position.y};
+            let d1 = p.x-q.x;
+            let d2 = p.y-q.y;
+            if (Math.sqrt(d1*d1 + d2*d2) <= wp.RADIUS){
+                this.waypoints.splice(i,1);
+                this.scene.remove(wp);
+                return;
+            }
+        }
+        //if no waypoint was clicked, add waypoint
+        this.addWaypoint(lat, lng, p);
+    }
+    addWaypoint(lat, lng, pos){
+        if (typeof pos === 'undefined'){
+            pos = this.latLng2World(lat, lng);
+        }
         let wp = new Waypoint(lat, lng);
-        let pos = this.latLng2World(lat, lng);
         wp.position.x = pos.x;
         wp.position.y = pos.y;
         this.waypoints.push(wp);
         this.scene.add(wp);
     }
     latLng2World(lat, lng){
-        let result = new THREE.Vector3(0,0,0);
         let projection = this.map.getProjection();
         if (projection != null && this.camera != null){
             let width = this.canvasElement.width;
@@ -157,9 +175,9 @@ export default class MapDisplayData {
             //compute coordinates
             let x = ((point.x - bottomLeft.x) * scale - (width / 2)) / this.camera.zoom;
             let y = ((topRight.y - point.y) * scale + (height / 2) ) / this.camera.zoom;
-            result.setX(x);
-            result.setY(y);
+            return {x:x, y:y};
+        } else {
+            return {x:0, y:0};
         }
-        return result;
     }
 };
