@@ -19,6 +19,7 @@ var mainConfig = {
         alias: {
             components: 'src/components',
             styles: 'src/styles',
+            js: 'src/js',
             app: 'src'
         },
         extensions: ['', '.js', '.vue', '.json', '.styl']

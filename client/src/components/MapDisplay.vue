@@ -10,8 +10,8 @@ import loadGoogleMapsAPI from 'load-google-maps-api';
 import THREE from 'three';
 
 //this is for using the canvas renderer when WebGL is not available
-import loadCanvasRenderer from 'src/js/CanvasRenderer.js';
-import loadProjector from 'src/js/Projector.js';
+import loadCanvasRenderer from 'js/CanvasRenderer.js';
+import loadProjector from 'js/Projector.js';
 loadCanvasRenderer(THREE);
 loadProjector(THREE);
 
@@ -78,20 +78,22 @@ let overlayData = {
                 this.renderer = new THREE.CanvasRenderer({canvas: this.element, alpha: true});
                 console.log('Unable to load WebGL overlay. Using canvas renderer instead.');
             }
-            //test overlay
-            this.renderer.setSize(this.element.width, this.element.height);
+            //create scene, and start animation loop
+            let width = this.element.width;
+            let height = this.element.height;
+            this.renderer.setSize(width, height);
             let scene = new THREE.Scene();
-            let camera = new THREE.PerspectiveCamera(75, this.element.width/this.element.height, 0.1, 1000);
-            let geometry = new THREE.BoxGeometry(1, 1, 1);
-            let material = new THREE.MeshBasicMaterial({color: 0x00ff00});
-            let cube = new THREE.Mesh(geometry, material);
-            scene.add(cube);
-            camera.position.z = 5;
+            let camera = new THREE.OrthographicCamera(width/-2, width/2, height/2, height/-2, 0.1, 1000);
+            camera.position.z = 100;
+            scene.add(camera);
+            let geometry = new THREE.CircleGeometry(50, 32); //radius, segments
+            let material = new THREE.MeshBasicMaterial({color: 0x00FF00, overdraw: true});
+                //the 'overdraw' seems to prevent the canvas renderer showing wireframes
+            let circle = new THREE.Mesh(geometry, material);
+            scene.add(circle);
             let renderer = this.renderer;
             function render(){
                 requestAnimationFrame(render);
-                cube.rotation.x += 0.02;
-                cube.rotation.y += 0.02;
                 renderer.render(scene, camera);
             };
             render();
