@@ -9,6 +9,12 @@
 import loadGoogleMapsAPI from 'load-google-maps-api';
 import THREE from 'three';
 
+//this is for using the canvas renderer when WebGL is not available
+import loadCanvasRenderer from 'src/js/CanvasRenderer.js';
+import loadProjector from 'src/js/Projector.js';
+loadCanvasRenderer(THREE);
+loadProjector(THREE);
+
 //starting loading a map using the google maps API
     //the map object will be stored in the 'map' member of a 'mapData' object
     //this is done so that it can be referred to by a handler that the API calls when loaded
@@ -69,12 +75,10 @@ let overlayData = {
                 });
                 console.log('WebGL renderer loaded');
             } else {
-                //this.renderer = new THREE.CanvasRenderer({canvas: this.element}); //couldn't get this to work
-                console.log('Unable to load WebGL overlay');
-                return;
+                this.renderer = new THREE.CanvasRenderer({canvas: this.element, alpha: true});
+                console.log('Unable to load WebGL overlay. Using canvas renderer instead.');
             }
             //test overlay
-            /*
             let renderer = this.renderer;
             renderer.setSize(this.element.width, this.element.height);
             let scene = new THREE.Scene();
@@ -91,7 +95,6 @@ let overlayData = {
                 renderer.render(scene, camera);
             };
             render();
-            */
         });
     }
 };

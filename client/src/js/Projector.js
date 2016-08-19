@@ -2,7 +2,13 @@
  * @author mrdoob / http://mrdoob.com/
  * @author supereggbert / http://www.paulbrunt.co.uk/
  * @author julianwa / https://github.com/julianwa
+ * 
+ * @author terry
+ *     Copied from node_modules/three/examples/js/renderers. 
+ *     Added enclosing 'export default (THREE) => { ... };'.
  */
+
+export default (THREE) => {
 
 THREE.RenderableObject = function () {
 
@@ -925,5 +931,7 @@ THREE.Projector = function () {
 		}
 
 	}
+
+};
 
 };

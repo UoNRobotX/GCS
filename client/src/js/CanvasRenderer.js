@@ -1,6 +1,12 @@
 /**
  * @author mrdoob / http://mrdoob.com/
+ * 
+ * @author terry
+ *     Copied from node_modules/three/examples/js/renderers. 
+ *     Added enclosing 'export default (THREE) => { ... };'.
  */
+
+export default (THREE) => {
 
 THREE.SpriteCanvasMaterial = function ( parameters ) {
 
@@ -1114,5 +1120,7 @@ THREE.CanvasRenderer = function ( parameters ) {
 		}
 
 	}
+
+};
 
 };
