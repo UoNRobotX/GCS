@@ -79,8 +79,7 @@ let overlayData = {
                 console.log('Unable to load WebGL overlay. Using canvas renderer instead.');
             }
             //test overlay
-            let renderer = this.renderer;
-            renderer.setSize(this.element.width, this.element.height);
+            this.renderer.setSize(this.element.width, this.element.height);
             let scene = new THREE.Scene();
             let camera = new THREE.PerspectiveCamera(75, this.element.width/this.element.height, 0.1, 1000);
             let geometry = new THREE.BoxGeometry(1, 1, 1);
@@ -88,6 +87,7 @@ let overlayData = {
             let cube = new THREE.Mesh(geometry, material);
             scene.add(cube);
             camera.position.z = 5;
+            let renderer = this.renderer;
             function render(){
                 requestAnimationFrame(render);
                 cube.rotation.x += 0.02;
@@ -95,18 +95,17 @@ let overlayData = {
                 renderer.render(scene, camera);
             };
             render();
+            //when window is resized, resize overlay and renderer
+            window.addEventListener('resize', () => {
+                let mapElement = document.getElementById('map');
+                this.element.width = mapElement.clientWidth;
+                this.element.height = mapElement.clientHeight;
+                this.renderer.setSize(this.element.width, this.element.height);
+            });
         });
     }
 };
 overlayData.load();
-
-//when window is resized, resize overlay
-window.addEventListener('resize', () => {
-    let mapElement = document.getElementById('map');
-    let overlayElement = document.getElementById('overlay');
-    overlayElement.width = mapElement.clientWidth;
-    overlayElement.height = mapElement.clientHeight;
-});
 
 export default {
     data() {
@@ -128,7 +127,7 @@ export default {
             this.mapData.map.setZoom(this.mapData.map.getZoom()-1);
         },
         'map-type': function(value){
-           this.mapData.map.setMapTypeId(google.maps.MapTypeId[value]);
+            this.mapData.map.setMapTypeId(google.maps.MapTypeId[value]);
         },
         'map-up': function(){
             let px = overlayData.element.height/4;
