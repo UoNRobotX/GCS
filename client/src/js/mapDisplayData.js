@@ -75,7 +75,7 @@ export default class MapDisplayData {
         camera.position.z = 100;
         scene.add(camera);
         //add WAM-V
-        this.wamv = new WamV(this.initialLatLng.lat, this.initialLatLng.lng);
+        this.wamv = new WamV(this.initialLatLng);
         scene.add(this.wamv);
         //start animation loop
         function render(){
@@ -133,17 +133,18 @@ export default class MapDisplayData {
             this.camera.updateProjectionMatrix();
         }
         for (let wp of this.waypoints){
-            let pos = this.latLng2World(wp.lat, wp.lng);
+            let pos = this.latLng2World(wp.latLng);
             wp.position.x = pos.x;
             wp.position.y = pos.y;
         }
-        let pos = this.latLng2World(this.wamv.lat, this.wamv.lng);
+        let pos = this.latLng2World(this.wamv.latLng);
         this.wamv.position.x = pos.x;
         this.wamv.position.y = pos.y;
     }
     clicked(lat, lng){
+        let latLng = {lat: lat, lng: lng};
         //if a waypoint was clicked, remove it
-        let p = this.latLng2World(lat, lng);
+        let p = this.latLng2World(latLng);
         for (let i = 0; i < this.waypoints.length; i++){
             let wp = this.waypoints[i];
             let q = {x: wp.position.x, y: wp.position.y};
@@ -156,25 +157,25 @@ export default class MapDisplayData {
             }
         }
         //if no waypoint was clicked, add waypoint
-        this.addWaypoint(lat, lng, p);
+        this.addWaypoint(latLng, p);
     }
-    addWaypoint(lat, lng, pos){
+    addWaypoint(latLng, pos){
         if (typeof pos === 'undefined'){
-            pos = this.latLng2World(lat, lng);
+            pos = this.latLng2World(latLng);
         }
-        let wp = new Waypoint(lat, lng);
+        let wp = new Waypoint(latLng);
         wp.position.x = pos.x;
         wp.position.y = pos.y;
         this.waypoints.push(wp);
         this.scene.add(wp);
     }
-    latLng2World(lat, lng){
+    latLng2World(latLng){
         let projection = this.map.getProjection();
         if (projection != null && this.camera != null){
             let width = this.canvasElement.width;
             let height = this.canvasElement.height;
-            let latLng = new google.maps.LatLng(lat, lng);
-            let point = projection.fromLatLngToPoint(latLng);
+            let latLng2 = new google.maps.LatLng(latLng.lat, latLng.lng);
+            let point = projection.fromLatLngToPoint(latLng2);
             let bounds = this.map.getBounds();
             let topRight   = projection.fromLatLngToPoint(bounds.getNorthEast());
             let bottomLeft = projection.fromLatLngToPoint(bounds.getSouthWest());
