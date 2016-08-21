@@ -12,18 +12,22 @@ app.use(serve(path.join(__dirname, 'public')));
 
 var server = http.createServer(app.callback());
 
-//test socket.io
+//use socket.io to periodically send WAM-V data
 var io = socket_io(server);
 io.on('connection', (socket) => {
+    //for a new connection print a message
+    var host = socket.client.request.headers.host;
+    console.log('connected to: ' + host);
+    //periodically send data
+    var timer = setInterval(() => {
+        console.log('sent data to: ' + host);
+        socket.emit('data', {data: 'data'});
+    }, 5000);
+    //when the connection ends, print a message
     socket.on('disconnect', () => {
-        console.log('disconnected');
+        clearInterval(timer);
+        console.log('disconnected from: ' + host);
     });
-    socket.on('test', (data) => {
-        console.log('test message received');
-        console.log(data);
-    });
-    console.log('connected');
-    socket.emit('test', {data: 'data'});
 });
 
 server.listen(3000);

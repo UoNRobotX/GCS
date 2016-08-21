@@ -25,18 +25,16 @@ import SettingsView from 'components/SettingsView.vue';
 import Indicators from 'components/Indicators.vue';
 import socket_io_client from 'socket.io-client';
 
-//test socket.io
+//open socket.io connection for WAM-V data
 let socket = socket_io_client('localhost:3000');
 socket.on('connect', () => {
-    console.log('connected')
+    console.log('connected to server')
 });
 socket.on('disconnect', () => {
-    console.log('disconnected');
+    console.log('disconnected from server');
 });
-socket.on('test', (data) => {
-    console.log('test message received');
-    console.log(data);
-    socket.emit('test', {data: 'data'});
+socket.on('data', (data) => {
+    console.log('received data: ' + data);
 });
 
 export default {

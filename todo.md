@@ -10,6 +10,7 @@
 * Test on multiple platforms.
 * Add judges display.
 * Add functionality for specifying RobotX tasks/courses.
+* Make stuff look better.
 
 ## Stuff that may need doing
 * Add vehicle message log.
