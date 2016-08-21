@@ -60,8 +60,8 @@ export default {
         'save-waypoints-event': function(){
             this.$broadcast('save-waypoints');
         },
-        'load-waypoints-event': function(){
-            this.$broadcast('load-waypoints');
+        'load-waypoints-event': function(contents){
+            this.$broadcast('load-waypoints', contents);
         },
         'hide-waypoints-event': function(){
             this.$broadcast('hide-waypoints');

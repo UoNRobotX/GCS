@@ -73,8 +73,8 @@ export default {
         'save-waypoints': function(){
             this.data.saveWaypoints();
         },
-        'load-waypoints': function(){
-            this.data.loadWaypoints();
+        'load-waypoints': function(contents){
+            this.data.loadWaypoints(contents);
         },
         'hide-waypoints': function(){
             this.data.hideWaypoints();

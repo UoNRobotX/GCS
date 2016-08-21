@@ -181,15 +181,13 @@ export default class MapDisplayData {
         }
         //if no waypoint was clicked, add waypoint
         if (!removedWaypoint){
-            this.addWaypoint(latLng, p);
+            this.addWaypoint(latLng);
         }
         //update scene
         this.updateScene();
     }
-    addWaypoint(latLng, pos){
-        if (typeof pos === 'undefined'){
-            pos = this.latLng2World(latLng);
-        }
+    addWaypoint(latLng){
+        let pos = this.latLng2World(latLng);
         let wp = new Waypoint(latLng);
         wp.position.x = pos.x;
         wp.position.y = pos.y;
@@ -240,18 +238,38 @@ export default class MapDisplayData {
         }
         uri = encodeURI(uri);
         //get link to use for download
-        let link = document.getElementById('_save_waypoints_link');
-        if (link == null){
-            link = document.createElement('a');
-            document.body.appendChild(link);
-        }
+        let link = document.getElementById('save_waypoints_link');
         link.href = uri;
         link.download = 'mission.txt';
         //trigger download
         link.click();
     }
-    loadWaypoints(){
-        console.log('load');
+    loadWaypoints(contents){
+        let points = [];
+        //get waypoints from file contents
+        let lines = contents.split('\n');
+        for (let line of lines){
+            if (line.length == 0){continue;}
+            let vals = line.split(',');
+            if (vals.length != 2){
+                console.log('found invalid line in waypoints file');
+                return;
+            }
+            let lat = parseFloat(vals[0]);
+            let lng = parseFloat(vals[1]);
+            if (isNaN(lat) || isNaN(lng)){
+                console.log('found invalid coordinate in waypoints file');
+                return;
+            }
+            points.push({lat: lat, lng: lng});
+        }
+        //set waypoints
+        this.clearWaypoints();
+        for (let point of points){
+            this.addWaypoint(point);
+        }
+        //update scene
+        this.updateScene();
     }
     hideWaypoints(){
         for (let wp of this.waypoints.points){

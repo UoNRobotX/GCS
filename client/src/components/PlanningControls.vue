@@ -5,7 +5,9 @@
         </div>
         <div>
             <ui-button color="primary" v-on:click="save">Save</ui-button>
-            <ui-button color="primary" v-on:click="load">Load</ui-button>
+            <a id="save_waypoints_link" class="hidden"></a>
+            <ui-button color="primary" v-on:click="clicked_load">Load</ui-button>
+            <input type="file" id="load_waypoints_input" class="hidden" v-on:change="load">
         </div>
         <div>
             <ui-button color="primary" v-on:click="toggleHide">{{ hidden ? 'Show': 'Hide'}}</ui-button>
@@ -31,8 +33,24 @@ export default {
         save(){
             this.$dispatch('save-waypoints-event');
         },
+        clicked_load(){
+            //activate file selection dialog
+            document.getElementById('load_waypoints_input').click();
+        },
         load(){
-            this.$dispatch('load-waypoints-event');
+            let files = document.getElementById('load_waypoints_input').files;
+            //get file contents
+            if (files.length > 0){
+                let file = files[0];
+                let reader = new FileReader();
+                //specify function to call when file has been read
+                reader.onload = (e) => {
+                    let contents = e.target.result;
+                    this.$dispatch('load-waypoints-event', contents);
+                };
+                //start file read
+                reader.readAsText(file);
+            }
         },
         toggleHide(){
             if (this.hidden){
@@ -56,5 +74,9 @@ export default {
     &:last-child {
         padding-bottom: 10px;
     }
+}
+
+.hidden {
+    display: none;
 }
 </style>
