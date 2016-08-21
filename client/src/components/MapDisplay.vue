@@ -67,6 +67,21 @@ export default {
         'map-down': function(){
             this.data.moveMap(3);
         },
+        'clear-waypoints': function(){
+            this.data.clearWaypoints();
+        },
+        'save-waypoints': function(){
+            this.data.saveWaypoints();
+        },
+        'load-waypoints': function(){
+            this.data.loadWaypoints();
+        },
+        'hide-waypoints': function(){
+            this.data.hideWaypoints();
+        },
+        'show-waypoints': function(){
+            this.data.showWaypoints();
+        },
     }
 };
 </script>

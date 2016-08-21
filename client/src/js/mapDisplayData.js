@@ -21,7 +21,6 @@ export default class MapDisplayData {
         this.camera = null;
         this.wamv = null;
         this.waypoints = {points: [], lines: []};
-        this.hidden = false;
     }
     load(googleMaps){
         //get map element
@@ -221,6 +220,38 @@ export default class MapDisplayData {
             return {x:x, y:y};
         } else {
             return {x:0, y:0};
+        }
+    }
+    clearWaypoints(){
+        for (let wp of this.waypoints.points){
+            this.scene.remove(wp);
+        }
+        for (let line of this.waypoints.lines){
+            this.scene.remove(line);
+        }
+        this.waypoints.points = [];
+        this.waypoints.lines = [];
+    }
+    saveWaypoints(){
+        console.log('save');
+    }
+    loadWaypoints(){
+        console.log('load');
+    }
+    hideWaypoints(){
+        for (let wp of this.waypoints.points){
+            this.scene.remove(wp);
+        }
+        for (let line of this.waypoints.lines){
+            this.scene.remove(line);
+        }
+    }
+    showWaypoints(){
+        for (let wp of this.waypoints.points){
+            this.scene.add(wp);
+        }
+        for (let line of this.waypoints.lines){
+            this.scene.add(line);
         }
     }
 };

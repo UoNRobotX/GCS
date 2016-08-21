@@ -5,7 +5,7 @@
             <hr>
             <command-controls></command-controls>
         </div>
-        <map-display></map-display>
+        <map-display v-on:click.capture="clickedMapDisplay"></map-display>
         <map-controls></map-controls>
     </div>
 </template>
@@ -18,10 +18,19 @@ import MapControls from 'components/MapControls.vue';
 
 export default {
     data() {
-        return {};
+        return {
+            hidden: false,
+        };
+    },
+    methods: {
+        clickedMapDisplay(e){
+            if (this.hidden){
+                e.stopPropagation();
+            }
+        }
     },
     events: {
-         'map-center-event': function(){
+        'map-center-event': function(){
             this.$broadcast('map-center');
         },
         'map-zoom-in-event': function(){
@@ -44,6 +53,23 @@ export default {
         },
         'map-down-event': function(){
             this.$broadcast('map-down');
+        },
+        'clear-waypoints-event': function(){
+            this.$broadcast('clear-waypoints');
+        },
+        'save-waypoints-event': function(){
+            this.$broadcast('save-waypoints');
+        },
+        'load-waypoints-event': function(){
+            this.$broadcast('load-waypoints');
+        },
+        'hide-waypoints-event': function(){
+            this.$broadcast('hide-waypoints');
+            this.hidden = true;
+        },
+        'show-waypoints-event': function(){
+            this.$broadcast('show-waypoints');
+            this.hidden = false;
         },
     },
     components: {
