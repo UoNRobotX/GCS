@@ -212,8 +212,7 @@ export default {
             }
         },
         center(){
-            //should center the map on the WAM-V
-            this.map.panTo(this.initialLatLng);
+            this.map.panTo(this.wamv.latLng);
         },
         zoom(inward){
             this.map.setZoom(this.map.getZoom() + (inward ? 1 : -1));
