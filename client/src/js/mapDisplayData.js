@@ -1,6 +1,7 @@
 import THREE from 'three';
-import Waypoint from 'js/waypoint.js';
 import WamV from 'js/wamv.js';
+import Waypoint from 'js/waypoint.js';
+import MapLine from 'js/mapLine.js';
 
 //this is for using the canvas renderer when WebGL is not available
 import loadCanvasRenderer from 'js/CanvasRenderer.js';
@@ -19,7 +20,7 @@ export default class MapDisplayData {
         this.scene = null;
         this.camera = null;
         this.wamv = null;
-        this.waypoints = [];
+        this.waypoints = {points: [], lines: []};
         this.hidden = false;
     }
     load(googleMaps){
@@ -132,10 +133,15 @@ export default class MapDisplayData {
             this.camera.zoom = (Math.pow(2, this.map.zoom) / Math.pow(2, this.initialZoom));
             this.camera.updateProjectionMatrix();
         }
-        for (let wp of this.waypoints){
+        for (let wp of this.waypoints.points){
             let pos = this.latLng2World(wp.latLng);
             wp.position.x = pos.x;
             wp.position.y = pos.y;
+        }
+        for (let line of this.waypoints.lines){
+            let pos1 = this.latLng2World(line.start);
+            let pos2 = this.latLng2World(line.end);
+            line.updateGeometry(pos1,pos2);
         }
         let pos = this.latLng2World(this.wamv.latLng);
         this.wamv.position.x = pos.x;
@@ -144,20 +150,42 @@ export default class MapDisplayData {
     clicked(lat, lng){
         let latLng = {lat: lat, lng: lng};
         //if a waypoint was clicked, remove it
+        let removedWaypoint = false;
         let p = this.latLng2World(latLng);
-        for (let i = 0; i < this.waypoints.length; i++){
-            let wp = this.waypoints[i];
+        for (let i = 0; i < this.waypoints.points.length; i++){
+            let wp = this.waypoints.points[i];
             let q = {x: wp.position.x, y: wp.position.y};
             let d1 = p.x-q.x;
             let d2 = p.y-q.y;
+            //check if the click was within a waypoint's area
             if (Math.sqrt(d1*d1 + d2*d2) <= wp.RADIUS){
-                this.waypoints.splice(i,1);
+                this.waypoints.points.splice(i,1);
                 this.scene.remove(wp);
-                return;
+                //remove and/or reconnect appropriate lines
+                if (i > 0){
+                    let line = this.waypoints.lines[i-1];
+                    if (i < this.waypoints.lines.length){
+                        this.waypoints.lines[i].start = line.start;
+                    }
+                    this.waypoints.lines.splice(i-1,1);
+                    this.scene.remove(line);
+                } else {
+                    if (this.waypoints.lines.length > 0){
+                        let line = this.waypoints.lines[0];
+                        this.waypoints.lines.splice(0,1);
+                        this.scene.remove(line);
+                    }
+                }
+                removedWaypoint = true;
+                break;
             }
         }
         //if no waypoint was clicked, add waypoint
-        this.addWaypoint(latLng, p);
+        if (!removedWaypoint){
+            this.addWaypoint(latLng, p);
+        }
+        //update scene
+        this.updateScene();
     }
     addWaypoint(latLng, pos){
         if (typeof pos === 'undefined'){
@@ -166,8 +194,15 @@ export default class MapDisplayData {
         let wp = new Waypoint(latLng);
         wp.position.x = pos.x;
         wp.position.y = pos.y;
-        this.waypoints.push(wp);
+        this.waypoints.points.push(wp);
         this.scene.add(wp);
+        //if there are existing waypoints, add a line
+        if (this.waypoints.points.length > 1){
+            let prevWp = this.waypoints.points[this.waypoints.points.length-2];
+            let line = new MapLine(prevWp.latLng, latLng);
+            this.waypoints.lines.push(line);
+            this.scene.add(line);
+        }
     }
     latLng2World(latLng){
         let projection = this.map.getProjection();
