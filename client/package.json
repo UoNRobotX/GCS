@@ -52,6 +52,7 @@
     "bluebird": "^3.4.0",
     "keen-ui": "^0.8.8",
     "load-google-maps-api": "0.0.2",
+    "socket.io-client": "^1.4.8",
     "three": "^0.79.0",
     "vue": "^1.0.26",
     "vuex": "^0.8.2",

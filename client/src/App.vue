@@ -23,6 +23,21 @@ import MapView from 'components/MapView.vue';
 import ParamsView from 'components/ParamsView.vue';
 import SettingsView from 'components/SettingsView.vue';
 import Indicators from 'components/Indicators.vue';
+import socket_io_client from 'socket.io-client';
+
+//test socket.io
+let socket = socket_io_client('localhost:3000');
+socket.on('connect', () => {
+    console.log('connected')
+});
+socket.on('disconnect', () => {
+    console.log('disconnected');
+});
+socket.on('test', (data) => {
+    console.log('test message received');
+    console.log(data);
+    socket.emit('test', {data: 'data'});
+});
 
 export default {
     data() {
