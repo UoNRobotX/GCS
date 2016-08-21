@@ -233,7 +233,22 @@ export default class MapDisplayData {
         this.waypoints.lines = [];
     }
     saveWaypoints(){
-        console.log('save');
+        //create data URI
+        let uri = 'data:,';
+        for (let wp of this.waypoints.points){
+            uri += wp.latLng.lat + ',' + wp.latLng.lng + '\n';
+        }
+        uri = encodeURI(uri);
+        //get link to use for download
+        let link = document.getElementById('_save_waypoints_link');
+        if (link == null){
+            link = document.createElement('a');
+            document.body.appendChild(link);
+        }
+        link.href = uri;
+        link.download = 'mission.txt';
+        //trigger download
+        link.click();
     }
     loadWaypoints(){
         console.log('load');
