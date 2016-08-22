@@ -9,9 +9,6 @@
         <div>
             <ui-button color="primary">Start</ui-button>
         </div>
-        <div>
-            <ui-button color="primary">Kill Switch</ui-button>
-        </div>
     </div>
 </template>
 

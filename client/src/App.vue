@@ -33,8 +33,9 @@ socket.on('connect', () => {
 socket.on('disconnect', () => {
     console.log('disconnected from server');
 });
-socket.on('data', (data) => {
-    console.log('received data: ' + data);
+socket.on('msg', (msg) => {
+    console.log('received message');
+    console.log(msg);
 });
 
 export default {
