@@ -48,7 +48,7 @@ function randomMsg(){
             };
             break;
         }
-        case 'upload_mission': 
+        case 'upload_mission':
         case 'download_mission': {
             msg.data = [];
             for (var i = 0; i < 3; i++){
@@ -56,17 +56,17 @@ function randomMsg(){
             }
             break;
         }
-        case 'arm': 
-        case 'disarm': 
-        case 'start_mission': 
-        case 'stop_mission': 
-        case 'resume_mission': 
+        case 'arm':
+        case 'disarm':
+        case 'start_mission':
+        case 'stop_mission':
+        case 'resume_mission':
         case 'command_ack': {
             msg.data = null;
             break;
         }
         case 'error': {
-            msg.data = 'test error message'; 
+            msg.data = 'test error message';
             break;
         }
     }
