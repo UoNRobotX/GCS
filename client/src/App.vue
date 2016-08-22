@@ -33,9 +33,19 @@ socket.on('connect', () => {
 socket.on('disconnect', () => {
     console.log('disconnected from server');
 });
-socket.on('msg', (msg) => {
-    console.log('received message');
-    console.log(msg);
+socket.on('status', (data) => {
+    console.log('received "status" message:');
+    console.log(data);
+});
+socket.on('download_mission', (data) => {
+    console.log('received "download_mission" message:');
+    console.log(data);
+});
+socket.on('command_ack', (data) => {
+    console.log('received "command_ack" message');
+});
+socket.on('error', (data) => {
+    console.log('received "error" message');
 });
 
 export default {
