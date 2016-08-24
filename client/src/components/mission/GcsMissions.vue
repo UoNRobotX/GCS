@@ -8,10 +8,6 @@
                             type="clear" icon="add" tooltip="Add mission"
                         ></ui-icon-button>
 
-                        <!-- <ui-icon-button
-                            type="clear" icon="file_upload" tooltip="Import missions from file"
-                        ></ui-icon-button> -->
-
                         <ui-icon-button
                             type="clear" icon="more_vert" has-dropdown-menu
                             dropdown-position="bottom right" :menu-options="overflowMenu"
@@ -24,13 +20,13 @@
 
                     <gcs-mission-row
                         v-for="(index, mission) in missions" :mission="mission"
-                        @click="selectMission(mission, index)"
+                        @click="selectMission(index)"
                     ></gcs-mission-row>
                 </div>
             </div>
 
             <component
-                v-else :is="currentView" :mission="selectedMission" @go-back="showIndexView"
+                v-else :is="currentView" :mission="currentMission" @go-back="showIndexView"
             ></component>
         </div>
     </div>
@@ -70,12 +66,25 @@ let missions = [
     }
 ];
 
+import { getMissions, getCurrentMission } from 'store/getters';
+import { setMissions, setCurrentMissionIndex } from 'store/actions';
+
 export default {
+    vuex: {
+        getters: {
+            missions: getMissions,
+            currentMission: getCurrentMission
+        },
+
+        actions: {
+            setMissions,
+            setCurrentMissionIndex
+        }
+    },
+
     data() {
         return {
-            missions,
             currentView: 'index',
-            selectedMissionIndex: -1,
             overflowMenu: [
                 { id: 'import', text: 'Import from file' },
                 { id: 'export', text: 'Export to file' },
@@ -84,15 +93,13 @@ export default {
         };
     },
 
-    computed: {
-        selectedMission() {
-            return this.missions[this.selectedMissionIndex];
-        }
+    ready() {
+        this.setMissions(missions);
     },
 
     methods: {
-        selectMission(mission, index) {
-            this.selectedMissionIndex = index;
+        selectMission(index) {
+            this.setCurrentMissionIndex(index);
             this.currentView = 'gcs-mission';
         },
 
