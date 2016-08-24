@@ -8,14 +8,16 @@
         >Missions</ui-button>
 
         <ui-button has-popover text="Commands">
-            <div slot="popover">
-                <ui-switch :value.sync="true"></ui-switch>
+            <div slot="popover" class="gcs-sidebar-controls-popover">
+                <gcs-commands></gcs-commands>
             </div>
         </ui-button>
     </div>
 </template>
 
 <script>
+import GcsCommands from 'map/GcsCommands.vue';
+
 export default {
     props: {
         showSidebar: {
@@ -28,6 +30,10 @@ export default {
         toggleSidebar() {
             this.$dispatch('toggle-sidebar');
         }
+    },
+
+    components: {
+        GcsCommands
     }
 };
 </script>
