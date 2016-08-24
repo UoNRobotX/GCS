@@ -1,0 +1,132 @@
+* {
+    box-sizing: border-box;
+    font-family: $font-stack;
+}
+
+body,
+.gcs-app {
+    margin: 0;
+    width: 100vw;
+    height: 100vh;
+}
+
+.main-tab-container {
+    margin: 0;
+    padding: 0;
+
+    .ui-tabs-body {
+        padding: 0;
+        border: none;
+        overflow: hidden;
+        height: calc(100vh - 48px);
+    }
+
+    .ui-tabs-header.background-color-dark {
+        background-color: #333;
+    }
+
+    .ui-tabs-header.background-color-dark .ui-tab-header-item.active {
+        background-color: #222;
+    }
+
+    .ui-tabs-header-items.text-color-light {
+        color: $light-secondary;
+    }
+}
+
+.view {
+    border: none;
+    overflow-x: hidden;
+    overflow-y: auto;
+    background-color: #eee;
+    height: calc(100vh - 48px);
+
+    .page {
+        margin: 0 auto;
+        max-width: 960px;
+        background-color: white;
+        box-shadow: 0 1px 6px #999;
+    }
+
+    .page-header {
+        margin: 0;
+        padding: 16px 24px;
+        border-bottom: 1px solid #EEE;
+        font-weight: normal;
+        font-size: 1.75em;
+        line-height: 1;
+    }
+
+    .page-content {
+        padding: 24px;
+        min-height: 160px;
+    }
+}
+
+.row {
+    display: flex;
+}
+
+.column {
+    width: 100%;
+
+    &.one-half {
+        width: 50%;
+        padding-right: 8px;
+
+        &:last-child {
+            padding-right: 0
+        }
+    }
+}
+
+.sidebar-page {
+    height: 100%;
+
+    .ui-toolbar {
+        z-index: 1;
+    }
+
+    .ui-toolbar-title {
+        margin-left: 12px;
+    }
+
+    .sidebar-page-header {
+        margin: 0;
+        padding: 12px;
+        font-size: 1.4em;
+        font-weight: normal;
+    }
+
+    .sidebar-page-actions {
+        border-top: 1px solid #EEE;
+        border-bottom: 1px solid #EEE;
+        padding: 8px;
+
+        .ui-button {
+            height: 32px;
+        }
+    }
+
+    .sidebar-page-content {
+        overflow-y: auto;
+        height: calc(100% - 56px);
+
+        .blank-state {
+            padding: 16px;
+            color: #999;
+        }
+    }
+}
+
+.ui-snackbar-container {
+    z-index: 99;
+
+    .ui-snackbar {
+        background-color: #222;
+    }
+}
+
+.ui-menu-option {
+    height: 32px;
+}
