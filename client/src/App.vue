@@ -1,6 +1,9 @@
 <template>
     <div class="gcs-app">
-        <ui-tabs class="main-tab-container" background-color="dark" text-color="light" indicator-color="transparent">
+        <ui-tabs
+            class="main-tab-container" background-color="dark" text-color="light"
+            indicator-color="transparent"
+        >
             <ui-tab header="Map">
                 <map-view></map-view>
             </ui-tab>
@@ -14,92 +17,88 @@
             </ui-tab>
         </ui-tabs>
 
-        <indicators heading="45° NE" speed="24 KMPH" battery="100%" signal="100%"></indicators>
+        <gcs-indicators></gcs-indicators>
+
+        <ui-snackbar-container position="center"></ui-snackbar-container>
     </div>
 </template>
 
 <script>
-import MapView from 'components/MapView.vue';
-import ParamsView from 'components/ParamsView.vue';
-import SettingsView from 'components/SettingsView.vue';
-import Indicators from 'components/Indicators.vue';
+import MapView from 'views/MapView.vue';
+import ParamsView from 'views/ParamsView.vue';
+import SettingsView from 'views/SettingsView.vue';
+import GcsIndicators from 'components/GcsIndicators.vue';
 
 export default {
-    data() {
-        return {};
+    events: {
+        'app::create-snackbar'(message, snackbar) {
+            this.createSnackbar(message, snackbar);
+        },
+
+        'map::pan-up'() {
+            this.$broadcast('map::pan-up');
+        },
+
+        'map::pan-down'() {
+            this.$broadcast('map::pan-down');
+        },
+
+        'map::pan-left'() {
+            this.$broadcast('map::pan-left');
+        },
+
+        'map::pan-right'() {
+            this.$broadcast('map::pan-right');
+        },
+
+        'map::pan-center'() {
+            this.$broadcast('map::pan-center');
+        },
+
+        'map::zoom-in'() {
+            this.$broadcast('map::zoom-in');
+        },
+
+        'map::zoom-out'() {
+            this.$broadcast('map::zoom-out');
+        },
+
+        'map::change-type'(newType) {
+            this.$broadcast('map::change-type', newType);
+        },
+
+        'map:click'(e) {
+            this.$broadcast('map:click', e);
+        },
+
+        'map:dblclick'(e) {
+            this.$broadcast('map:dblclick', e);
+        },
+
+        'map:rightclick'(e) {
+            this.$broadcast('map:rightclick', e);
+        }
+    },
+
+    methods: {
+        createSnackbar(message, snackbar) {
+            snackbar = snackbar || {
+                message
+            };
+
+            this.$broadcast('ui-snackbar::create', snackbar);
+        }
     },
 
     components: {
         MapView,
         ParamsView,
         SettingsView,
-        Indicators
+        GcsIndicators
     }
 };
 </script>
 
 <style lang="stylus">
-@import '~keen-ui/dist/keen-ui.css';
-@import '~styles/_variables';
-
-body,
-.gcs-app {
-    margin: 0;
-    width: 100vw;
-    height: 100vh;
-    font-family: $font-stack;
-}
-
-.main-tab-container {
-    margin: 0;
-    padding: 0;
-
-    .ui-tabs-body {
-        padding: 0;
-        border: none;
-        overflow: hidden;
-        height: calc(100vh - 48px);
-    }
-
-    .ui-tabs-header.background-color-dark {
-        background-color: #333;
-    }
-
-    .ui-tabs-header.background-color-dark .ui-tab-header-item.active {
-        background-color: #222;
-    }
-
-    .ui-tabs-header-items.text-color-light {
-        color: $light-secondary;
-    }
-}
-
-.view {
-    border: none;
-    overflow-x: hidden;
-    overflow-y: auto;
-    background-color: #eee;
-    height: calc(100vh - 48px);
-
-    .page {
-        margin: 0 auto;
-        max-width: 960px;
-        background-color: white;
-        box-shadow: 0 1px 6px #999;
-    }
-
-    .page-header {
-        margin: 0;
-        padding: 16px 24px;
-        border-bottom: 1px solid #EEE;
-        font-weight: normal;
-        font-size: 1.75em;
-        line-height: 1;
-    }
-
-    .page-content {
-        padding: 24px;
-        min-height: 160px;
-    }
-}
+@import '~styles/main';
 </style>
