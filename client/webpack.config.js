@@ -18,7 +18,14 @@ var mainConfig = {
         root: path.resolve(__dirname),
         alias: {
             components: 'src/components',
+            markers: 'src/components/markers',
+            mission: 'src/components/mission',
+            views: 'src/components/views',
+            map: 'src/components/map',
             styles: 'src/styles',
+            mixins: 'src/mixins',
+            store: 'src/store',
+            util: 'src/util',
             app: 'src'
         },
         extensions: ['', '.js', '.vue', '.json', '.styl']
