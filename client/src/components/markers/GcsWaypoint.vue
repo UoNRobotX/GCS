@@ -66,6 +66,10 @@ export default {
             element.scrollIntoView(this.$el, null, 56); // 56px margin for UiToolbar
         },
 
+        rightclick() {
+            this.$dispatch('delete');
+        },
+
         drag(e) {
             this.lat = Number( parseFloat(e.latLng.lat()).toFixed(7) );
             this.lng = Number( parseFloat(e.latLng.lng()).toFixed(7) );

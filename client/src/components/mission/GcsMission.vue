@@ -29,6 +29,8 @@
                 :label="toLetter(index + 1)" :title="waypoint.title" :type="waypoint.type"
                 :lat="waypoint.position.lat" :lng="waypoint.position.lng" :visible="waypoint.visible"
                 :rotation="waypoint.rotation" :scale="waypoint.scale" draggable
+
+                @delete="deleteWaypoint(index)"
             ></gcs-waypoint>
         </div>
     </div>
@@ -41,9 +43,14 @@ import element from 'util/element-scroll';
 import numberToLetter from 'util/number-to-letter';
 
 import { setMapEditing } from 'store/actions';
+import { getMapEditing } from 'store/getters';
 
 export default {
     vuex: {
+        getters: {
+            mapEditing: getMapEditing
+        },
+
         actions: {
             setMapEditing
         }
@@ -76,12 +83,17 @@ export default {
 
     events: {
         'map:click'(e) {
+            if (!this.mapEditing) {
+                return;
+            }
+
             let lat = Number( parseFloat(e.latLng.lat()).toFixed(7) );
             let lng = Number( parseFloat(e.latLng.lng()).toFixed(7) );
 
             let newWaypoint = {
                 title: null,
                 type: 'normal',
+                visible: true,
                 position: {
                     lat,
                     lng
@@ -117,7 +129,17 @@ export default {
         toggleWaypointVisibility() {
             this.waypointsVisible = !this.waypointsVisible;
 
-            // TODO: Actually hide/show the waypoints
+            this.mission.waypoints = this.mission.waypoints.map((waypoint) => {
+                waypoint.visible = this.waypointsVisible;
+
+                return waypoint;
+            });
+
+            this.setMapEditing(this.waypointsVisible);
+        },
+
+        deleteWaypoint(index) {
+            this.mission.waypoints.splice(index, 1);
         }
     },
 

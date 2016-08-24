@@ -1,7 +1,7 @@
 <template>
 	<div class="gcs-missions">
         <div class="sidebar-page">
-            <div class="missions-list" v-if="currentView === 'index'">
+            <div class="missions-list" v-if="currentView === 'listing'">
                 <ui-toolbar title="Missions" hide-nav-icon>
                     <div slot="actions">
                         <ui-icon-button
@@ -26,7 +26,7 @@
             </div>
 
             <component
-                v-else :is="currentView" :mission="currentMission" @go-back="showIndexView"
+                v-else :is="currentView" :mission="currentMission" @go-back="showListingView"
             ></component>
         </div>
     </div>
@@ -51,6 +51,7 @@ let missions = [
         waypoints: [{
             title: null,
             type: 'normal',
+            visible: true,
             position: {
                 lat: -32.8882,
                 lng: 151.7080
@@ -58,6 +59,7 @@ let missions = [
         }, {
             title: null,
             type: 'normal',
+            visible: true,
             position: {
                 lat: -32.888091,
                 lng: 151.7066267
@@ -66,25 +68,12 @@ let missions = [
     }
 ];
 
-import { getMissions, getCurrentMission } from 'store/getters';
-import { setMissions, setCurrentMissionIndex } from 'store/actions';
-
 export default {
-    vuex: {
-        getters: {
-            missions: getMissions,
-            currentMission: getCurrentMission
-        },
-
-        actions: {
-            setMissions,
-            setCurrentMissionIndex
-        }
-    },
-
     data() {
         return {
-            currentView: 'index',
+            missions,
+            currentView: 'listing',
+            currentMissionIndex: -1,
             overflowMenu: [
                 { id: 'import', text: 'Import from file' },
                 { id: 'export', text: 'Export to file' },
@@ -93,18 +82,20 @@ export default {
         };
     },
 
-    ready() {
-        this.setMissions(missions);
+    computed: {
+        currentMission() {
+            return this.missions[this.currentMissionIndex];
+        }
     },
 
     methods: {
         selectMission(index) {
-            this.setCurrentMissionIndex(index);
+            this.currentMissionIndex = index;
             this.currentView = 'gcs-mission';
         },
 
-        showIndexView() {
-            this.currentView = 'index';
+        showListingView() {
+            this.currentView = 'listing';
         }
     },
 
