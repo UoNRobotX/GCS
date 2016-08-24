@@ -9,11 +9,14 @@
             </div>
 
             <div slot="actions">
-                <ui-icon-button type="clear" icon="clear_all" tooltip="Clear all"></ui-icon-button>
+                <ui-icon-button
+                    type="clear" icon="clear_all" tooltip="Clear all" @click="clearWaypoints"
+                ></ui-icon-button>
 
                 <ui-icon-button
                     type="clear" :icon="waypointsVisible ? 'visibility' : 'visibility_off'"
-                    @click="toggleWaypointVisibility" :tooltip="waypointsVisible ? 'Hide waypoints' : 'Show waypoints'"
+                    @click="toggleWaypointVisibility"
+                    :tooltip="waypointsVisible ? 'Hide waypoints' : 'Show waypoints'"
                 ></ui-icon-button>
 
                 <ui-icon-button
@@ -24,8 +27,12 @@
         </ui-toolbar>
 
         <div class="sidebar-page-content" v-el:page-content>
+            <p
+                class="no-waypoints" v-if="!mission.waypoints.length"
+            >No waypoints for this mission. Click the map to add a waypoint.</p>
+
             <gcs-waypoint
-                v-for="(index, waypoint) in mission.waypoints" :index="index"
+                v-else v-for="(index, waypoint) in mission.waypoints" :index="index"
                 :label="toLetter(index + 1)" :title="waypoint.title" :type="waypoint.type"
                 :lat="waypoint.position.lat" :lng="waypoint.position.lng" :visible="waypoint.visible"
                 :rotation="waypoint.rotation" :scale="waypoint.scale" draggable
@@ -140,6 +147,13 @@ export default {
 
         deleteWaypoint(index) {
             this.mission.waypoints.splice(index, 1);
+        },
+
+        clearWaypoints() {
+            this.mission.waypoints = [];
+
+            this.waypointsVisible = true;
+            this.setMapEditing(true);
         }
     },
 
@@ -165,6 +179,13 @@ export default {
 
     .ui-toolbar-brand {
         min-width: 0;
+    }
+
+    .no-waypoints {
+        font-size: 0.9em;
+        color: #777;
+        padding: 16px;
+        margin: 0;
     }
 }
 </style>
