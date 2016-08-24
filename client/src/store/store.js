@@ -23,6 +23,8 @@ const initialState = {
         battery: 1,
         signal: 1
     },
+    missions: [],
+    currentMissionIndex: -1,
     config: config,
     settings: config.settings,
     settingsLoaded: false
@@ -71,6 +73,14 @@ const mutations = {
 
     SET_WAMV_SIGNAL(state, signal) {
         state.wamv.signal = signal;
+    },
+
+    SET_MISSIONS(state, missions) {
+        state.missions = missions;
+    },
+
+    SET_CURRENT_MISSION_INDEX(state, index) {
+        state.currentMissionIndex = index;
     },
 
     INIT_SETTINGS(state, settings) {

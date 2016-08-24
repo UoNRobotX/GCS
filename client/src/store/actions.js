@@ -80,6 +80,20 @@ export function setWamvSignal({ dispatch, state }, signal) {
 }
 
 /**
+ * Set the list of missions
+ */
+export function setMissions({ dispatch, state }, missions) {
+    dispatch('SET_MISSIONS', missions);
+}
+
+/**
+ * Set the the current mission index
+ */
+export function setCurrentMissionIndex({ dispatch, state }, index) {
+    dispatch('SET_CURRENT_MISSION_INDEX', index);
+}
+
+/**
  * Initialize the app settings and set it on the global
  * state
  */
