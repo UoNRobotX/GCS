@@ -3129,12 +3129,15 @@ body[modality="keyboard"] .ui-tabs-header.background-color-clear .ui-tab-header-
   display: flex;
 }
 
-/*# sourceMappingURL=keen-ui.css.map*/body,
+/*# sourceMappingURL=keen-ui.css.map*/* {
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Roboto", "Droid Sans", "Helvetica Neue", sans-serif;
+}
+body,
 .gcs-app {
   margin: 0;
   width: 100vw;
   height: 100vh;
-  font-family: Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
 }
 .main-tab-container {
   margin: 0;
@@ -3155,7 +3158,343 @@ body[modality="keyboard"] .ui-tabs-header.background-color-clear .ui-tab-header-
 .main-tab-container .ui-tabs-header-items.text-color-light {
   color: rgba(255,255,255,0.6);
 }
-.indicators {
+.view {
+  border: none;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background-color: #eee;
+  height: calc(100vh - 48px);
+}
+.view .page {
+  margin: 0 auto;
+  max-width: 960px;
+  background-color: #fff;
+  box-shadow: 0 1px 6px #999;
+}
+.view .page-header {
+  margin: 0;
+  padding: 16px 24px;
+  border-bottom: 1px solid #eee;
+  font-weight: normal;
+  font-size: 1.75em;
+  line-height: 1;
+}
+.view .page-content {
+  padding: 24px;
+  min-height: 160px;
+}
+.row {
+  display: -ms-flexbox;
+  display: flex;
+}
+.column {
+  width: 100%;
+}
+.column.one-half {
+  width: 50%;
+  padding-right: 8px;
+}
+.column.one-half:last-child {
+  padding-right: 0;
+}
+.sidebar-page {
+  height: 100%;
+}
+.sidebar-page .ui-toolbar {
+  z-index: 1;
+}
+.sidebar-page .ui-toolbar-title {
+  margin-left: 12px;
+}
+.sidebar-page .sidebar-page-header {
+  margin: 0;
+  padding: 12px;
+  font-size: 1.4em;
+  font-weight: normal;
+}
+.sidebar-page .sidebar-page-actions {
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+  padding: 8px;
+}
+.sidebar-page .sidebar-page-actions .ui-button {
+  height: 32px;
+}
+.sidebar-page .sidebar-page-content {
+  overflow-y: auto;
+  height: calc(100% - 56px);
+}
+.sidebar-page .sidebar-page-content .blank-state {
+  padding: 16px;
+  color: #999;
+}
+.ui-snackbar-container {
+  z-index: 99;
+}
+.ui-snackbar-container .ui-snackbar {
+  background-color: #222;
+}
+.ui-menu-option {
+  height: 32px;
+}
+.view.map-view {
+  position: relative;
+}
+.gcs-map {
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+.gcs-map.gcs-map-edit-mode {
+  cursor: crosshair;
+}
+.gcs-map-controls {
+  position: absolute;
+  bottom: 24px;
+  right: 12px;
+  z-index: 1;
+}
+.gcs-map-controls .pan-controls {
+  width: 100px;
+  height: 100px;
+  position: relative;
+}
+.gcs-map-controls .pan-control {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: 0 2px 5px 0 rgba(0,0,0,0.2), 0 2px 10px 0 rgba(0,0,0,0.16);
+  -webkit-mask-image: none;
+  background-color: #fff !important;
+}
+.gcs-map-controls .pan-control.up {
+  top: 0;
+  left: 34px;
+  right: auto;
+}
+.gcs-map-controls .pan-control.down {
+  bottom: 0;
+  left: 34px;
+}
+.gcs-map-controls .pan-control.left {
+  left: 0;
+  top: 34px;
+}
+.gcs-map-controls .pan-control.right {
+  right: 0;
+  top: 34px;
+}
+.gcs-map-controls .pan-control.center {
+  top: 34px;
+  left: 34px;
+}
+.gcs-map-controls .pan-control.center .ui-icon {
+  font-size: 18px;
+}
+.gcs-map-controls .zoom-controls {
+  display: -ms-flexbox;
+  display: flex;
+  margin-top: 8px;
+  box-shadow: 0 2px 5px 0 rgba(0,0,0,0.2), 0 2px 10px 0 rgba(0,0,0,0.16);
+}
+.gcs-map-controls .zoom-controls .zoom-control {
+  border-radius: 0;
+  width: 50px;
+  height: 28px;
+  background-color: #fff !important;
+}
+.gcs-map-controls .zoom-controls .zoom-control.in {
+  border-right: 1px solid #ccc;
+}
+.gcs-map-controls .type-control {
+  margin-top: 8px;
+}
+.gcs-map-controls .type-control .ui-button {
+  border-radius: 0;
+  width: 100px;
+  height: 32px;
+  background-color: #fff;
+}
+.gcs-map-sidebar {
+  position: absolute;
+  width: 360px;
+  height: 100%;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background-color: #fff;
+  box-shadow: 0 0 4px rgba(0,0,0,0.35), 0 2px 3px rgba(0,0,0,0.2);
+}
+.sidebar-collapse-transition {
+  transition: transform 0.2s ease;
+  transform: translateX(0);
+}
+.sidebar-collapse-enter,
+.sidebar-collapse-leave {
+  transform: translateX(-360px);
+}
+.gcs-missions,
+.missions-list {
+  height: 100%;
+  overflow: hidden;
+}
+.gcs-mission {
+  height: 100%;
+}
+.gcs-mission .row {
+  margin-bottom: 4px;
+}
+.gcs-mission .row:last-child {
+  margin-bottom: 0;
+}
+.gcs-mission .ui-toolbar-brand {
+  min-width: 0;
+}
+.gcs-mission .no-waypoints {
+  font-size: 0.9em;
+  color: #777;
+  padding: 16px;
+  margin: 0;
+}
+.gcs-waypoint {
+  display: -ms-flexbox;
+  display: flex;
+  padding: 8px 12px;
+  padding-top: 12px;
+  background-color: #fff;
+  transition: background-color 0.1s ease;
+}
+.gcs-waypoint:not(:first-child) {
+  padding-top: 18px;
+  border-top: 1px solid #ddd;
+}
+.gcs-waypoint.highlighted {
+  background-color: rgba(33,150,243,0.15);
+}
+.gcs-waypoint .number {
+  font-size: 18px;
+  margin-right: 16px;
+  line-height: 1;
+  font-weight: bold;
+  min-width: 24px;
+}
+.gcs-waypoint .content {
+  -ms-flex-positive: 1;
+      flex-grow: 1;
+}
+.gcs-mission-row .mission-header,
+.gcs-mission-row .mission-summary p {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gcs-mission-row {
+  padding: 12px;
+  position: relative;
+  border-bottom: 1px solid #eee;
+}
+.gcs-mission-row:hover,
+.gcs-mission-row:focus {
+  background-color: #eee;
+  cursor: pointer;
+  padding-right: 48px;
+}
+.gcs-mission-row:hover .mission-header,
+.gcs-mission-row:focus .mission-header {
+  color: #1976d2;
+}
+.gcs-mission-row:hover .delete-button,
+.gcs-mission-row:focus .delete-button {
+  display: block;
+}
+.gcs-mission-row .mission-header {
+  margin: 0;
+  font-weight: normal;
+  font-size: 1.1em;
+  width: 100%;
+}
+.gcs-mission-row .mission-summary {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  font-size: 0.9em;
+  line-height: 1;
+  color: #777;
+}
+.gcs-mission-row .mission-summary p {
+  margin: 0;
+  padding: 0;
+}
+.gcs-mission-row .no-waypoints {
+  padding: 0;
+  margin: 0;
+  color: #aaa;
+}
+.gcs-mission-row .delete-button {
+  right: 6px;
+  position: absolute;
+  display: none;
+  color: rgba(0,0,0,0.54);
+}
+.gcs-mission-row .delete-button:hover {
+  color: rgba(0,0,0,0.87);
+}
+.gcs-mission-row .delete-button .ui-icon {
+  font-size: 20px;
+}
+.gcs-sidebar-controls {
+  display: -ms-flexbox;
+  display: flex;
+  position: absolute;
+  top: 16px;
+  left: 0;
+  z-index: 1;
+  transition: transform 0.2s ease;
+  transform: translateX(16px);
+  border-radius: 2px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px 0 rgba(0,0,0,0.2), 0 2px 10px 0 rgba(0,0,0,0.16);
+}
+.gcs-sidebar-controls .ui-button {
+  border-radius: 0;
+  border-right: 1px solid #ccc;
+  height: 32px;
+}
+.gcs-sidebar-controls .ui-button .ui-button-dropdown-icon {
+  font-size: 18px;
+  margin-top: -2px;
+}
+.gcs-sidebar-controls .ui-button.color-default:not(.dropdown-open) {
+  background-color: #fff;
+}
+.gcs-sidebar-controls .ui-button.color-primary {
+  border-right: none;
+}
+.gcs-sidebar-controls .ui-button:last-child {
+  border-right: none;
+}
+.gcs-commands {
+  min-width: 100px;
+}
+.gcs-commands .row {
+  margin-bottom: 8px;
+}
+.gcs-commands .row:last-child {
+  margin-bottom: 0;
+}
+.gcs-wamv {
+  display: none;
+}
+.view.params-view {
+  padding: 24px;
+}
+.view.settings-view {
+  padding: 24px;
+}
+.gcs-indicators {
   position: absolute;
   right: 16px;
   top: 12px;
@@ -3164,17 +3503,20 @@ body[modality="keyboard"] .ui-tabs-header.background-color-clear .ui-tab-header-
   margin: 0;
   list-style: none;
 }
-.indicators .indicator {
+.gcs-indicators .indicator {
   color: rgba(255,255,255,0.8);
   display: inline-block;
   margin-right: 18px;
 }
-.indicators .indicator:last-child {
+.gcs-indicators .indicator:last-child {
   border-right: none;
   padding-right: 0;
   margin-right: 0;
 }
-.indicators .ui-icon {
+.gcs-indicators .indicator .heading .ui-icon {
+  transition: transform 0.2s ease;
+}
+.gcs-indicators .ui-icon {
   color: rgba(255,255,255,0.5);
 }
 
