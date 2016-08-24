@@ -15,5 +15,7 @@ module.exports = {
         'html' // lint <script> blocks in .html and .vue files
     ],
 
-    globals: {},
+    globals: {
+        google: false // google is a global that should not be overridden
+    },
 };
