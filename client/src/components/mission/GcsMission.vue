@@ -35,7 +35,7 @@
                 v-else v-for="(index, waypoint) in mission.waypoints" :index="index"
                 :label="toLetter(index + 1)" :title="waypoint.title" :type="waypoint.type"
                 :lat="waypoint.position.lat" :lng="waypoint.position.lng" :visible="waypoint.visible"
-                :rotation="waypoint.rotation" :scale="waypoint.scale" draggable
+                :rotation="waypoint.rotation" :scale="10" draggable
 
                 @delete="deleteWaypoint(index)"
             ></gcs-waypoint>

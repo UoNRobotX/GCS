@@ -83,7 +83,7 @@ export default {
         showListingView() {
             this.currentView = 'listing';
         },
-        
+
         addMission(){
             this.missions.push({
                 title: 'Mission ' + (this.missions.length + 1),
@@ -134,7 +134,7 @@ export default {
             }
         }
     },
-    
+
     events: {
         'delete-mission'(index){
             this.missions.splice(index, 1);

@@ -94,17 +94,15 @@ export default {
 
     methods: {
         getIcon(scale = this.scale, rotation = this.rotation) {
-            return null;
-
-            // {
-            //     // path: google.maps.SymbolPath.CIRCLE,
-            //     rotation: rotation,
-            //     scale: scale,
-            //     fillColor: 'yellow',
-            //     fillOpacity: 0.8,
-            //     strokeColor: 'white',
-            //     strokeWeight: 2
-            // };
+            return {
+                path: google.maps.SymbolPath.CIRCLE,
+                rotation: rotation,
+                scale: scale,
+                fillColor: 'yellow',
+                fillOpacity: 0.8,
+                strokeColor: 'white',
+                strokeWeight: 2
+            };
         }
     },
 

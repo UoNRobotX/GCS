@@ -1,7 +1,7 @@
 <template>
     <div class="gcs-mission-row">
         <ui-icon-button
-            type="clear" icon="delete" class="delete-button" tooltip="Delete" @click="delete"
+            type="clear" icon="delete" class="delete-button" tooltip="Delete" @click="deleteMission"
         ></ui-icon-button>
 
         <h3 class="mission-header" v-text="mission.title"></h3>
@@ -25,7 +25,7 @@ export default {
         mission: {
             type: Object,
             required: true
-        }, 
+        },
         index: {
             type: Number,
             required: true
@@ -45,9 +45,9 @@ export default {
             return this.mission.waypoints[this.mission.waypoints.length - 1];
         }
     },
-    
+
     methods: {
-        delete(){
+        deleteMission(){
             this.$dispatch('delete-mission', this.index);
         }
     }
