@@ -5,7 +5,7 @@
                 <ui-toolbar title="Missions" hide-nav-icon>
                     <div slot="actions">
                         <ui-icon-button
-                            type="clear" icon="add" tooltip="Add mission"
+                            type="clear" icon="add" tooltip="Add mission" @click="addMission"
                         ></ui-icon-button>
 
                         <ui-icon-button
@@ -20,7 +20,7 @@
                     <div class="blank-state" v-if="!missions.length">No missions</div>
 
                     <gcs-mission-row
-                        v-for="(index, mission) in missions" :mission="mission"
+                        v-for="(index, mission) in missions" :index="index" :mission="mission"
                         @click="selectMission(index)"
                     ></gcs-mission-row>
                 </div>
@@ -83,6 +83,14 @@ export default {
         showListingView() {
             this.currentView = 'listing';
         },
+        
+        addMission(){
+            this.missions.push({
+                title: 'Mission ' + (this.missions.length + 1),
+                description: null,
+                waypoints: []
+            })
+        },
 
         menuOptionSelected(option){
             if (option.id == 'import'){
@@ -124,6 +132,12 @@ export default {
                 //start file read
                 reader.readAsText(file);
             }
+        }
+    },
+    
+    events: {
+        'delete-mission'(index){
+            this.missions.splice(index, 1);
         }
     },
 

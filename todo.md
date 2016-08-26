@@ -1,7 +1,6 @@
 # Todo list
 
 ## Stuff that needs doing
-* Implement export/import to/from file
 * Add waypoint links (should form a closed path)
 * Implement saving and loading missions on server
 * Implement WAM-V message handling.
