@@ -36,44 +36,24 @@
 import GcsMission from 'mission/GcsMission.vue';
 import GcsMissionRow from 'mission/GcsMissionRow.vue';
 
-let missions = [
-    {
-        title: 'Mission 1',
-        description: null,
-        waypoints: []
-    }, {
-        title: 'Mission 2',
-        description: 'A special description for this mission',
-        waypoints: []
-    }, {
-        title: 'Mission 3',
-        description: null,
-        waypoints: [{
-            title: null,
-            type: 'normal',
-            visible: true,
-            position: {
-                lat: -32.8882,
-                lng: 151.7080
-            }
-        }, {
-            title: null,
-            type: 'normal',
-            visible: true,
-            position: {
-                lat: -32.888091,
-                lng: 151.7066267
-            }
-        }]
-    }
-];
+import { setCurrentMissionIndex } from 'store/actions';
+import { getMissions, getCurrentMissionIndex } from 'store/getters';
 
 export default {
+    vuex: {
+        getters: {
+            missions: getMissions,
+            currentMissionIndex: getCurrentMissionIndex
+        },
+
+        actions: {
+            setCurrentMissionIndex
+        }
+    },
+
     data() {
         return {
-            missions,
             currentView: 'listing',
-            currentMissionIndex: -1,
             overflowMenu: [
                 { id: 'import', text: 'Import from file' },
                 { id: 'export', text: 'Export to file' },
@@ -90,7 +70,7 @@ export default {
 
     methods: {
         selectMission(index) {
-            this.currentMissionIndex = index;
+            this.setCurrentMissionIndex(index);
             this.currentView = 'gcs-mission';
         },
 

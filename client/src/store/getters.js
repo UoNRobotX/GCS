@@ -25,3 +25,11 @@ export function getConfig(state) {
 export function getSettings(state) {
     return state.settings;
 }
+
+export function getMissions(state) {
+    return state.missions;
+}
+
+export function getCurrentMissionIndex(state) {
+    return state.currentMissionIndex;
+}
