@@ -8,17 +8,17 @@ var Promise = require('bluebird');
  * @return {Promise}
  */
 function createDir(dirpath) {
-	return new Promise(function(resolve, reject) {
-		fs.mkdir(dirpath, function(error) {
-			if (error) {
-				reject(error);
-			}
+    return new Promise(function(resolve, reject) {
+        fs.mkdir(dirpath, function(error) {
+            if (error) {
+                reject(error);
+            }
 
-			resolve();
-		});
-	});
+            resolve();
+        });
+    });
 }
 
 module.exports = {
-	createDir: createDir
+    createDir: createDir
 };

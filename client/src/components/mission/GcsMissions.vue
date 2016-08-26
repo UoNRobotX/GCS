@@ -1,5 +1,5 @@
 <template>
-	<div class="gcs-missions">
+    <div class="gcs-missions">
         <div class="sidebar-page">
             <div class="missions-list" v-if="currentView === 'listing'">
                 <ui-toolbar title="Missions" hide-nav-icon>

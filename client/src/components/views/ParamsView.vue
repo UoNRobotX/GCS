@@ -1,5 +1,5 @@
 <template>
-	<div class="view params-view">
+    <div class="view params-view">
         <div class="page">
             <h1 class="page-header">Params</h1>
             <div class="page-content">
