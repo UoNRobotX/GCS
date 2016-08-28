@@ -9,7 +9,9 @@ export default {
             lng: 151.7075279
         },
         zoom: 19,
-        disableDefaultUI: true
+        disableDefaultUI: true,
+        disableDoubleClickZoom: true,
+        tilt: 0
     },
     settings: {
         defaultMapType: 'SATELLITE'

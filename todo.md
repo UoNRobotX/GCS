@@ -4,6 +4,7 @@
 * Implement saving and loading missions on server
 * Implement WAM-V message handling.
 * Implement fake WAM-V for testing.
+* Add delete mission buttons.
 * Allow for multiple clients.
 * Add parameters and settings.
 * Improve error handling.
@@ -15,6 +16,7 @@
 ## Stuff that may need doing
 * Allow reordering waypoints?
 * Add vehicle message log.
+* Add de-activate kill-switch button?
 * Add ground station marker.
 * Allow specifying hold times for waypoints.
 * Allow for changing a mission while it is being completed.

@@ -28,6 +28,43 @@ import MapView from 'views/MapView.vue';
 import ParamsView from 'views/ParamsView.vue';
 import SettingsView from 'views/SettingsView.vue';
 import GcsIndicators from 'components/GcsIndicators.vue';
+import socket_io_client from 'socket.io-client';
+
+//open socket.io connection for WAM-V data
+let socket = socket_io_client('localhost:3000');
+socket.on('connect', () => {
+    console.log('connected to server')
+});
+socket.on('disconnect', () => {
+    console.log('disconnected from server');
+});
+socket.on('status', (data) => {
+    console.log('received "status" message:');
+    console.log(data);
+});
+socket.on('get_parameters', (data) => {
+    console.log('received "get_parameters" message:');
+    console.log(data);
+});
+socket.on('load_missions', (data) => {
+    console.log('received "load_missions" message:');
+    console.log(data);
+});
+socket.on('download_mission', (data) => {
+    console.log('received "download_mission" message:');
+    console.log(data);
+});
+socket.on('success', (data) => {
+    console.log('received "success" message');
+});
+socket.on('failure', (data) => {
+    console.log('received "failure" message');
+    console.log(data);
+});
+socket.on('attention', (data) => {
+    console.log('received "attention" message');
+    console.log(data);
+});
 
 export default {
     events: {
