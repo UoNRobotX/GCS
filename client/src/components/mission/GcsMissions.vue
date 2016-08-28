@@ -126,7 +126,7 @@ export default {
                         // TODO: verify missions object format
                         this.setMissions(newMissions);
                     } catch (e){
-                        console.log("file contents are invalid: " + e.message);
+                        console.log('file contents are invalid: ' + e.message);
                     }
                 };
                 //start file read

@@ -4,7 +4,8 @@ var path = require('path');
 var openUrl = require('openurl');
 var serve = require('koa-static');
 var socket_io = require('socket.io');
-
+var fs = require('fs');
+var path = require('path');
 var Vehicle = require('./js/vehicle.js');
 
 var app = koa();
@@ -14,6 +15,7 @@ app.use(serve(path.join(__dirname, 'public')));
 
 //create server
 var server = http.createServer(app.callback());
+
 //create fake WAM-V
 var vehicle = new Vehicle();
 
@@ -31,9 +33,9 @@ var vehicle = new Vehicle();
  *      - 'disarm'           -> sent to server, requests that the vehicle disarm itself
  *      - 'start_mission'    -> sent to server, requests that the vehicle begin its mission
  *      - 'stop_mission'     -> sent to server, requests that the vehicle stop its mission
- *      - 'pause_mission'    -> sent to server, requests that the vehicle pause its mission
  *      - 'resume_mission'   -> sent to server, requests that the vehicle resume its mission
- *      - 'kill_switch'      -> sent to server, requests that the kill switch be activated
+ *      - 'kill'             -> sent to server, requests that the kill switch be activated
+ *      - 'unkill'           -> sent to server, requests that the kill switch be deactivated
  *      - 'success'          -> sent to client, indicates that a request was successfully handled
  *      - 'failure'          -> sent to client, indicates that a request could not be handled
  *      - 'attention'        -> sent to client, indicates that something important has happened
@@ -45,7 +47,7 @@ var vehicle = new Vehicle();
  *              speed:    kmph1,
  *              battery:  percentage1,
  *              armed:    boolean1,
- *              mode:     mode1, //this will be one of: 'idle', 'auto', 'paused',
+ *              mode:     mode1, //this will be one of: 'idle', 'auto', 'killed',
  *          }
  *     - For 'get_parameters':
  *         If sent from the client, no data is sent.
@@ -66,7 +68,7 @@ var vehicle = new Vehicle();
  *         If sent from the client, no data is sent.
  *         If sent from the server, the data specifies a list of missions.
  *             The data is an array of objects, each of the same form as with 'upload_mission'
- *     - For 'upload_mission', the data has this form:
+ *     - For 'upload_mission', the data specifies a mission, and has this form:
  *         {
  *             title:       title1, //a string, or null
  *             description: desc1,  //a string, or null
@@ -89,7 +91,74 @@ var vehicle = new Vehicle();
  *     - For other types, no data is sent.
  */
 
-//use socket.io to periodically send WAM-V data
+//used to check if sent data corresponds to a mission
+function isMission(data){
+    if (typeof data != 'object' ||
+        !data.hasOwnProperty('waypoints') ||
+        typeof data.waypoints != 'array' ||
+        data.waypoints.length == 0){
+        return false;
+    }
+    for (var i = 0; i < data.waypoints.length; i++){
+        var wp = data.waypoints[i];
+        if (!wp.hasOwnProperty('lat') ||
+            typeof wp.lat != 'number' ||
+            !wp.hasOwnProperty('lng') ||
+            typeof wp.lng != 'number'){
+            return false;
+        }
+    }
+    return true;
+}
+
+//used to check if sent data corresponds to a mission list
+function isMissionList(data){
+    if (typeof data != 'array'){
+        return false;
+    }
+    for (var i = 0; i < data.length; i++){
+        if (!isMission(data[i])){
+            return false;
+        }
+    }
+    return true;
+}
+
+var missions = []; //mission list stored on server
+var missionsFile = path.join(__dirname, 'data/missions.json');
+
+//load missions from file
+fs.readFile(missionsFile, function(err, data){
+    if (err){
+        console.log('Unable to read missions file. Using empty missions list.');
+    } else {
+        try {
+            var data = JSON.parse(data.toString());
+            if (!isMissionList(data)){
+                console.log('Missions file is invalid. Using empty missions list.');
+            } else {
+                missions = data;
+            }
+        } catch (e){
+            console.log('Missions file content is invalid: ' + e.message);
+            console.log('Using empty missions list');
+        }
+    }
+});
+
+//save missions on shutdown
+var saveMissionsCalled = false;
+function saveMissions(){
+    if (!saveMissionsCalled){
+        fs.writeFileSync(missionsFile, JSON.stringify(missions));
+        saveMissionsCalled = true;
+    }
+    process.exit();
+}
+process.on('exit', saveMissions);
+process.on('SIGINT', saveMissions);
+
+//handle messages from clients
 var io = socket_io(server);
 io.on('connection', function(socket){
     var statusTimer, updateTimer; //used for fake WAM-V
@@ -104,7 +173,10 @@ io.on('connection', function(socket){
     });
     //periodically update fake vehicle
     updateTimer = setInterval(function(){
-        vehicle.update();
+        var msg = vehicle.update();
+        if (msg != null){
+            socket.emit('attention', msg);
+        }
     }, 300);
     //periodically send vehicle status information
     statusTimer = setInterval(function(){
@@ -120,11 +192,11 @@ io.on('connection', function(socket){
     socket.on('set_parameter', function(data){
         console.log('got "set_parameter" message');
         //check data format
-        if (typeof data != 'object' || 
-            !data.hasOwnProperty('name') || 
+        if (typeof data != 'object' ||
+            !data.hasOwnProperty('name') ||
             !data.hasOwnProperty('value') ||
             typeof data.name != 'string'){
-            socket.emit('failure', 'message has invalid format');
+            socket.emit('failure', 'Message has invalid format.');
         }
         //set parameter
         var msg = vehicle.setParameter(data.name, data.value);
@@ -136,38 +208,101 @@ io.on('connection', function(socket){
     });
     socket.on('save_missions', function(data){
         console.log('got "save_missions" message');
-        console.log(data);
+        if (!isMissionList(data)){
+            socket.emit('failure', 'Invalid mission list data.');
+        } else {
+            missions = data;
+            socket.emit('success');
+        }
     });
     socket.on('load_missions', function(){
         console.log('got "load_missions" message');
+        socket.emit('load_missions', missions);
     });
     socket.on('upload_mission', function(data){
         console.log('got "upload_mission" message');
-        console.log(data);
+        if (!isMission(data)){
+            socket.emit('failure', 'Invalid mission data');
+        } else {
+            var msg = vehicle.setMission(data);
+            if (msg == null){
+                socket.emit('success');
+            } else {
+                socket.emit('failure', msg);
+            }
+        }
     });
     socket.on('download_mission', function(){
         console.log('got "download_mission" message');
+        var mission = vehicle.getMission();
+        if (typeof mission == 'object'){
+            socket.emit('download_mission', mission);
+        } else {
+            socket.emit('failure', msg)
+        }
     });
     socket.on('arm', function(){
         console.log('got "arm" message');
+        var msg = vehicle.arm();
+        if (msg == null){
+            socket.emit('success');
+        } else {
+            socket.emit('failure', msg);
+        }
     });
     socket.on('disarm', function(){
         console.log('got "disarm" message');
+        msg = vehicle.disarm();
+        if (msg == null){
+            socket.emit('success');
+        } else {
+            socket.emit('failure', msg);
+        }
     });
     socket.on('start_mission', function(){
         console.log('got "start_mission" message');
+        msg = vehicle.start(true);
+        if (msg == null){
+            socket.emit('success');
+        } else {
+            socket.emit('failure', msg);
+        }
     });
     socket.on('stop_mission', function(){
         console.log('got "stop_mission" message');
-    });
-    socket.on('pause_mission', function(){
-        console.log('got "pause_mission" message');
+        msg = vehicle.stop();
+        if (msg == null){
+            socket.emit('success');
+        } else {
+            socket.emit('failure', msg);
+        }
     });
     socket.on('resume_mission', function(){
         console.log('got "resume_mission" message');
+        msg = vehicle.start(false);
+        if (msg == null){
+            socket.emit('success');
+        } else {
+            socket.emit('failure', msg);
+        }
     });
-    socket.on('kill_switch', function(){
-        console.log('got "kill_switch" message');
+    socket.on('kill', function(){
+        console.log('got "kill" message');
+        msg = vehicle.kill();
+        if (msg == null){
+            socket.emit('success');
+        } else {
+            socket.emit('failure', msg);
+        }
+    });
+    socket.on('unkill', function(){
+        console.log('got "unkill" message');
+        msg = vehicle.unkill();
+        if (msg == null){
+            socket.emit('success');
+        } else {
+            socket.emit('failure', msg);
+        }
     });
 });
 
