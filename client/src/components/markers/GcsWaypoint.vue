@@ -57,7 +57,8 @@ export default {
     data() {
         return {
             dragging: false,
-            highlighted: false
+            highlighted: false,
+            fillColor: {normal: 'yellow', hover: 'lime'},
         };
     },
 
@@ -78,10 +79,16 @@ export default {
 
         mouseover() {
             this.highlighted = true;
+            if (this.marker){
+                this.marker.setIcon(this.getIcon(this.fillColor.hover));
+            }
         },
 
         mouseout() {
             this.highlighted = false;
+            if (this.marker && !this.dragging){
+                this.marker.setIcon(this.getIcon(this.fillColor.normal));
+            }
         },
 
         dragstart() {
@@ -94,13 +101,13 @@ export default {
     },
 
     methods: {
-        getIcon(scale = this.scale, rotation = this.rotation) {
+        getIcon(fillColor = this.fillColor.normal, scale = this.scale, rotation = this.rotation) {
             return {
                 path: google.maps.SymbolPath.CIRCLE,
                 rotation: rotation,
                 scale: scale,
-                fillColor: 'yellow',
-                fillOpacity: 0.8,
+                fillColor: fillColor,
+                fillOpacity: 1,
                 strokeColor: 'white',
                 strokeWeight: 2
             };

@@ -34,7 +34,8 @@ export default {
 
     data() {
         return {
-            link: null
+            link: null,
+            strokeColor: {normal: 'black', hover: 'green'}
         };
     },
 
@@ -79,7 +80,7 @@ export default {
         initializeLink() {
             this.link = new google.maps.Polyline({
                 path: [this.start, this.end],
-                strokeColor: 'black',
+                strokeColor: this.strokeColor.normal,
                 strokeOpacity: 1,
                 strokeWeight: 3,
                 visible: this.visible,
@@ -89,6 +90,16 @@ export default {
                 let lat = Number( parseFloat(e.latLng.lat()).toFixed(7) );
                 let lng = Number( parseFloat(e.latLng.lng()).toFixed(7) );
                 this.$dispatch('waypointLink:click', this.index, lat, lng);
+            });
+            this.link.addListener('mouseover', () => {
+                if (this.link){
+                    this.link.setOptions({strokeColor: this.strokeColor.hover});
+                }
+            });
+            this.link.addListener('mouseout', () => {
+                if (this.link){
+                    this.link.setOptions({strokeColor: this.strokeColor.normal});
+                }
             });
         }
     },

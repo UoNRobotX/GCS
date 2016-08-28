@@ -140,7 +140,7 @@ export default {
             let nextIndex = (index > 0 ? index - 1 : this.mission.waypoints.length - 1);
             this.$broadcast('waypointLink:drag_end', nextIndex, lat, lng);
         },
-        
+
         'waypointLink:click'(index, lat, lng){
             if (!this.mapEditing) {
                 return;

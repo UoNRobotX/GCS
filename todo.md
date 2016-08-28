@@ -1,7 +1,6 @@
 # Todo list
 
 ## Stuff that needs doing
-* Add waypoint links (should form a closed path)
 * Implement saving and loading missions on server
 * Implement WAM-V message handling.
 * Implement fake WAM-V for testing.
@@ -14,6 +13,7 @@
 * Make stuff look better.
 
 ## Stuff that may need doing
+* Allow reordering waypoints?
 * Add vehicle message log.
 * Add ground station marker.
 * Allow specifying hold times for waypoints.
