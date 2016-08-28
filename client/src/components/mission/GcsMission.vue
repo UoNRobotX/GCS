@@ -31,20 +31,28 @@
                 class="no-waypoints" v-if="!mission.waypoints.length"
             >No waypoints for this mission. Click the map to add a waypoint.</p>
 
-            <gcs-waypoint
-                v-else v-for="(index, waypoint) in mission.waypoints" :index="index"
-                :label="toLetter(index + 1)" :title="waypoint.title" :type="waypoint.type"
-                :lat="waypoint.position.lat" :lng="waypoint.position.lng" :visible="waypoint.visible"
-                :rotation="waypoint.rotation" :scale="10" draggable
-
-                @delete="deleteWaypoint(index)"
-            ></gcs-waypoint>
+            <component v-else>
+                <gcs-waypoint
+                    v-for="(index, waypoint) in mission.waypoints" :index="index"
+                    :label="toLetter(index + 1)" :title="waypoint.title" :type="waypoint.type"
+                    :lat="waypoint.position.lat" :lng="waypoint.position.lng" :visible="waypoint.visible"
+                    :rotation="waypoint.rotation" :scale="10" draggable
+                    @delete="deleteWaypoint(index)"
+                ></gcs-waypoint>
+                <gcs-waypoint-link
+                    v-for="(index, waypoint) in mission.waypoints"
+                    :index="index"
+                    :start="waypoint.position"
+                    :end="mission.waypoints[(index+1) % mission.waypoints.length].position;"
+                ></gcs-waypoint-link>
+            </component>
         </div>
     </div>
 </template>
 
 <script>
 import GcsWaypoint from 'markers/GcsWaypoint.vue';
+import GcsWaypointLink from 'markers/GcsWaypointLink.vue';
 
 import element from 'util/element-scroll';
 import numberToLetter from 'util/number-to-letter';
@@ -121,6 +129,15 @@ export default {
 
         'map:rightclick'(e) {
             console.log('Map right-clicked', e);
+        },
+        
+        'waypoint:drag'(index, lat, lng){
+            this.mission.waypoints[index].position.lat = lat;
+            this.mission.waypoints[index].position.lng = lng;
+            //update waypoint links
+            this.$broadcast('waypointLink:drag_start', index, lat, lng);
+            let nextIndex = (index > 0 ? index - 1 : this.mission.waypoints.length - 1);
+            this.$broadcast('waypointLink:drag_end', nextIndex, lat, lng);
         }
     },
 
@@ -158,7 +175,8 @@ export default {
     },
 
     components: {
-        GcsWaypoint
+        GcsWaypoint,
+        GcsWaypointLink
     }
 };
 </script>

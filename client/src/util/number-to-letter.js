@@ -1,5 +1,5 @@
 export default function(number) {
-    if (number > 48) {
+    if (number > 52) {
         return '0';
     }
 
