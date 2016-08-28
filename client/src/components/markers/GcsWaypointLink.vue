@@ -86,11 +86,13 @@ export default {
                 map: this.map
             });
             this.link.addListener('click', (e) => {
-                console.log('clicked waypoint link');
+                let lat = Number( parseFloat(e.latLng.lat()).toFixed(7) );
+                let lng = Number( parseFloat(e.latLng.lng()).toFixed(7) );
+                this.$dispatch('waypointLink:click', this.index, lat, lng);
             });
         }
     },
-    
+
     events: {
         'waypointLink:drag_start'(index, lat, lng){
             if (this.index == index){

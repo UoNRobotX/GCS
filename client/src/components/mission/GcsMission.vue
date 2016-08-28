@@ -130,14 +130,33 @@ export default {
         'map:rightclick'(e) {
             console.log('Map right-clicked', e);
         },
-        
+
         'waypoint:drag'(index, lat, lng){
+            //update waypoint positions
             this.mission.waypoints[index].position.lat = lat;
             this.mission.waypoints[index].position.lng = lng;
             //update waypoint links
             this.$broadcast('waypointLink:drag_start', index, lat, lng);
             let nextIndex = (index > 0 ? index - 1 : this.mission.waypoints.length - 1);
             this.$broadcast('waypointLink:drag_end', nextIndex, lat, lng);
+        },
+        
+        'waypointLink:click'(index, lat, lng){
+            if (!this.mapEditing) {
+                return;
+            }
+            //insert new waypoint
+            let newWaypoint = {
+                title: null,
+                type: 'normal',
+                visible: true,
+                position: {
+                    lat,
+                    lng
+                }
+            };
+            this.mission.waypoints.splice(index+1, 0, newWaypoint);
+            // TODO: scroll to new waypoint?
         }
     },
 
