@@ -1,5 +1,5 @@
 <template>
-    <ul class="gcs-indicators" v-if="wamv != null">
+    <ul class="gcs-indicators" v-if="wamv.loaded">
         <li class="indicator heading">
             <ui-icon
                 icon="navigation" :style="{ transform: 'rotateZ(' + wamv.heading + 'deg)' }"

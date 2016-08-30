@@ -67,7 +67,7 @@ export default {
         },
 
         'map::pan-center'() {
-            if (this.wamv != null){
+            if (this.wamv.loaded){
                 this.map.panTo(this.wamv.position);
             }
         },

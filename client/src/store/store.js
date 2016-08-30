@@ -11,7 +11,16 @@ const initialState = {
     mapEl: null,
     mapLoaded: false,
     mapEditing: false,
-    wamv: null,
+    wamv: {
+        loaded: false,
+        position: {lat: -32.8883338, lng: 151.7075279},
+        heading:  0,
+        speed:    0,
+        battery:  100,
+        armed:    false,
+        mode:     'idle',
+        signal:   100
+    },
     config: config,
     settings: config.settings,
     settingsLoaded: false,

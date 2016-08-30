@@ -56,6 +56,7 @@ export default {
         });
         this.socket.on('status', (data) => {
             console.log('received "status" message');
+            data.loaded = true;
             this.setWamv(data);
         });
         this.socket.on('get_parameters', (data) => {
