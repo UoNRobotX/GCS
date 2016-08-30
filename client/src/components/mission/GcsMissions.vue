@@ -47,8 +47,8 @@ import {
     sendLoadMissions, failLoadMissions
 } from 'store/actions';
 import {
-    getMessageStateWaiting, getMessageStateSuccess, getMessageStateFailure,
     getMissions, getCurrentMissionIndex,
+    getMessageStateWaiting, getMessageStateSuccess, getMessageStateFailure,
     getSaveMissionsState, getSaveMissionsData,
     getLoadMissionsState, getLoadMissionsData,
 } from 'store/getters';
@@ -106,6 +106,7 @@ export default {
 
         showListingView() {
             this.currentView = 'listing';
+            this.setCurrentMissionIndex(-1);
         },
 
         addMission(){

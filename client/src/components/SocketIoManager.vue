@@ -138,7 +138,7 @@ export default {
                 }
             }
         },
-        
+
         loadMissionsState(state, oldState){
             if (state != oldState){
                 if (state == this.WAITING){
