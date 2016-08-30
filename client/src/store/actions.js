@@ -100,3 +100,24 @@ export function setCurrentMissionIndex({ dispatch, state }, index) {
 export function setParameters({ dispatch, state }, parameters) {
     dispatch('SET_PARAMETERS', parameters);
 }
+
+/**
+ * Send get_parameters message
+ */
+export function sendGetParameters({ dispatch, state }) {
+    dispatch('SEND_GET_PARAMETERS');
+}
+
+/**
+ * Indicate a successful response to a get_parameters message
+ */
+export function succeedGetParameters({ dispatch, state }, parameters) {
+    dispatch('SUCCEED_GET_PARAMETERS', parameters);
+}
+
+/**
+ * Indicate failure of a get_parameters message
+ */
+export function failGetParameters({ dispatch, state }, msg) {
+    dispatch('FAIL_GET_PARAMETERS', msg);
+}

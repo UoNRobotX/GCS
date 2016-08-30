@@ -37,3 +37,23 @@ export function getCurrentMissionIndex(state) {
 export function getParameters(state) {
     return state.parameters;
 }
+
+export function getMessageStateWaiting(state) {
+    return state.messageState.WAITING;
+}
+
+export function getMessageStateSuccess(state) {
+    return state.messageState.SUCCESS;
+}
+
+export function getMessageStateFailure(state) {
+    return state.messageState.FAILURE;
+}
+
+export function getGetParameterState(state) {
+    return state.messageState.get_parameters[0];
+}
+
+export function getGetParameterData(state) {
+    return state.messageState.get_parameters[1];
+}

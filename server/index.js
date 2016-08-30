@@ -195,7 +195,12 @@ io.on('connection', function(socket){
     //handle other messages
     socket.on('get_parameters', function(){
         console.log('got "get_parameters" message');
-        socket.emit('get_parameters', vehicle.getParameters());
+        var data = vehicle.getParameters();
+        if (typeof data == 'object'){
+            socket.emit('get_parameters', data);
+        } else {
+            socket.emit('failure', ['get_parameters', data]);
+        }
     });
     socket.on('set_parameter', function(data){
         console.log('got "set_parameter" message');

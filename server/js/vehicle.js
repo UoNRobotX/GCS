@@ -92,7 +92,7 @@ module.exports = function(){
             signal:   this.signal
         };
     };
-    //return paramters
+    //return parameters (returns a parameters object on success, or an error message)
     this.getParameters = function(){
         return this.parameters;
     };

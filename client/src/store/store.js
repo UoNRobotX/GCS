@@ -47,7 +47,32 @@ const initialState = {
         }
     ],
     currentMissionIndex: -1,
-    parameters: {}
+    parameters: {},
+    messageState: {
+        //constants for indicating state
+        INITIAL: 0,
+        WAITING: 1,
+        SUCCESS: 2,
+        FAILURE: 3,
+        //for a message type T below, T[0] specifies a state, and T[1] specifies data
+        //when a component wants to send a message of type T, T[0] is set to WAITING
+            //T[1] is set to the request data, if any
+        //when a server response is received, T[0] is set to SUCCESS, and T[1] to the response data
+            //if the request failed, T[0] is instead set to FAILURE, and T[1] to the failure message
+        get_parameters:   [0, null],
+        set_parameter:    [0, null],
+        save_missions:    [0, null],
+        load_missions:    [0, null],
+        upload_mission:   [0, null],
+        download_mission: [0, null],
+        arm:              [0, null],
+        disarm:           [0, null],
+        start_mission:    [0, null],
+        stop_mission:     [0, null],
+        resume_mission:   [0, null],
+        kill:             [0, null],
+        unkill:           [0, null]
+    }
 };
 
 const mutations = {
@@ -102,6 +127,20 @@ const mutations = {
 
     SET_PARAMETERS(state, parameters) {
         state.parameters = parameters;
+    },
+
+    SEND_GET_PARAMETERS(state) {
+        state.messageState.get_parameters.$set(0, state.messageState.WAITING);
+    },
+
+    SUCCEED_GET_PARAMETERS(state, parameters) {
+        state.messageState.get_parameters.$set(0, state.messageState.SUCCESS);
+        state.messageState.get_parameters.$set(1, parameters);
+    },
+
+    FAIL_GET_PARAMETERS(state, msg) {
+        state.messageState.get_parameters.$set(0, state.messageState.FAILURE);
+        state.messageState.get_parameters.$set(1, msg);
     },
 };
 
