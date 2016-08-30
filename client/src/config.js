@@ -5,8 +5,8 @@ export default {
     },
     map: {
         center: {
-            lat: -32.8883338,
-            lng: 151.7075279
+            lat: 21.308731,
+            lng: -157.888815
         },
         zoom: 19,
         disableDefaultUI: true,

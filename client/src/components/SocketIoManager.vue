@@ -8,8 +8,8 @@ import socket_io_client from 'socket.io-client';
 import {
     setWamv, setParameters,
     sendGetParameters, succeedGetParameters, failGetParameters,
+    sendLoadMissions,  succeedLoadMissions,  failLoadMissions,
     succeedSaveMissions,    failSaveMissions,
-    succeedLoadMissions,    failLoadMissions,
     succeedUploadMission,   failUploadMission,
     succeedDownloadMission, failDownloadMission,
     succeedStartMission,    failStartMission,
@@ -73,10 +73,11 @@ export default {
             sendGetParameters,
             succeedGetParameters,
             failGetParameters,
+            succeedLoadMissions,
+            sendLoadMissions,
+            failLoadMissions,
             succeedSaveMissions,
             failSaveMissions,
-            succeedLoadMissions,
-            failLoadMissions,
             succeedUploadMission,
             failUploadMission,
             succeedDownloadMission,
@@ -114,6 +115,13 @@ export default {
             setTimeout(() => {
                 if (this.getParameterState == this.WAITING){
                     this.failGetParameters('Timeout reached.');
+                }
+            }, 1000);
+            //load missions once at startup
+            this.sendLoadMissions();
+            setTimeout(() => {
+                if (this.loadMissionsState == this.WAITING){
+                    this.failLoadMissions('Timeout reached.');
                 }
             }, 1000);
         });

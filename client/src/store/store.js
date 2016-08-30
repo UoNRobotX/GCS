@@ -24,37 +24,7 @@ const initialState = {
     config: config,
     settings: config.settings,
     settingsLoaded: false,
-    missions: [
-        {
-            title: 'Mission 1',
-            description: null,
-            waypoints: []
-        }, {
-            title: 'Mission 2',
-            description: 'A special description for this mission',
-            waypoints: []
-        }, {
-            title: 'Mission 3',
-            description: null,
-            waypoints: [{
-                title: null,
-                type: 'normal',
-                visible: true,
-                position: {
-                    lat: -32.8882,
-                    lng: 151.7080
-                }
-            }, {
-                title: null,
-                type: 'normal',
-                visible: true,
-                position: {
-                    lat: -32.888091,
-                    lng: 151.7066267
-                }
-            }]
-        }
-    ],
+    missions: [],
     currentMissionIndex: -1,
     parameters: {},
     messageState: {
