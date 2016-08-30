@@ -3,7 +3,7 @@
         <div class="row">
             <ui-button @click="uploadMission">Upload Mission</ui-button>
         </div>
-        
+
         <div class="row">
             <ui-button @click="downloadMission">Download Mission</ui-button>
         </div>
@@ -29,30 +29,37 @@
 import {
     getWamv, getMissions, getCurrentMissionIndex,
     getMessageStateWaiting, getMessageStateSuccess, getMessageStateFailure,
-    getUploadMissionState, getUploadMissionData
+    getUploadMissionState, getUploadMissionData,
+    getDownloadMissionState, getDownloadMissionData
 } from 'store/getters';
 import {
-    setWamvArmed,
-    sendUploadMission, failUploadMission
+    setWamvArmed, setCurrentMission,
+    sendUploadMission, failUploadMission,
+    sendDownloadMission, failDownloadMission
 } from 'store/actions';
 
 export default {
     vuex: {
         getters: {
-            wamv:                getWamv,
-            missions:            getMissions,
-            WAITING:             getMessageStateWaiting,
-            SUCCESS:             getMessageStateSuccess,
-            FAILURE:             getMessageStateFailure,
-            currentMissionIndex: getCurrentMissionIndex,
-            uploadMissionState:  getUploadMissionState,
-            uploadMissionData:   getUploadMissionData
+            wamv:                 getWamv,
+            missions:             getMissions,
+            WAITING:              getMessageStateWaiting,
+            SUCCESS:              getMessageStateSuccess,
+            FAILURE:              getMessageStateFailure,
+            currentMissionIndex:  getCurrentMissionIndex,
+            uploadMissionState:   getUploadMissionState,
+            uploadMissionData:    getUploadMissionData,
+            downloadMissionState: getDownloadMissionState,
+            downloadMissionData:  getDownloadMissionData
         },
 
         actions: {
             setArmed: setWamvArmed,
+            setCurrentMission,
             sendUploadMission,
-            failUploadMission
+            failUploadMission,
+            sendDownloadMission,
+            failDownloadMission
         }
     },
 
@@ -79,10 +86,15 @@ export default {
             }, 1000);
         },
         downloadMission() {
-            // do the download
+            this.sendDownloadMission();
+            setTimeout(() => {
+                if (this.downloadMissionState == this.WAITING){
+                    this.failDownloadMission('Timeout reached.');
+                }
+            }, 1000);
         }
     },
-    
+
     watch: {
         uploadMissionState(state, oldState){
             if (state != oldState){
@@ -90,6 +102,16 @@ export default {
                     console.log('Mission uploaded.');
                 } else if (state == this.FAILURE){ //failure response
                     console.log('Unable to upload mission: ' + this.uploadMissionData);
+                }
+            }
+        },
+        downloadMissionState(state, oldState){
+            if (state != oldState){
+                if (state == this.SUCCESS){
+                    console.log('Mission downloaded.');
+                    this.setCurrentMission(this.downloadMissionData);
+                } else if (state == this.FAILURE){
+                    console.log('Unable to download mission: ' + this.downloadMissionData);
                 }
             }
         }

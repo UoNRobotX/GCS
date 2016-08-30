@@ -250,11 +250,11 @@ io.on('connection', function(socket){
     });
     socket.on('download_mission', function(){
         console.log('got "download_mission" message');
-        var mission = vehicle.getMission();
-        if (typeof mission == 'object'){
-            socket.emit('download_mission', mission);
+        var data = vehicle.getMission();
+        if (typeof data == 'object'){
+            socket.emit('download_mission', data);
         } else {
-            socket.emit('failure', ['download_mission', msg]);
+            socket.emit('failure', ['download_mission', data]);
         }
     });
     socket.on('arm', function(){

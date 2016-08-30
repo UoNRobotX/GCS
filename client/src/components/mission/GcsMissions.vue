@@ -47,7 +47,7 @@ import {
     sendLoadMissions, failLoadMissions
 } from 'store/actions';
 import {
-    getMissions, getCurrentMissionIndex,
+    getMissions, getCurrentMissionIndex, getCurrentMission,
     getMessageStateWaiting, getMessageStateSuccess, getMessageStateFailure,
     getSaveMissionsState, getSaveMissionsData,
     getLoadMissionsState, getLoadMissionsData,
@@ -58,6 +58,7 @@ export default {
         getters: {
             missions:            getMissions,
             currentMissionIndex: getCurrentMissionIndex,
+            currentMission:      getCurrentMission,
             WAITING:             getMessageStateWaiting,
             SUCCESS:             getMessageStateSuccess,
             FAILURE:             getMessageStateFailure,
@@ -90,12 +91,6 @@ export default {
                 { id: 'clear', text: 'Clear all' },
             ]
         };
-    },
-
-    computed: {
-        currentMission() {
-            return this.missions[this.currentMissionIndex];
-        }
     },
 
     methods: {

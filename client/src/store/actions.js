@@ -95,6 +95,13 @@ export function setCurrentMissionIndex({ dispatch, state }, index) {
 }
 
 /**
+ * Set the current mission
+ */
+export function setCurrentMission({ dispatch, state }, mission) {
+    dispatch('SET_CURRENT_MISSION', mission);
+}
+
+/**
  * Set the parameters
  */
 export function setParameters({ dispatch, state }, parameters) {
@@ -183,4 +190,25 @@ export function succeedUploadMission({ dispatch, state }) {
  */
 export function failUploadMission({ dispatch, state }, msg) {
     dispatch('FAIL_UPLOAD_MISSION', msg);
+}
+
+/**
+ * Send download_mission message
+ */
+export function sendDownloadMission({ dispatch, state }) {
+    dispatch('SEND_DOWNLOAD_MISSION');
+}
+
+/**
+ * Indicate a successful response to a download_mission message
+ */
+export function succeedDownloadMission({ dispatch, state }, mission) {
+    dispatch('SUCCEED_DOWNLOAD_MISSION', mission);
+}
+
+/**
+ * Indicate failure of a download_mission message
+ */
+export function failDownloadMission({ dispatch, state }, msg) {
+    dispatch('FAIL_DOWNLOAD_MISSION', msg);
 }

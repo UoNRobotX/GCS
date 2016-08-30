@@ -134,6 +134,10 @@ const mutations = {
         state.currentMissionIndex = index;
     },
 
+    SET_CURRENT_MISSION(state, mission) {
+        state.missions.$set(state.currentMissionIndex, mission);
+    },
+
     SET_PARAMETERS(state, parameters) {
         state.parameters = parameters;
     },
@@ -192,6 +196,20 @@ const mutations = {
     FAIL_UPLOAD_MISSION(state, msg) {
         state.messageState.upload_mission.$set(0, state.messageState.FAILURE);
         state.messageState.upload_mission.$set(1, msg);
+    },
+
+    SEND_DOWNLOAD_MISSION(state) {
+        state.messageState.download_mission.$set(0, state.messageState.WAITING);
+    },
+
+    SUCCEED_DOWNLOAD_MISSION(state, mission) {
+        state.messageState.download_mission.$set(0, state.messageState.SUCCESS);
+        state.messageState.download_mission.$set(1, mission);
+    },
+
+    FAIL_DOWNLOAD_MISSION(state, msg) {
+        state.messageState.download_mission.$set(0, state.messageState.FAILURE);
+        state.messageState.download_mission.$set(1, msg);
     },
 };
 

@@ -10,30 +10,34 @@ import {
     sendGetParameters, succeedGetParameters, failGetParameters,
     succeedSaveMissions, failSaveMissions,
     succeedLoadMissions, failLoadMissions,
-    succeedUploadMission, failUploadMission
+    succeedUploadMission, failUploadMission,
+    succeedDownloadMission, failDownloadMission
 } from 'store/actions';
 import {
     getMessageStateWaiting, getMessageStateSuccess, getMessageStateFailure,
     getGetParameterState, getGetParameterData,
     getSaveMissionsState, getSaveMissionsData,
     getLoadMissionsState, getLoadMissionsData,
-    getUploadMissionState, getUploadMissionData
+    getUploadMissionState, getUploadMissionData,
+    getDownloadMissionState, getDownloadMissionData
 } from 'store/getters';
 
 export default {
     vuex: {
         getters: {
-            WAITING:            getMessageStateWaiting,
-            SUCCESS:            getMessageStateSuccess,
-            FAILURE:            getMessageStateFailure,
-            getParameterState:  getGetParameterState,
-            getParameterData:   getGetParameterData,
-            saveMissionsState:  getSaveMissionsState,
-            saveMissionsData:   getSaveMissionsData,
-            loadMissionsState:  getLoadMissionsState,
-            loadMissionsData:   getLoadMissionsData,
-            uploadMissionState: getUploadMissionState,
-            uploadMissionData:  getUploadMissionData
+            WAITING:              getMessageStateWaiting,
+            SUCCESS:              getMessageStateSuccess,
+            FAILURE:              getMessageStateFailure,
+            getParameterState:    getGetParameterState,
+            getParameterData:     getGetParameterData,
+            saveMissionsState:    getSaveMissionsState,
+            saveMissionsData:     getSaveMissionsData,
+            loadMissionsState:    getLoadMissionsState,
+            loadMissionsData:     getLoadMissionsData,
+            uploadMissionState:   getUploadMissionState,
+            uploadMissionData:    getUploadMissionData,
+            downloadMissionState: getDownloadMissionState,
+            downloadMissionData:  getDownloadMissionData
         },
         actions: {
             setWamv,
@@ -46,7 +50,9 @@ export default {
             succeedLoadMissions,
             failLoadMissions,
             succeedUploadMission,
-            failUploadMission
+            failUploadMission,
+            succeedDownloadMission,
+            failDownloadMission
         }
     },
 
@@ -91,7 +97,9 @@ export default {
         });
         this.socket.on('download_mission', (data) => {
             console.log('received "download_mission" message:');
-            console.log(data);
+            if (this.downloadMissionState == this.WAITING){
+                this.succeedDownloadMission(data);
+            }
         });
         this.socket.on('success', (data) => {
             console.log('received "success" message');
@@ -118,6 +126,10 @@ export default {
                 }
                 case 'upload_mission': {
                     this.failUploadMission(data[1]);
+                    break;
+                }
+                case 'download_mission': {
+                    this.failDownloadMission(data[1]);
                     break;
                 }
             }
@@ -158,11 +170,19 @@ export default {
                 }
             }
         },
-        
+
         uploadMissionState(state, oldState){
             if (state != oldState){
                 if (state == this.WAITING){
                     this.socket.emit('upload_mission', this.uploadMissionData);
+                }
+            }
+        },
+
+        downloadMissionState(state, oldState){
+            if (state != oldState){
+                if (state == this.WAITING){
+                    this.socket.emit('download_mission');
                 }
             }
         }

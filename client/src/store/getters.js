@@ -34,6 +34,10 @@ export function getCurrentMissionIndex(state) {
     return state.currentMissionIndex;
 }
 
+export function getCurrentMission(state) {
+    return state.missions[state.currentMissionIndex];
+}
+
 export function getParameters(state) {
     return state.parameters;
 }
@@ -80,4 +84,12 @@ export function getUploadMissionState(state) {
 
 export function getUploadMissionData(state) {
     return state.messageState.upload_mission[1];
+}
+
+export function getDownloadMissionState(state) {
+    return state.messageState.download_mission[0];
+}
+
+export function getDownloadMissionData(state) {
+    return state.messageState.download_mission[1];
 }
