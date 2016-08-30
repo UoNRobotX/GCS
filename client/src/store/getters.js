@@ -65,3 +65,11 @@ export function getSaveMissionsState(state) {
 export function getSaveMissionsData(state) {
     return state.messageState.save_missions[1];
 }
+
+export function getLoadMissionsState(state) {
+    return state.messageState.load_missions[0];
+}
+
+export function getLoadMissionsData(state) {
+    return state.messageState.load_missions[1];
+}

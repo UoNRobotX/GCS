@@ -8,12 +8,14 @@ import socket_io_client from 'socket.io-client';
 import {
     setWamv, setParameters,
     sendGetParameters, succeedGetParameters, failGetParameters,
-    succeedSaveMissions, failSaveMissions
+    succeedSaveMissions, failSaveMissions,
+    succeedLoadMissions, failLoadMissions
 } from 'store/actions';
 import {
     getMessageStateWaiting, getMessageStateSuccess, getMessageStateFailure,
     getGetParameterState, getGetParameterData,
-    getSaveMissionsState, getSaveMissionsData
+    getSaveMissionsState, getSaveMissionsData,
+    getLoadMissionsState, getLoadMissionsData
 } from 'store/getters';
 
 export default {
@@ -25,7 +27,9 @@ export default {
             getParameterState: getGetParameterState,
             getParameterData:  getGetParameterData,
             saveMissionsState: getSaveMissionsState,
-            saveMissionsData:  getSaveMissionsData
+            saveMissionsData:  getSaveMissionsData,
+            loadMissionsState:   getLoadMissionsState,
+            loadMissionsData:    getLoadMissionsData
         },
         actions: {
             setWamv,
@@ -34,7 +38,9 @@ export default {
             succeedGetParameters,
             failGetParameters,
             succeedSaveMissions,
-            failSaveMissions
+            failSaveMissions,
+            succeedLoadMissions,
+            failLoadMissions
         }
     },
 
@@ -66,14 +72,16 @@ export default {
             this.setWamv(data);
         });
         this.socket.on('get_parameters', (data) => {
-            console.log('received "get_parameters" message:');
+            console.log('received "get_parameters" message');
             if (this.getParameterState == this.WAITING){
                 this.succeedGetParameters(data);
             }
         });
         this.socket.on('load_missions', (data) => {
-            console.log('received "load_missions" message:');
-            console.log(data);
+            console.log('received "load_missions" message');
+            if (this.loadMissionsState == this.WAITING){
+                this.succeedLoadMissions(data);
+            }
         });
         this.socket.on('download_mission', (data) => {
             console.log('received "download_mission" message:');
@@ -81,16 +89,25 @@ export default {
         });
         this.socket.on('success', (data) => {
             console.log('received "success" message');
-            if (data == 'save_missions'){
+            if (data == 'save_missions' && this.saveMissionsState == this.WAITING){
                 this.succeedSaveMissions();
             }
         });
         this.socket.on('failure', (data) => {
             console.log('received "failure" message');
-            if (data[0] == 'get_parameters'){
-                this.failGetParameters(data[1]);
-            } else if (data[0] == 'save_missions'){
-                this.failSaveMissions(data[1]);
+            switch (data[0]){
+                case 'get_parameters': {
+                    this.failGetParameters(data[1]);
+                    break;
+                }
+                case 'save_missions': {
+                    this.failSaveMissions(data[1]);
+                    break;
+                }
+                case 'load_missions': {
+                    this.failLoadMissions(data[1]);
+                    break;
+                }
             }
             console.log(data);
         });
@@ -108,16 +125,24 @@ export default {
                     this.socket.emit('get_parameters');
                 } else if (state == this.SUCCESS){ //successful response
                     this.setParameters(this.getParameterData);
-                } else if (state == this.FAILURE){ //invalid response
+                } else if (state == this.FAILURE){ //failure response
                     console.log('Unable to get parameters: ' + this.getParameterData);
                 }
             }
         },
-        
+
         saveMissionsState(state, oldState){
             if (state != oldState){
                 if (state == this.WAITING){
                     this.socket.emit('save_missions', this.saveMissionsData);
+                }
+            }
+        },
+        
+        loadMissionsState(state, oldState){
+            if (state != oldState){
+                if (state == this.WAITING){
+                    this.socket.emit('load_missions');
                 }
             }
         }

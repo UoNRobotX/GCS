@@ -142,3 +142,24 @@ export function succeedSaveMissions({ dispatch, state }) {
 export function failSaveMissions({ dispatch, state }, msg) {
     dispatch('FAIL_SAVE_MISSIONS', msg);
 }
+
+/**
+ * Send load_missions message
+ */
+export function sendLoadMissions({ dispatch, state }) {
+    dispatch('SEND_LOAD_MISSIONS');
+}
+
+/**
+ * Indicate a successful response to a load_missions message
+ */
+export function succeedLoadMissions({ dispatch, state }, missions) {
+    dispatch('SUCCEED_LOAD_MISSIONS', missions);
+}
+
+/**
+ * Indicate failure of a load_missions message
+ */
+export function failLoadMissions({ dispatch, state }, msg) {
+    dispatch('FAIL_LOAD_MISSIONS', msg);
+}

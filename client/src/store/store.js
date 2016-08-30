@@ -165,6 +165,20 @@ const mutations = {
         state.messageState.save_missions.$set(0, state.messageState.FAILURE);
         state.messageState.save_missions.$set(1, msg);
     },
+
+    SEND_LOAD_MISSIONS(state) {
+        state.messageState.load_missions.$set(0, state.messageState.WAITING);
+    },
+
+    SUCCEED_LOAD_MISSIONS(state, missions) {
+        state.messageState.load_missions.$set(0, state.messageState.SUCCESS);
+        state.messageState.load_missions.$set(1, missions);
+    },
+
+    FAIL_LOAD_MISSIONS(state, msg) {
+        state.messageState.load_missions.$set(0, state.messageState.FAILURE);
+        state.messageState.load_missions.$set(1, msg);
+    },
 };
 
 export default new Vuex.Store({

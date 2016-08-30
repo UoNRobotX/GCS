@@ -43,12 +43,14 @@ import GcsMissionRow from 'mission/GcsMissionRow.vue';
 
 import {
     setMissions, setCurrentMissionIndex,
-    sendSaveMissions, failSaveMissions
+    sendSaveMissions, failSaveMissions,
+    sendLoadMissions, failLoadMissions
 } from 'store/actions';
 import {
     getMessageStateWaiting, getMessageStateSuccess, getMessageStateFailure,
     getMissions, getCurrentMissionIndex,
-    getSaveMissionsState, getSaveMissionsData
+    getSaveMissionsState, getSaveMissionsData,
+    getLoadMissionsState, getLoadMissionsData,
 } from 'store/getters';
 
 export default {
@@ -60,14 +62,18 @@ export default {
             missions:            getMissions,
             currentMissionIndex: getCurrentMissionIndex,
             saveMissionsState:   getSaveMissionsState,
-            saveMissionsData:    getSaveMissionsData
+            saveMissionsData:    getSaveMissionsData,
+            loadMissionsState:   getLoadMissionsState,
+            loadMissionsData:    getLoadMissionsData
         },
 
         actions: {
             setMissions,
             setCurrentMissionIndex,
             sendSaveMissions,
-            failSaveMissions
+            failSaveMissions,
+            sendLoadMissions,
+            failLoadMissions
         }
     },
 
@@ -113,7 +119,6 @@ export default {
         menuOptionSelected(option){
             switch (option.id){
                 case 'save': {
-                    console.log('save mission list');
                     this.sendSaveMissions(this.missions);
                     setTimeout(() => {
                         if (this.saveMissionsState == this.WAITING){
@@ -123,7 +128,12 @@ export default {
                     break;
                 }
                 case 'load': {
-                    console.log('load mission list');
+                    this.sendLoadMissions(this.missions);
+                    setTimeout(() => {
+                        if (this.loadMissionsState == this.WAITING){
+                            this.failLoadMissions('Timeout reached.');
+                        }
+                    }, 1000);
                     break;
                 }
                 case 'import': {
@@ -172,14 +182,24 @@ export default {
             }
         }
     },
-    
+
     watch: {
         saveMissionsState(state, oldState){
             if (state != oldState){
                 if (state == this.SUCCESS){ //successful response
                     console.log('Missions saved.');
-                } else if (state == this.FAILURE){ //invalid response
+                } else if (state == this.FAILURE){ //failure response
                     console.log('Unable to save missions: ' + this.saveMissionsData);
+                }
+            }
+        },
+        loadMissionsState(state, oldState){
+            if (state != oldState){
+                if (state == this.SUCCESS){
+                    this.setMissions(this.loadMissionsData);
+                    console.log('Missions loaded.');
+                } else if (state == this.FAILURE){
+                    console.log('Unable to load missions: ' + this.loadMissionsData);
                 }
             }
         }
