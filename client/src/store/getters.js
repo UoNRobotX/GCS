@@ -93,3 +93,27 @@ export function getDownloadMissionState(state) {
 export function getDownloadMissionData(state) {
     return state.messageState.download_mission[1];
 }
+
+export function getStartMissionState(state) {
+    return state.messageState.start_mission[0];
+}
+
+export function getStartMissionData(state) {
+    return state.messageState.start_mission[1];
+}
+
+export function getStopMissionState(state) {
+    return state.messageState.stop_mission[0];
+}
+
+export function getStopMissionData(state) {
+    return state.messageState.stop_mission[1];
+}
+
+export function getResumeMissionState(state) {
+    return state.messageState.resume_mission[0];
+}
+
+export function getResumeMissionData(state) {
+    return state.messageState.resume_mission[1];
+}

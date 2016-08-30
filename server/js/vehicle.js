@@ -177,12 +177,8 @@ module.exports = function(){
         if (this.mission == null){
             return 'No current mission.';
         }
-        if (this.mode == 'paused'){
-            if (fromBeginning){
-                this.missionIndex = 0;
-            } else {
-                return 'Not in the middle of doing a mission.';
-            }
+        if (this.mode == 'paused' && fromBeginning){
+            this.missionIndex = 0;
         }
         this.mode = 'auto';
         this.speed = this.SPEED;

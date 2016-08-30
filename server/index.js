@@ -192,7 +192,7 @@ io.on('connection', function(socket){
         var data = vehicle.getStatusData();
         socket.volatile.emit('status', data); //'volatile' allows the message to be dropped
         console.log('sent status message to: ' + host);
-    }, 3000);
+    }, 500);
     //handle other messages
     socket.on('get_parameters', function(){
         console.log('got "get_parameters" message');

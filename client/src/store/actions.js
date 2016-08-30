@@ -212,3 +212,66 @@ export function succeedDownloadMission({ dispatch, state }, mission) {
 export function failDownloadMission({ dispatch, state }, msg) {
     dispatch('FAIL_DOWNLOAD_MISSION', msg);
 }
+
+/**
+ * Send start_mission message
+ */
+export function sendStartMission({ dispatch, state }) {
+    dispatch('SEND_START_MISSION');
+}
+
+/**
+ * Indicate a successful response to a start_mission message
+ */
+export function succeedStartMission({ dispatch, state }) {
+    dispatch('SUCCEED_START_MISSION');
+}
+
+/**
+ * Indicate failure of a start_mission message
+ */
+export function failStartMission({ dispatch, state }, msg) {
+    dispatch('FAIL_START_MISSION', msg);
+}
+
+/**
+ * Send stop_mission message
+ */
+export function sendStopMission({ dispatch, state }) {
+    dispatch('SEND_STOP_MISSION');
+}
+
+/**
+ * Indicate a successful response to a stop_mission message
+ */
+export function succeedStopMission({ dispatch, state }) {
+    dispatch('SUCCEED_STOP_MISSION');
+}
+
+/**
+ * Indicate failure of a stop_mission message
+ */
+export function failStopMission({ dispatch, state }, msg) {
+    dispatch('FAIL_STOP_MISSION', msg);
+}
+
+/**
+ * Send resume_mission message
+ */
+export function sendResumeMission({ dispatch, state }) {
+    dispatch('SEND_RESUME_MISSION');
+}
+
+/**
+ * Indicate a successful response to a resume_mission message
+ */
+export function succeedResumeMission({ dispatch, state }) {
+    dispatch('SUCCEED_RESUME_MISSION');
+}
+
+/**
+ * Indicate failure of a resume_mission message
+ */
+export function failResumeMission({ dispatch, state }, msg) {
+    dispatch('FAIL_RESUME_MISSION', msg);
+}

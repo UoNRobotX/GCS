@@ -11,7 +11,10 @@ import {
     succeedSaveMissions, failSaveMissions,
     succeedLoadMissions, failLoadMissions,
     succeedUploadMission, failUploadMission,
-    succeedDownloadMission, failDownloadMission
+    succeedDownloadMission, failDownloadMission,
+    succeedStartMission, failStartMission,
+    succeedStopMission, failStopMission,
+    succeedResumeMission, failResumeMission
 } from 'store/actions';
 import {
     getMessageStateWaiting, getMessageStateSuccess, getMessageStateFailure,
@@ -19,7 +22,10 @@ import {
     getSaveMissionsState, getSaveMissionsData,
     getLoadMissionsState, getLoadMissionsData,
     getUploadMissionState, getUploadMissionData,
-    getDownloadMissionState, getDownloadMissionData
+    getDownloadMissionState, getDownloadMissionData,
+    getStartMissionState, getStartMissionData,
+    getStopMissionState, getStopMissionData,
+    getResumeMissionState, getResumeMissionData
 } from 'store/getters';
 
 export default {
@@ -37,7 +43,13 @@ export default {
             uploadMissionState:   getUploadMissionState,
             uploadMissionData:    getUploadMissionData,
             downloadMissionState: getDownloadMissionState,
-            downloadMissionData:  getDownloadMissionData
+            downloadMissionData:  getDownloadMissionData,
+            startMissionState:    getStartMissionState,
+            startMissionData:     getStartMissionData,
+            stopMissionState:     getStopMissionState,
+            stopMissionData:      getStopMissionData,
+            resumeMissionState:   getResumeMissionState,
+            resumeMissionData:    getResumeMissionData,
         },
         actions: {
             setWamv,
@@ -52,7 +64,13 @@ export default {
             succeedUploadMission,
             failUploadMission,
             succeedDownloadMission,
-            failDownloadMission
+            failDownloadMission,
+            succeedStartMission,
+            failStartMission,
+            succeedStopMission,
+            failStopMission,
+            succeedResumeMission,
+            failResumeMission
         }
     },
 
@@ -107,6 +125,12 @@ export default {
                 this.succeedSaveMissions();
             } else if (data == 'upload_mission' && this.uploadMissionState == this.WAITING){
                 this.succeedUploadMission();
+            } else if (data == 'start_mission' && this.startMissionState == this.WAITING){
+                this.succeedStartMission();
+            } else if (data == 'stop_mission' && this.stopMissionState == this.WAITING){
+                this.succeedStopMission();
+            } else if (data == 'resume_mission' && this.resumeMissionState == this.WAITING){
+                this.succeedResumeMission();
             }
         });
         this.socket.on('failure', (data) => {
@@ -132,12 +156,23 @@ export default {
                     this.failDownloadMission(data[1]);
                     break;
                 }
+                case 'start_mission': {
+                    this.failStartMission(data[1]);
+                    break;
+                }
+                case 'stop_mission': {
+                    this.failStopMission(data[1]);
+                    break;
+                }
+                case 'resume_mission': {
+                    this.failResumeMission(data[1]);
+                    break;
+                }
             }
             console.log(data);
         });
         this.socket.on('attention', (data) => {
-            console.log('received "attention" message');
-            console.log(data);
+            console.log('Attention: ' + data);
         });
     },
 
@@ -183,6 +218,30 @@ export default {
             if (state != oldState){
                 if (state == this.WAITING){
                     this.socket.emit('download_mission');
+                }
+            }
+        },
+
+        startMissionState(state, oldState){
+            if (state != oldState){
+                if (state == this.WAITING){
+                    this.socket.emit('start_mission');
+                }
+            }
+        },
+
+        stopMissionState(state, oldState){
+            if (state != oldState){
+                if (state == this.WAITING){
+                    this.socket.emit('stop_mission');
+                }
+            }
+        },
+
+        resumeMissionState(state, oldState){
+            if (state != oldState){
+                if (state == this.WAITING){
+                    this.socket.emit('resume_mission');
                 }
             }
         }

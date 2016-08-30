@@ -9,7 +9,18 @@
         </div>
 
         <div class="row">
-            <ui-button>Start</ui-button>
+            <ui-button
+                v-if="wamv.mode == 'idle' || wamv.mode == 'paused'"
+                @click="startMission"
+            >Start</ui-button>
+            <ui-button
+                v-if="wamv.mode == 'paused'"
+                @click="resumeMission"
+            >Resume</ui-button>
+            <ui-button
+                v-if="wamv.mode == 'auto'"
+                @click="stopMission"
+            >Stop</ui-button>
         </div>
 
         <div class="row" v-if="wamv.loaded">
@@ -30,12 +41,18 @@ import {
     getWamv, getMissions, getCurrentMissionIndex,
     getMessageStateWaiting, getMessageStateSuccess, getMessageStateFailure,
     getUploadMissionState, getUploadMissionData,
-    getDownloadMissionState, getDownloadMissionData
+    getDownloadMissionState, getDownloadMissionData,
+    getStartMissionState, getStartMissionData,
+    getStopMissionState, getStopMissionData,
+    getResumeMissionState, getResumeMissionData
 } from 'store/getters';
 import {
     setWamvArmed, setCurrentMission,
     sendUploadMission, failUploadMission,
-    sendDownloadMission, failDownloadMission
+    sendDownloadMission, failDownloadMission,
+    sendStartMission, failStartMission,
+    sendStopMission, failStopMission,
+    sendResumeMission, failResumeMission
 } from 'store/actions';
 
 export default {
@@ -50,7 +67,13 @@ export default {
             uploadMissionState:   getUploadMissionState,
             uploadMissionData:    getUploadMissionData,
             downloadMissionState: getDownloadMissionState,
-            downloadMissionData:  getDownloadMissionData
+            downloadMissionData:  getDownloadMissionData,
+            startMissionState:    getStartMissionState,
+            startMissionData:     getStartMissionData,
+            stopMissionState:     getStopMissionState,
+            stopMissionData:      getStopMissionData,
+            resumeMissionState:   getResumeMissionState,
+            resumeMissionData:    getResumeMissionData
         },
 
         actions: {
@@ -59,7 +82,13 @@ export default {
             sendUploadMission,
             failUploadMission,
             sendDownloadMission,
-            failDownloadMission
+            failDownloadMission,
+            sendStartMission,
+            failStartMission,
+            sendStopMission,
+            failStopMission,
+            sendResumeMission,
+            failResumeMission
         }
     },
 
@@ -92,6 +121,30 @@ export default {
                     this.failDownloadMission('Timeout reached.');
                 }
             }, 1000);
+        },
+        startMission(){
+            this.sendStartMission();
+            setTimeout(() => {
+                if (this.startMissionState == this.WAITING){
+                    this.failStartMission('Timeout reached.');
+                }
+            }, 1000);
+        },
+        stopMission(){
+            this.sendStopMission();
+            setTimeout(() => {
+                if (this.stopMissionState == this.WAITING){
+                    this.failStopMission('Timeout reached.');
+                }
+            }, 1000);
+        },
+        resumeMission(){
+            this.sendResumeMission();
+            setTimeout(() => {
+                if (this.resumeMissionState == this.WAITING){
+                    this.failResumeMission('Timeout reached.');
+                }
+            }, 1000);
         }
     },
 
@@ -112,6 +165,33 @@ export default {
                     this.setCurrentMission(this.downloadMissionData);
                 } else if (state == this.FAILURE){
                     console.log('Unable to download mission: ' + this.downloadMissionData);
+                }
+            }
+        },
+        startMissionState(state, oldState){
+            if (state != oldState){
+                if (state == this.SUCCESS){
+                    console.log('Mission started.');
+                } else if (state == this.FAILURE){
+                    console.log('Unable to start mission: ' + this.startMissionData);
+                }
+            }
+        },
+        stopMissionState(state, oldState){
+            if (state != oldState){
+                if (state == this.SUCCESS){
+                    console.log('Mission stopped.');
+                } else if (state == this.FAILURE){
+                    console.log('Unable to stop mission: ' + this.stopMissionData);
+                }
+            }
+        },
+        resumeMissionState(state, oldState){
+            if (state != oldState){
+                if (state == this.SUCCESS){
+                    console.log('Mission resumed.');
+                } else if (state == this.FAILURE){
+                    console.log('Unable to resume mission: ' + this.resumeMissionData);
                 }
             }
         }

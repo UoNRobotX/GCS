@@ -211,6 +211,45 @@ const mutations = {
         state.messageState.download_mission.$set(0, state.messageState.FAILURE);
         state.messageState.download_mission.$set(1, msg);
     },
+
+    SEND_START_MISSION(state) {
+        state.messageState.start_mission.$set(0, state.messageState.WAITING);
+    },
+
+    SUCCEED_START_MISSION(state) {
+        state.messageState.start_mission.$set(0, state.messageState.SUCCESS);
+    },
+
+    FAIL_START_MISSION(state, msg) {
+        state.messageState.start_mission.$set(0, state.messageState.FAILURE);
+        state.messageState.start_mission.$set(1, msg);
+    },
+
+    SEND_STOP_MISSION(state) {
+        state.messageState.stop_mission.$set(0, state.messageState.WAITING);
+    },
+
+    SUCCEED_STOP_MISSION(state) {
+        state.messageState.stop_mission.$set(0, state.messageState.SUCCESS);
+    },
+
+    FAIL_STOP_MISSION(state, msg) {
+        state.messageState.stop_mission.$set(0, state.messageState.FAILURE);
+        state.messageState.stop_mission.$set(1, msg);
+    },
+
+    SEND_RESUME_MISSION(state) {
+        state.messageState.resume_mission.$set(0, state.messageState.WAITING);
+    },
+
+    SUCCEED_RESUME_MISSION(state) {
+        state.messageState.resume_mission.$set(0, state.messageState.SUCCESS);
+    },
+
+    FAIL_RESUME_MISSION(state, msg) {
+        state.messageState.resume_mission.$set(0, state.messageState.FAILURE);
+        state.messageState.resume_mission.$set(1, msg);
+    },
 };
 
 export default new Vuex.Store({
