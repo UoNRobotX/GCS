@@ -133,3 +133,19 @@ export function getDisarmState(state) {
 export function getDisarmData(state) {
     return state.messageState.disarm[1];
 }
+
+export function getKillState(state) {
+    return state.messageState.kill[0];
+}
+
+export function getKillData(state) {
+    return state.messageState.kill[1];
+}
+
+export function getUnkillState(state) {
+    return state.messageState.unkill[0];
+}
+
+export function getUnkillData(state) {
+    return state.messageState.unkill[1];
+}

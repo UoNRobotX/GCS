@@ -317,3 +317,45 @@ export function succeedDisarm({ dispatch, state }) {
 export function failDisarm({ dispatch, state }, msg) {
     dispatch('FAIL_DISARM', msg);
 }
+
+/**
+ * Send kill message
+ */
+export function sendKill({ dispatch, state }) {
+    dispatch('SEND_KILL');
+}
+
+/**
+ * Indicate a successful response to a kill message
+ */
+export function succeedKill({ dispatch, state }) {
+    dispatch('SUCCEED_KILL');
+}
+
+/**
+ * Indicate failure of a kill message
+ */
+export function failKill({ dispatch, state }, msg) {
+    dispatch('FAIL_KILL', msg);
+}
+
+/**
+ * Send unkill message
+ */
+export function sendUnkill({ dispatch, state }) {
+    dispatch('SEND_UNKILL');
+}
+
+/**
+ * Indicate a successful response to a unkill message
+ */
+export function succeedUnkill({ dispatch, state }) {
+    dispatch('SUCCEED_UNKILL');
+}
+
+/**
+ * Indicate failure of a unkill message
+ */
+export function failUnkill({ dispatch, state }, msg) {
+    dispatch('FAIL_UNKILL', msg);
+}

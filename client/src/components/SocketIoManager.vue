@@ -8,28 +8,32 @@ import socket_io_client from 'socket.io-client';
 import {
     setWamv, setParameters,
     sendGetParameters, succeedGetParameters, failGetParameters,
-    succeedSaveMissions, failSaveMissions,
-    succeedLoadMissions, failLoadMissions,
-    succeedUploadMission, failUploadMission,
+    succeedSaveMissions,    failSaveMissions,
+    succeedLoadMissions,    failLoadMissions,
+    succeedUploadMission,   failUploadMission,
     succeedDownloadMission, failDownloadMission,
-    succeedStartMission, failStartMission,
-    succeedStopMission, failStopMission,
-    succeedResumeMission, failResumeMission,
-    succeedArm, failArm,
-    succeedDisarm, failDisarm
+    succeedStartMission,    failStartMission,
+    succeedStopMission,     failStopMission,
+    succeedResumeMission,   failResumeMission,
+    succeedArm,             failArm,
+    succeedDisarm,          failDisarm,
+    succeedKill,            failKill,
+    succeedUnkill,          failUnkill
 } from 'store/actions';
 import {
     getMessageStateWaiting, getMessageStateSuccess, getMessageStateFailure,
-    getGetParameterState, getGetParameterData,
-    getSaveMissionsState, getSaveMissionsData,
-    getLoadMissionsState, getLoadMissionsData,
-    getUploadMissionState, getUploadMissionData,
+    getGetParameterState,    getGetParameterData,
+    getSaveMissionsState,    getSaveMissionsData,
+    getLoadMissionsState,    getLoadMissionsData,
+    getUploadMissionState,   getUploadMissionData,
     getDownloadMissionState, getDownloadMissionData,
-    getStartMissionState, getStartMissionData,
-    getStopMissionState, getStopMissionData,
-    getResumeMissionState, getResumeMissionData,
-    getArmState, getArmData,
-    getDisarmState, getDisarmData
+    getStartMissionState,    getStartMissionData,
+    getStopMissionState,     getStopMissionData,
+    getResumeMissionState,   getResumeMissionData,
+    getArmState,             getArmData,
+    getDisarmState,          getDisarmData,
+    getKillState,            getKillData,
+    getUnkillState,          getUnkillData
 } from 'store/getters';
 
 export default {
@@ -57,7 +61,11 @@ export default {
             armState:             getArmState,
             armData:              getArmData,
             disarmState:          getDisarmState,
-            disarmData:           getDisarmData
+            disarmData:           getDisarmData,
+            killState:            getKillState,
+            killData:             getKillData,
+            unkillState:          getUnkillState,
+            unkillData:           getUnkillData
         },
         actions: {
             setWamv,
@@ -82,7 +90,11 @@ export default {
             succeedArm,
             failArm,
             succeedDisarm,
-            failDisarm
+            failDisarm,
+            succeedKill,
+            failKill,
+            succeedUnkill,
+            failUnkill
         }
     },
 
@@ -147,6 +159,10 @@ export default {
                 this.succeedArm();
             } else if (data == 'disarm' && this.disarmState == this.WAITING){
                 this.succeedDisarm();
+            } else if (data == 'kill' && this.killState == this.WAITING){
+                this.succeedKill();
+            } else if (data == 'unkill' && this.unkillState == this.WAITING){
+                this.succeedUnkill();
             }
         });
         this.socket.on('failure', (data) => {
@@ -190,6 +206,14 @@ export default {
                 }
                 case 'disarm': {
                     this.failDisarm(data[1]);
+                    break;
+                }
+                case 'kill': {
+                    this.failKill(data[1]);
+                    break;
+                }
+                case 'unkill': {
+                    this.failUnkill(data[1]);
                     break;
                 }
             }
@@ -283,7 +307,23 @@ export default {
                     this.socket.emit('disarm');
                 }
             }
-        }
+        },
+
+        killState(state, oldState){
+            if (state != oldState){
+                if (state == this.WAITING){
+                    this.socket.emit('kill');
+                }
+            }
+        },
+
+        unkillState(state, oldState){
+            if (state != oldState){
+                if (state == this.WAITING){
+                    this.socket.emit('unkill');
+                }
+            }
+        },
     }
 }
 </script>

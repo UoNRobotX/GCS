@@ -208,6 +208,7 @@ module.exports = function(){
             return 'Kill switch is not active';
         }
         this.mode = 'idle';
+        this.missionIndex = 0;
         return null;
     }
 }

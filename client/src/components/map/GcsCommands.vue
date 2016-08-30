@@ -31,7 +31,12 @@
         </div>
 
         <div class="row">
-            <ui-button color="danger">Kill</ui-button>
+            <ui-button color="danger"
+                v-if="wamv.mode != 'killed'" @click="kill"
+            >Kill</ui-button>
+            <ui-button
+                v-if="wamv.mode == 'killed'" @click="unkill"
+            >Unkill</ui-button>
         </div>
     </div>
 </template>
@@ -46,7 +51,9 @@ import {
     getStopMissionState, getStopMissionData,
     getResumeMissionState, getResumeMissionData,
     getArmState, getArmData,
-    getDisarmState, getDisarmData
+    getDisarmState, getDisarmData,
+    getKillState, getKillData,
+    getUnkillState, getUnkillData
 } from 'store/getters';
 import {
     setWamvArmed, setCurrentMission,
@@ -56,7 +63,9 @@ import {
     sendStopMission, failStopMission,
     sendResumeMission, failResumeMission,
     sendArm, failArm,
-    sendDisarm, failDisarm
+    sendDisarm, failDisarm,
+    sendKill, failKill,
+    sendUnkill, failUnkill
 } from 'store/actions';
 
 export default {
@@ -81,7 +90,11 @@ export default {
             armState:             getArmState,
             armData:              getArmData,
             disarmState:          getDisarmState,
-            disarmData:           getDisarmData
+            disarmData:           getDisarmData,
+            killState:            getKillState,
+            killData:             getKillData,
+            unkillState:          getUnkillState,
+            unkillData:           getUnkillData,
         },
 
         actions: {
@@ -100,7 +113,11 @@ export default {
             sendArm,
             failArm,
             sendDisarm,
-            failDisarm
+            failDisarm,
+            sendKill,
+            failKill,
+            sendUnkill,
+            failUnkill
         }
     },
 
@@ -172,6 +189,22 @@ export default {
                     this.failResumeMission('Timeout reached.');
                 }
             }, 1000);
+        },
+        kill(){
+            this.sendKill();
+            setTimeout(() => {
+                if (this.killState == this.WAITING){
+                    this.failKill('Timeout reached.');
+                }
+            }, 1000);
+        },
+        unkill(){
+            this.sendUnkill();
+            setTimeout(() => {
+                if (this.unkillState == this.WAITING){
+                    this.failUnkill('Timeout reached.');
+                }
+            }, 1000);
         }
     },
 
@@ -240,6 +273,24 @@ export default {
                 }
             }
         },
+        killState(state, oldState){
+            if (state != oldState){
+                if (state == this.SUCCESS){
+                    console.log('Kill switch activated.');
+                } else if (state == this.FAILURE){
+                    console.log('Unable to activate kill switch: ' + this.killData);
+                }
+            }
+        },
+        unkillState(state, oldState){
+            if (state != oldState){
+                if (state == this.SUCCESS){
+                    console.log('Kill switch deactivated.');
+                } else if (state == this.FAILURE){
+                    console.log('Unable to deactivate kill switch: ' + this.unkillData);
+                }
+            }
+        }
     }
 };
 </script>
