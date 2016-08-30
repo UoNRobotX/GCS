@@ -129,7 +129,7 @@ export default {
             console.log('disconnected from server');
         });
         this.socket.on('status', (data) => {
-            console.log('received "status" message');
+            //console.log('received "status" message');
             data.loaded = true;
             this.setWamv(data);
         });

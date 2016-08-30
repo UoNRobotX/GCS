@@ -186,13 +186,13 @@ io.on('connection', function(socket){
         if (msg != null){
             socket.emit('attention', msg);
         }
-    }, 300);
+    }, 50);
     //periodically send vehicle status information
     statusTimer = setInterval(function(){
         var data = vehicle.getStatusData();
         socket.volatile.emit('status', data); //'volatile' allows the message to be dropped
-        console.log('sent status message to: ' + host);
-    }, 500);
+        //console.log('sent status message to: ' + host);
+    }, 50);
     //handle other messages
     socket.on('get_parameters', function(){
         console.log('got "get_parameters" message');
