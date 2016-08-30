@@ -33,3 +33,7 @@ export function getMissions(state) {
 export function getCurrentMissionIndex(state) {
     return state.currentMissionIndex;
 }
+
+export function getParameters(state) {
+    return state.parameters;
+}

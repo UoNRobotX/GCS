@@ -1,5 +1,5 @@
 <template>
-    <ul class="gcs-indicators">
+    <ul class="gcs-indicators" v-if="wamv != null">
         <li class="indicator heading">
             <ui-icon
                 icon="navigation" :style="{ transform: 'rotateZ(' + wamv.heading + 'deg)' }"
@@ -36,19 +36,23 @@ export default {
 
     computed: {
         heading() {
-            return this.wamv.heading + '&deg; ' + this.degreeToToCardinal(this.wamv.heading);
+            let deg = Math.round(this.wamv.heading); //0 decimal places
+            return deg + '&deg; ' + this.degreeToToCardinal(this.wamv.heading);
         },
 
         speed() {
+            let spd = Math.round(this.wamv.speed*100)/100; //2 decimal places
             return this.wamv.speed + ' KMPH';
         },
 
         battery() {
-            return (this.wamv.battery * 100) + '%';
+            let perc = Math.round(this.wamv.battery*100)/100; //2 decimal places
+            return perc + '%';
         },
 
         signal() {
-            return (this.wamv.signal * 100) + '%';
+            let perc = Math.round(this.wamv.signal*100)/100; //2 decimal places
+            return perc + '%';
         }
     },
 

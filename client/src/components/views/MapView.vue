@@ -8,7 +8,10 @@
             :show-sidebar="showSidebar" @toggle-sidebar="toggleSidebar"
         ></gcs-sidebar-controls>
 
-        <gcs-wamv :lat="wamv.position.lat" :lng="wamv.position.lng"></gcs-wamv>
+        <gcs-wamv v-if="wamv != null"
+            :lat="wamv.position.lat" :lng="wamv.position.lng"
+            :rotation="wamv.heading"
+        ></gcs-wamv>
     </div>
 </template>
 

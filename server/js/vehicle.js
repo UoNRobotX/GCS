@@ -11,16 +11,21 @@ module.exports = function(){
     this.battery = 100;
     this.armed = false;
     this.mode = 'idle';
+    this.signal = 100; //unrealistically, for the fake WAM-V, this is always 100
     this.mission = null; //the vehicle's current mission
     this.missionIndex = -1; //-1 if not completing a mission, or the index of the next waypoint
     this.parameters = {
+        'Test Parameter 1': ['double', 3.2],
+        'Test Parameter Group 1': {
+            'Test Parameter 2': ['vec3', [3,-2.3,1000]]
+        },
         'State Estimator': {
             'IMU': {
-                'mag scale':  {type: 'double',  value: 0},
-                'mag vector': {type: 'vector3', value: [0,0,0]},
-                'Rib':        {type: 'mat3',    value: [0,0,0,0,0,0,0,0,0]},
-                'rIBb':       {type: 'vec3',    value: [0,0,0]},
-                'gbBNi':      {type: 'vec3',    value: [0,0,0]}
+                'mag scale':  ['double',  0],
+                'mag vector': ['vector3', [0,0,0]],
+                'Rib':        ['mat3',    [0,0,0,0,0,0,0,0,0]],
+                'rIBb':       ['vec3',    [0,0,0]],
+                'gbBNi':      ['vec3',    [0,0,0]]
             }
         }
     };
@@ -46,9 +51,9 @@ module.exports = function(){
                 //move towards waypoint
                 this.heading = geolib.getBearing(pos, wpPos);
                 if (travelDist < dist){
-                    travelDist = 0;
                     var newPos = geolib.computeDestinationPoint(pos, travelDist, this.heading);
                     this.position = {lat: newPos.latitude, lng: newPos.longitude};
+                    travelDist = 0;
                 } else {
                     travelDist -= dist;
                     this.position = wp.position;
@@ -83,7 +88,8 @@ module.exports = function(){
             speed:    this.speed,
             battery:  this.battery,
             armed:    this.armed,
-            mode:     this.mode
+            mode:     this.mode,
+            signal:   this.signal
         };
     };
     //return paramters
@@ -157,7 +163,7 @@ module.exports = function(){
         if (this.battery == 0){
             return 'Battery is at 0%.';
         }
-        if (this.armed){
+        if (!this.armed){
             return 'Vehicle is not armed.';
         }
         if (this.mission == null){

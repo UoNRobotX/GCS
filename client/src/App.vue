@@ -30,43 +30,62 @@ import SettingsView from 'views/SettingsView.vue';
 import GcsIndicators from 'components/GcsIndicators.vue';
 import socket_io_client from 'socket.io-client';
 
-//open socket.io connection for WAM-V data
-let socket = socket_io_client('localhost:3000');
-socket.on('connect', () => {
-    console.log('connected to server')
-});
-socket.on('disconnect', () => {
-    console.log('disconnected from server');
-});
-socket.on('status', (data) => {
-    console.log('received "status" message:');
-    console.log(data);
-});
-socket.on('get_parameters', (data) => {
-    console.log('received "get_parameters" message:');
-    console.log(data);
-});
-socket.on('load_missions', (data) => {
-    console.log('received "load_missions" message:');
-    console.log(data);
-});
-socket.on('download_mission', (data) => {
-    console.log('received "download_mission" message:');
-    console.log(data);
-});
-socket.on('success', (data) => {
-    console.log('received "success" message');
-});
-socket.on('failure', (data) => {
-    console.log('received "failure" message');
-    console.log(data);
-});
-socket.on('attention', (data) => {
-    console.log('received "attention" message');
-    console.log(data);
-});
+import { setWamv, setParameters } from 'store/actions';
 
 export default {
+    vuex: {
+        actions: {
+            setWamv: setWamv,
+            setParameters: setParameters
+        }
+    },
+
+    data() {
+        return {
+            socket: null //used for socket.io connection
+        };
+    },
+
+    ready() {
+        //initialise socket
+        this.socket = socket_io_client('localhost:3000');
+        this.socket.on('connect', () => {
+            console.log('connected to server')
+        });
+        this.socket.on('disconnect', () => {
+            console.log('disconnected from server');
+        });
+        this.socket.on('status', (data) => {
+            console.log('received "status" message:');
+            this.setWamv(data);
+        });
+        this.socket.on('get_parameters', (data) => {
+            console.log('received "get_parameters" message:');
+            this.setParameters(data);
+        });
+        this.socket.on('load_missions', (data) => {
+            console.log('received "load_missions" message:');
+            console.log(data);
+        });
+        this.socket.on('download_mission', (data) => {
+            console.log('received "download_mission" message:');
+            console.log(data);
+        });
+        this.socket.on('success', (data) => {
+            console.log('received "success" message');
+        });
+        this.socket.on('failure', (data) => {
+            console.log('received "failure" message');
+            console.log(data);
+        });
+        this.socket.on('attention', (data) => {
+            console.log('received "attention" message');
+            console.log(data);
+        });
+        //get parameters once at startup
+        this.socket.emit('get_parameters');
+    },
+
     events: {
         'app::create-snackbar'(message, snackbar) {
             this.createSnackbar(message, snackbar);

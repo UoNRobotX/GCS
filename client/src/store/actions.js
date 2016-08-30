@@ -29,19 +29,10 @@ export function setMapEditing({ dispatch, state }, editing) {
 }
 
 /**
- * Set the WamV position
+ * Set the WamV
  */
-export function updateWamvPosition({ dispatch, state }, position) {
-    let newPosition = assign({}, state.wamv.position, position);
-
-    dispatch('UPDATE_WAMV_POSITION', newPosition);
-}
-
-/**
- * Set the WamV heading
- */
-export function setWamvHeading({ dispatch, state }, heading) {
-    dispatch('SET_WAMV_HEADING', heading);
+export function setWamv({ dispatch, state }, wamv) {
+    dispatch('SET_WAMV', wamv);
 }
 
 /**
@@ -54,29 +45,8 @@ export function setWamvArmed({ dispatch, state }, armed) {
 /**
  * Set the WamV moving
  */
-export function setWamvMoving({ dispatch, state }, moving) {
-    dispatch('SET_WAMV_MOVING', moving);
-}
-
-/**
- * Set the WamV speed
- */
-export function setWamvSpeed({ dispatch, state }, speed) {
-    dispatch('SET_WAMV_SPEED', speed);
-}
-
-/**
- * Set the WamV battery
- */
-export function setWamvBattery({ dispatch, state }, battery) {
-    dispatch('SET_WAMV_BATTERY', battery);
-}
-
-/**
- * Set the WamV signal
- */
-export function setWamvSignal({ dispatch, state }, signal) {
-    dispatch('SET_WAMV_SIGNAL', signal);
+export function setWamvMode({ dispatch, state }, mode) {
+    dispatch('SET_WAMV_MODE', mode);
 }
 
 /**
@@ -124,3 +94,9 @@ export function setCurrentMissionIndex({ dispatch, state }, index) {
     dispatch('SET_CURRENT_MISSION_INDEX', index);
 }
 
+/**
+ * Set the parameters
+ */
+export function setParameters({ dispatch, state }, parameters) {
+    dispatch('SET_PARAMETERS', parameters);
+}

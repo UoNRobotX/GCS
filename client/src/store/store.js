@@ -11,18 +11,7 @@ const initialState = {
     mapEl: null,
     mapLoaded: false,
     mapEditing: false,
-    wamv: {
-        position: {
-            lat: -32.8883338,
-            lng: 151.7075279
-        },
-        heading: 0,
-        armed: true,
-        moving: true,
-        speed: 24,
-        battery: 1,
-        signal: 1
-    },
+    wamv: null,
     config: config,
     settings: config.settings,
     settingsLoaded: false,
@@ -57,7 +46,8 @@ const initialState = {
             }]
         }
     ],
-    currentMissionIndex: -1
+    currentMissionIndex: -1,
+    parameters: {}
 };
 
 const mutations = {
@@ -81,28 +71,16 @@ const mutations = {
         state.wamv.position = position;
     },
 
-    SET_WAMV_HEADING(state, heading) {
-        state.wamv.heading = heading;
+    SET_WAMV(state, wamv) {
+        state.wamv = wamv;
     },
 
     SET_WAMV_ARMED(state, armed) {
         state.wamv.armed = armed;
     },
 
-    SET_WAMV_MOVING(state, moving) {
-        state.wamv.moving = moving;
-    },
-
-    SET_WAMV_SPEED(state, speed) {
-        state.wamv.speed = speed;
-    },
-
-    SET_WAMV_BATTERY(state, battery) {
-        state.wamv.battery = battery;
-    },
-
-    SET_WAMV_SIGNAL(state, signal) {
-        state.wamv.signal = signal;
+    SET_WAMV_MODE(state, mode) {
+        state.wamv.mode = mode;
     },
 
     INIT_SETTINGS(state, settings) {
@@ -120,6 +98,10 @@ const mutations = {
 
     SET_CURRENT_MISSION_INDEX(state, index) {
         state.currentMissionIndex = index;
+    },
+
+    SET_PARAMETERS(state, parameters) {
+        state.parameters = parameters;
     },
 };
 

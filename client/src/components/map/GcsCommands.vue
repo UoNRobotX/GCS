@@ -8,7 +8,7 @@
             <ui-button>Start</ui-button>
         </div>
 
-        <div class="row">
+        <div class="row" v-if:"this.wamv != null">
             <div class="column one-half"> {{ isArmed ? 'Armed' : 'Disarmed' }}</div>
             <div class="column one-half">
                 <ui-switch :value.sync="isArmed"></ui-switch>
