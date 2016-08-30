@@ -14,7 +14,9 @@ import {
     succeedDownloadMission, failDownloadMission,
     succeedStartMission, failStartMission,
     succeedStopMission, failStopMission,
-    succeedResumeMission, failResumeMission
+    succeedResumeMission, failResumeMission,
+    succeedArm, failArm,
+    succeedDisarm, failDisarm
 } from 'store/actions';
 import {
     getMessageStateWaiting, getMessageStateSuccess, getMessageStateFailure,
@@ -25,7 +27,9 @@ import {
     getDownloadMissionState, getDownloadMissionData,
     getStartMissionState, getStartMissionData,
     getStopMissionState, getStopMissionData,
-    getResumeMissionState, getResumeMissionData
+    getResumeMissionState, getResumeMissionData,
+    getArmState, getArmData,
+    getDisarmState, getDisarmData
 } from 'store/getters';
 
 export default {
@@ -50,6 +54,10 @@ export default {
             stopMissionData:      getStopMissionData,
             resumeMissionState:   getResumeMissionState,
             resumeMissionData:    getResumeMissionData,
+            armState:             getArmState,
+            armData:              getArmData,
+            disarmState:          getDisarmState,
+            disarmData:           getDisarmData
         },
         actions: {
             setWamv,
@@ -70,7 +78,11 @@ export default {
             succeedStopMission,
             failStopMission,
             succeedResumeMission,
-            failResumeMission
+            failResumeMission,
+            succeedArm,
+            failArm,
+            succeedDisarm,
+            failDisarm
         }
     },
 
@@ -131,6 +143,10 @@ export default {
                 this.succeedStopMission();
             } else if (data == 'resume_mission' && this.resumeMissionState == this.WAITING){
                 this.succeedResumeMission();
+            } else if (data == 'arm' && this.armState == this.WAITING){
+                this.succeedArm();
+            } else if (data == 'disarm' && this.disarmState == this.WAITING){
+                this.succeedDisarm();
             }
         });
         this.socket.on('failure', (data) => {
@@ -168,8 +184,15 @@ export default {
                     this.failResumeMission(data[1]);
                     break;
                 }
+                case 'arm': {
+                    this.failArm(data[1]);
+                    break;
+                }
+                case 'disarm': {
+                    this.failDisarm(data[1]);
+                    break;
+                }
             }
-            console.log(data);
         });
         this.socket.on('attention', (data) => {
             console.log('Attention: ' + data);
@@ -242,6 +265,22 @@ export default {
             if (state != oldState){
                 if (state == this.WAITING){
                     this.socket.emit('resume_mission');
+                }
+            }
+        },
+
+        armState(state, oldState){
+            if (state != oldState){
+                if (state == this.WAITING){
+                    this.socket.emit('arm');
+                }
+            }
+        },
+
+        disarmState(state, oldState){
+            if (state != oldState){
+                if (state == this.WAITING){
+                    this.socket.emit('disarm');
                 }
             }
         }

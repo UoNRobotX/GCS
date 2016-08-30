@@ -44,7 +44,9 @@ import {
     getDownloadMissionState, getDownloadMissionData,
     getStartMissionState, getStartMissionData,
     getStopMissionState, getStopMissionData,
-    getResumeMissionState, getResumeMissionData
+    getResumeMissionState, getResumeMissionData,
+    getArmState, getArmData,
+    getDisarmState, getDisarmData
 } from 'store/getters';
 import {
     setWamvArmed, setCurrentMission,
@@ -52,7 +54,9 @@ import {
     sendDownloadMission, failDownloadMission,
     sendStartMission, failStartMission,
     sendStopMission, failStopMission,
-    sendResumeMission, failResumeMission
+    sendResumeMission, failResumeMission,
+    sendArm, failArm,
+    sendDisarm, failDisarm
 } from 'store/actions';
 
 export default {
@@ -73,7 +77,11 @@ export default {
             stopMissionState:     getStopMissionState,
             stopMissionData:      getStopMissionData,
             resumeMissionState:   getResumeMissionState,
-            resumeMissionData:    getResumeMissionData
+            resumeMissionData:    getResumeMissionData,
+            armState:             getArmState,
+            armData:              getArmData,
+            disarmState:          getDisarmState,
+            disarmData:           getDisarmData
         },
 
         actions: {
@@ -88,18 +96,37 @@ export default {
             sendStopMission,
             failStopMission,
             sendResumeMission,
-            failResumeMission
+            failResumeMission,
+            sendArm,
+            failArm,
+            sendDisarm,
+            failDisarm
         }
     },
 
     computed: {
+        // TODO: ui-switch doesn't represent state when set() fails
         isArmed: {
             get() {
                 return this.wamv.armed;
             },
 
-            set(value) {
-                this.setArmed(value);
+            set(arm) {
+                if (arm){
+                    this.sendArm();
+                    setTimeout(() => {
+                        if (this.armState == this.WAITING){
+                            this.failArm('Timeout reached.');
+                        }
+                    }, 1000);
+                } else {
+                    this.sendDisarm();
+                    setTimeout(() => {
+                        if (this.disarmState == this.WAITING){
+                            this.failDisarm('Timeout reached.');
+                        }
+                    }, 1000);
+                }
             }
         }
     },
@@ -194,7 +221,25 @@ export default {
                     console.log('Unable to resume mission: ' + this.resumeMissionData);
                 }
             }
-        }
+        },
+        armState(state, oldState){
+            if (state != oldState){
+                if (state == this.SUCCESS){
+                    console.log('Vehicle armed.');
+                } else if (state == this.FAILURE){
+                    console.log('Unable to arm vehicle: ' + this.armData);
+                }
+            }
+        },
+        disarmState(state, oldState){
+            if (state != oldState){
+                if (state == this.SUCCESS){
+                    console.log('Vehicle disarmed.');
+                } else if (state == this.FAILURE){
+                    console.log('Unable to disarm vehicle: ' + this.disarmData);
+                }
+            }
+        },
     }
 };
 </script>

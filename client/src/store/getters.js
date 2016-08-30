@@ -117,3 +117,19 @@ export function getResumeMissionState(state) {
 export function getResumeMissionData(state) {
     return state.messageState.resume_mission[1];
 }
+
+export function getArmState(state) {
+    return state.messageState.arm[0];
+}
+
+export function getArmData(state) {
+    return state.messageState.arm[1];
+}
+
+export function getDisarmState(state) {
+    return state.messageState.disarm[0];
+}
+
+export function getDisarmData(state) {
+    return state.messageState.disarm[1];
+}

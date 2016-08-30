@@ -275,3 +275,45 @@ export function succeedResumeMission({ dispatch, state }) {
 export function failResumeMission({ dispatch, state }, msg) {
     dispatch('FAIL_RESUME_MISSION', msg);
 }
+
+/**
+ * Send arm message
+ */
+export function sendArm({ dispatch, state }) {
+    dispatch('SEND_ARM');
+}
+
+/**
+ * Indicate a successful response to an arm message
+ */
+export function succeedArm({ dispatch, state }) {
+    dispatch('SUCCEED_ARM');
+}
+
+/**
+ * Indicate failure of an arm message
+ */
+export function failArm({ dispatch, state }, msg) {
+    dispatch('FAIL_ARM', msg);
+}
+
+/**
+ * Send disarm message
+ */
+export function sendDisarm({ dispatch, state }) {
+    dispatch('SEND_DISARM');
+}
+
+/**
+ * Indicate a successful response to a disarm message
+ */
+export function succeedDisarm({ dispatch, state }) {
+    dispatch('SUCCEED_DISARM');
+}
+
+/**
+ * Indicate failure of a disarm message
+ */
+export function failDisarm({ dispatch, state }, msg) {
+    dispatch('FAIL_DISARM', msg);
+}

@@ -250,6 +250,32 @@ const mutations = {
         state.messageState.resume_mission.$set(0, state.messageState.FAILURE);
         state.messageState.resume_mission.$set(1, msg);
     },
+
+    SEND_ARM(state) {
+        state.messageState.arm.$set(0, state.messageState.WAITING);
+    },
+
+    SUCCEED_ARM(state) {
+        state.messageState.arm.$set(0, state.messageState.SUCCESS);
+    },
+
+    FAIL_ARM(state, msg) {
+        state.messageState.arm.$set(0, state.messageState.FAILURE);
+        state.messageState.arm.$set(1, msg);
+    },
+
+    SEND_DISARM(state) {
+        state.messageState.disarm.$set(0, state.messageState.WAITING);
+    },
+
+    SUCCEED_DISARM(state) {
+        state.messageState.disarm.$set(0, state.messageState.SUCCESS);
+    },
+
+    FAIL_DISARM(state, msg) {
+        state.messageState.disarm.$set(0, state.messageState.FAILURE);
+        state.messageState.disarm.$set(1, msg);
+    },
 };
 
 export default new Vuex.Store({
