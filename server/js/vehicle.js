@@ -13,7 +13,7 @@ module.exports = function(){
     this.mode = 'idle';
     this.signal = 100; //unrealistically, for the fake WAM-V, this is always 100
     this.mission = null; //the vehicle's current mission
-    this.missionIndex = -1; //-1 if not completing a mission, or the index of the next waypoint
+    this.missionIndex = 0; //if completing a mission, the index of the next waypoint
     this.parameters = {
         'Test Parameter 1': ['double', 3.2],
         'Test Parameter Group 1': {
@@ -64,7 +64,7 @@ module.exports = function(){
                 msg += 'Mission completed. ';
                 this.speed = 0;
                 this.mode = 'idle';
-                this.missionIndex = -1;
+                this.missionIndex = 0;
             }
         }
         if (this.battery <= maxBatDec){
@@ -73,7 +73,9 @@ module.exports = function(){
             }
             this.battery = 0;
             this.speed = 0;
-            this.mode = 'idle';
+            if (this.mode == 'auto'){
+                this.mode = 'paused';
+            }
         } else {
             this.battery -= maxBatDec;
         }
@@ -116,11 +118,17 @@ module.exports = function(){
     };
     //set mission (returns null on success, or an error message)
     this.setMission = function(mission){
+        if (mission.waypoints.length == 0){
+            return 'Mission has no waypoints.';
+        }
         if (this.mode == 'auto'){
-            return 'Currently completing a mission.';
+            return 'Currently doing a mission.';
+        }
+        if (this.mode == 'paused'){
+            this.mode = 'idle';
         }
         this.mission = mission;
-        this.missionIndex = -1;
+        this.missionIndex = 0;
         return null;
     };
     //get mission (returns an object on success, or an error message)
@@ -136,7 +144,7 @@ module.exports = function(){
             return 'Vehicle already armed.';
         }
         if (this.mode == 'auto'){
-            return 'Currently completing a mission.';
+            return 'Currently doing a mission.';
         }
         this.armed = true;
         return null;
@@ -147,7 +155,7 @@ module.exports = function(){
             return 'Vehicle already disarmed.';
         }
         if (this.mode == 'auto'){
-            return 'Currently completing a mission.';
+            return 'Currently doing a mission.';
         }
         this.armed = false;
         return null;
@@ -169,11 +177,12 @@ module.exports = function(){
         if (this.mission == null){
             return 'No current mission.';
         }
-        if (!fromBeginning && this.missionIndex == -1){
-            return 'Not in the middle of completing a mission.';
-        }
-        if (fromBeginning){
-            this.missionIndex = 0;
+        if (this.mode == 'paused'){
+            if (fromBeginning){
+                this.missionIndex = 0;
+            } else {
+                return 'Not in the middle of doing a mission.';
+            }
         }
         this.mode = 'auto';
         this.speed = this.SPEED;
@@ -184,7 +193,7 @@ module.exports = function(){
         if (this.mode != 'auto'){
             return 'Vehicle is not doing a mission.';
         }
-        this.mode = 'idle';
+        this.mode = 'paused';
         this.speed = 0;
         return null;
     };

@@ -50,7 +50,7 @@ var vehicle = new Vehicle();
  *              speed:    kmph1,
  *              battery:  percentage1,
  *              armed:    boolean1,
- *              mode:     mode1, //this will be one of: 'idle', 'auto', 'killed',
+ *              mode:     mode1, //this will be one of: 'idle', 'auto', 'paused', 'killed',
  *              signal:   percentage1
  *          }
  *     - For 'get_parameters':
@@ -237,8 +237,6 @@ io.on('connection', function(socket){
         console.log('got "upload_mission" message');
         if (!isMission(data)){
             socket.emit('failure', ['upload_mission', 'Invalid mission data.']);
-        } else if (data.waypoints.length == 0) {
-            socket.emit('failure', ['upload_mission', 'Mission has no waypoints.']);
         } else {
             var msg = vehicle.setMission(data);
             if (msg == null){
