@@ -56,11 +56,11 @@ import {
 export default {
     vuex: {
         getters: {
+            missions:            getMissions,
+            currentMissionIndex: getCurrentMissionIndex,
             WAITING:             getMessageStateWaiting,
             SUCCESS:             getMessageStateSuccess,
             FAILURE:             getMessageStateFailure,
-            missions:            getMissions,
-            currentMissionIndex: getCurrentMissionIndex,
             saveMissionsState:   getSaveMissionsState,
             saveMissionsData:    getSaveMissionsData,
             loadMissionsState:   getLoadMissionsState,

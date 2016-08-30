@@ -73,3 +73,11 @@ export function getLoadMissionsState(state) {
 export function getLoadMissionsData(state) {
     return state.messageState.load_missions[1];
 }
+
+export function getUploadMissionState(state) {
+    return state.messageState.upload_mission[0];
+}
+
+export function getUploadMissionData(state) {
+    return state.messageState.upload_mission[1];
+}

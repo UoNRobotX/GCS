@@ -9,27 +9,31 @@ import {
     setWamv, setParameters,
     sendGetParameters, succeedGetParameters, failGetParameters,
     succeedSaveMissions, failSaveMissions,
-    succeedLoadMissions, failLoadMissions
+    succeedLoadMissions, failLoadMissions,
+    succeedUploadMission, failUploadMission
 } from 'store/actions';
 import {
     getMessageStateWaiting, getMessageStateSuccess, getMessageStateFailure,
     getGetParameterState, getGetParameterData,
     getSaveMissionsState, getSaveMissionsData,
-    getLoadMissionsState, getLoadMissionsData
+    getLoadMissionsState, getLoadMissionsData,
+    getUploadMissionState, getUploadMissionData
 } from 'store/getters';
 
 export default {
     vuex: {
         getters: {
-            WAITING:           getMessageStateWaiting,
-            SUCCESS:           getMessageStateSuccess,
-            FAILURE:           getMessageStateFailure,
-            getParameterState: getGetParameterState,
-            getParameterData:  getGetParameterData,
-            saveMissionsState: getSaveMissionsState,
-            saveMissionsData:  getSaveMissionsData,
-            loadMissionsState:   getLoadMissionsState,
-            loadMissionsData:    getLoadMissionsData
+            WAITING:            getMessageStateWaiting,
+            SUCCESS:            getMessageStateSuccess,
+            FAILURE:            getMessageStateFailure,
+            getParameterState:  getGetParameterState,
+            getParameterData:   getGetParameterData,
+            saveMissionsState:  getSaveMissionsState,
+            saveMissionsData:   getSaveMissionsData,
+            loadMissionsState:  getLoadMissionsState,
+            loadMissionsData:   getLoadMissionsData,
+            uploadMissionState: getUploadMissionState,
+            uploadMissionData:  getUploadMissionData
         },
         actions: {
             setWamv,
@@ -40,7 +44,9 @@ export default {
             succeedSaveMissions,
             failSaveMissions,
             succeedLoadMissions,
-            failLoadMissions
+            failLoadMissions,
+            succeedUploadMission,
+            failUploadMission
         }
     },
 
@@ -91,6 +97,8 @@ export default {
             console.log('received "success" message');
             if (data == 'save_missions' && this.saveMissionsState == this.WAITING){
                 this.succeedSaveMissions();
+            } else if (data == 'upload_mission' && this.uploadMissionState == this.WAITING){
+                this.succeedUploadMission();
             }
         });
         this.socket.on('failure', (data) => {
@@ -106,6 +114,10 @@ export default {
                 }
                 case 'load_missions': {
                     this.failLoadMissions(data[1]);
+                    break;
+                }
+                case 'upload_mission': {
+                    this.failUploadMission(data[1]);
                     break;
                 }
             }
@@ -143,6 +155,14 @@ export default {
             if (state != oldState){
                 if (state == this.WAITING){
                     this.socket.emit('load_missions');
+                }
+            }
+        },
+        
+        uploadMissionState(state, oldState){
+            if (state != oldState){
+                if (state == this.WAITING){
+                    this.socket.emit('upload_mission', this.uploadMissionData);
                 }
             }
         }

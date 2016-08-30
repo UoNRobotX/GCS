@@ -163,3 +163,24 @@ export function succeedLoadMissions({ dispatch, state }, missions) {
 export function failLoadMissions({ dispatch, state }, msg) {
     dispatch('FAIL_LOAD_MISSIONS', msg);
 }
+
+/**
+ * Send upload_mission message
+ */
+export function sendUploadMission({ dispatch, state }, mission) {
+    dispatch('SEND_UPLOAD_MISSION', mission);
+}
+
+/**
+ * Indicate a successful response to a upload_mission message
+ */
+export function succeedUploadMission({ dispatch, state }) {
+    dispatch('SUCCEED_UPLOAD_MISSION');
+}
+
+/**
+ * Indicate failure of a upload_mission message
+ */
+export function failUploadMission({ dispatch, state }, msg) {
+    dispatch('FAIL_UPLOAD_MISSION', msg);
+}

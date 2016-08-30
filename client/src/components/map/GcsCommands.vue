@@ -3,6 +3,10 @@
         <div class="row">
             <ui-button @click="uploadMission">Upload Mission</ui-button>
         </div>
+        
+        <div class="row">
+            <ui-button @click="downloadMission">Download Mission</ui-button>
+        </div>
 
         <div class="row">
             <ui-button>Start</ui-button>
@@ -22,17 +26,33 @@
 </template>
 
 <script>
-import { getWamv } from 'store/getters';
-import { setWamvArmed } from 'store/actions';
+import {
+    getWamv, getMissions, getCurrentMissionIndex,
+    getMessageStateWaiting, getMessageStateSuccess, getMessageStateFailure,
+    getUploadMissionState, getUploadMissionData
+} from 'store/getters';
+import {
+    setWamvArmed,
+    sendUploadMission, failUploadMission
+} from 'store/actions';
 
 export default {
     vuex: {
         getters: {
-            wamv: getWamv
+            wamv:                getWamv,
+            missions:            getMissions,
+            WAITING:             getMessageStateWaiting,
+            SUCCESS:             getMessageStateSuccess,
+            FAILURE:             getMessageStateFailure,
+            currentMissionIndex: getCurrentMissionIndex,
+            uploadMissionState:  getUploadMissionState,
+            uploadMissionData:   getUploadMissionData
         },
 
         actions: {
-            setArmed: setWamvArmed
+            setArmed: setWamvArmed,
+            sendUploadMission,
+            failUploadMission
         }
     },
 
@@ -50,7 +70,28 @@ export default {
 
     methods: {
         uploadMission() {
-            // do the upload
+            let mission = this.missions[this.currentMissionIndex];
+            this.sendUploadMission(mission);
+            setTimeout(() => {
+                if (this.uploadMissionState == this.WAITING){
+                    this.failUploadMission('Timeout reached.');
+                }
+            }, 1000);
+        },
+        downloadMission() {
+            // do the download
+        }
+    },
+    
+    watch: {
+        uploadMissionState(state, oldState){
+            if (state != oldState){
+                if (state == this.SUCCESS){ //successful response
+                    console.log('Mission uploaded.');
+                } else if (state == this.FAILURE){ //failure response
+                    console.log('Unable to upload mission: ' + this.uploadMissionData);
+                }
+            }
         }
     }
 };
