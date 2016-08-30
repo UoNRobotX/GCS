@@ -1,8 +1,6 @@
 # Todo list
 
 ## Stuff that needs doing
-* Implement saving and loading missions on server
-* Implement WAM-V message handling.
 * Add delete mission buttons.
 * Allow for multiple clients.
 * Add parameters and settings.
