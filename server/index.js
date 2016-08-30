@@ -103,16 +103,17 @@ var vehicle = new Vehicle();
 function isMission(data){
     if (typeof data != 'object' ||
         !data.hasOwnProperty('waypoints') ||
-        !Array.isArray(data.waypoints) ||
-        data.waypoints.length == 0){
+        !Array.isArray(data.waypoints)){
         return false;
     }
     for (var i = 0; i < data.waypoints.length; i++){
         var wp = data.waypoints[i];
-        if (!wp.hasOwnProperty('lat') ||
-            typeof wp.lat != 'number' ||
-            !wp.hasOwnProperty('lng') ||
-            typeof wp.lng != 'number'){
+        if (!wp.hasOwnProperty('position') ||
+            typeof wp.position != 'object' ||
+            !wp.position.hasOwnProperty('lat') ||
+            typeof wp.position.lat != 'number' ||
+            !wp.position.hasOwnProperty('lng') ||
+            typeof wp.position.lng != 'number'){
             return false;
         }
     }
@@ -236,6 +237,8 @@ io.on('connection', function(socket){
         console.log('got "upload_mission" message');
         if (!isMission(data)){
             socket.emit('failure', ['upload_mission', 'Invalid mission data.']);
+        } else if (data.waypoints.length == 0) {
+            socket.emit('failure', ['upload_mission', 'Mission has no waypoints.']);
         } else {
             var msg = vehicle.setMission(data);
             if (msg == null){

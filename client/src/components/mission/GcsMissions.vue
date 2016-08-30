@@ -41,19 +41,33 @@
 import GcsMission from 'mission/GcsMission.vue';
 import GcsMissionRow from 'mission/GcsMissionRow.vue';
 
-import { setMissions, setCurrentMissionIndex } from 'store/actions';
-import { getMissions, getCurrentMissionIndex } from 'store/getters';
+import {
+    setMissions, setCurrentMissionIndex,
+    sendSaveMissions, failSaveMissions
+} from 'store/actions';
+import {
+    getMessageStateWaiting, getMessageStateSuccess, getMessageStateFailure,
+    getMissions, getCurrentMissionIndex,
+    getSaveMissionsState, getSaveMissionsData
+} from 'store/getters';
 
 export default {
     vuex: {
         getters: {
-            missions: getMissions,
-            currentMissionIndex: getCurrentMissionIndex
+            WAITING:             getMessageStateWaiting,
+            SUCCESS:             getMessageStateSuccess,
+            FAILURE:             getMessageStateFailure,
+            missions:            getMissions,
+            currentMissionIndex: getCurrentMissionIndex,
+            saveMissionsState:   getSaveMissionsState,
+            saveMissionsData:    getSaveMissionsData
         },
 
         actions: {
             setMissions,
-            setCurrentMissionIndex
+            setCurrentMissionIndex,
+            sendSaveMissions,
+            failSaveMissions
         }
     },
 
@@ -61,9 +75,13 @@ export default {
         return {
             currentView: 'listing',
             overflowMenu: [
-                { id: 'import', text: 'Import from file' },
+                { id: 'save', text: 'Save to server' },
+                { id: 'load', text: 'Load from server' },
+                { id: 'sep1', text: '', type: 'divider' },
                 { id: 'export', text: 'Export to file' },
-                { id: 'clear', text: 'Clear all' }
+                { id: 'import', text: 'Import from file' },
+                { id: 'sep2', text: '', type: 'divider' },
+                { id: 'clear', text: 'Clear all' },
             ]
         };
     },
@@ -93,22 +111,42 @@ export default {
         },
 
         menuOptionSelected(option){
-            if (option.id == 'import'){
-                //trigger file select
-                document.getElementById('import_missions_input').click();
-            } else if (option.id == 'export'){
-                //create data URI
-                let uri = 'data:application/json,';
-                uri += JSON.stringify(this.missions);
-                uri = encodeURI(uri);
-                //get link to use for download
-                let link = document.getElementById('export_missions_link');
-                link.href = uri;
-                link.download = 'missions.json';
-                //trigger download
-                link.click();
-            } else if (option.id == 'clear'){
-                this.setMissions([]);
+            switch (option.id){
+                case 'save': {
+                    console.log('save mission list');
+                    this.sendSaveMissions(this.missions);
+                    setTimeout(() => {
+                        if (this.saveMissionsState == this.WAITING){
+                            this.failSaveMissions('Timeout reached.');
+                        }
+                    }, 1000);
+                    break;
+                }
+                case 'load': {
+                    console.log('load mission list');
+                    break;
+                }
+                case 'import': {
+                    //trigger file select
+                    document.getElementById('import_missions_input').click();
+                    break;
+                }
+                case 'export': {
+                    //create data URI
+                    let uri = 'data:application/json,';
+                    uri += JSON.stringify(this.missions);
+                    uri = encodeURI(uri);
+                    //get link to use for download
+                    let link = document.getElementById('export_missions_link');
+                    link.href = uri;
+                    link.download = 'missions.json';
+                    //trigger download
+                    link.click();
+                    break;
+                }
+                case 'clear': {
+                    this.setMissions([]);
+                }
             }
         },
 
@@ -131,6 +169,18 @@ export default {
                 };
                 //start file read
                 reader.readAsText(file);
+            }
+        }
+    },
+    
+    watch: {
+        saveMissionsState(state, oldState){
+            if (state != oldState){
+                if (state == this.SUCCESS){ //successful response
+                    console.log('Missions saved.');
+                } else if (state == this.FAILURE){ //invalid response
+                    console.log('Unable to save missions: ' + this.saveMissionsData);
+                }
             }
         }
     },

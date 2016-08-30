@@ -121,3 +121,24 @@ export function succeedGetParameters({ dispatch, state }, parameters) {
 export function failGetParameters({ dispatch, state }, msg) {
     dispatch('FAIL_GET_PARAMETERS', msg);
 }
+
+/**
+ * Send save_missions message
+ */
+export function sendSaveMissions({ dispatch, state }, missions) {
+    dispatch('SEND_SAVE_MISSIONS', missions);
+}
+
+/**
+ * Indicate a successful response to a save_missions message
+ */
+export function succeedSaveMissions({ dispatch, state }) {
+    dispatch('SUCCEED_SAVE_MISSIONS');
+}
+
+/**
+ * Indicate failure of a save_missions message
+ */
+export function failSaveMissions({ dispatch, state }, msg) {
+    dispatch('FAIL_SAVE_MISSIONS', msg);
+}

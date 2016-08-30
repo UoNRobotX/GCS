@@ -7,11 +7,13 @@ import socket_io_client from 'socket.io-client';
 
 import {
     setWamv, setParameters,
-    sendGetParameters, succeedGetParameters, failGetParameters
+    sendGetParameters, succeedGetParameters, failGetParameters,
+    succeedSaveMissions, failSaveMissions
 } from 'store/actions';
 import {
     getMessageStateWaiting, getMessageStateSuccess, getMessageStateFailure,
-    getGetParameterState, getGetParameterData
+    getGetParameterState, getGetParameterData,
+    getSaveMissionsState, getSaveMissionsData
 } from 'store/getters';
 
 export default {
@@ -21,14 +23,18 @@ export default {
             SUCCESS:           getMessageStateSuccess,
             FAILURE:           getMessageStateFailure,
             getParameterState: getGetParameterState,
-            getParameterData:  getGetParameterData
+            getParameterData:  getGetParameterData,
+            saveMissionsState: getSaveMissionsState,
+            saveMissionsData:  getSaveMissionsData
         },
         actions: {
-            setWamv:              setWamv,
-            setParameters:        setParameters,
-            sendGetParameters:    sendGetParameters,
-            succeedGetParameters: succeedGetParameters,
-            failGetParameters:    failGetParameters
+            setWamv,
+            setParameters,
+            sendGetParameters,
+            succeedGetParameters,
+            failGetParameters,
+            succeedSaveMissions,
+            failSaveMissions
         }
     },
 
@@ -75,11 +81,16 @@ export default {
         });
         this.socket.on('success', (data) => {
             console.log('received "success" message');
+            if (data == 'save_missions'){
+                this.succeedSaveMissions();
+            }
         });
         this.socket.on('failure', (data) => {
             console.log('received "failure" message');
             if (data[0] == 'get_parameters'){
                 this.failGetParameters(data[1]);
+            } else if (data[0] == 'save_missions'){
+                this.failSaveMissions(data[1]);
             }
             console.log(data);
         });
@@ -99,6 +110,14 @@ export default {
                     this.setParameters(this.getParameterData);
                 } else if (state == this.FAILURE){ //invalid response
                     console.log('Unable to get parameters: ' + this.getParameterData);
+                }
+            }
+        },
+        
+        saveMissionsState(state, oldState){
+            if (state != oldState){
+                if (state == this.WAITING){
+                    this.socket.emit('save_missions', this.saveMissionsData);
                 }
             }
         }

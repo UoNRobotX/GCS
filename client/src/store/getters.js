@@ -57,3 +57,11 @@ export function getGetParameterState(state) {
 export function getGetParameterData(state) {
     return state.messageState.get_parameters[1];
 }
+
+export function getSaveMissionsState(state) {
+    return state.messageState.save_missions[0];
+}
+
+export function getSaveMissionsData(state) {
+    return state.messageState.save_missions[1];
+}
