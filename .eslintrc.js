@@ -8,7 +8,9 @@ module.exports = {
     // Override rules as needed
     // See http://eslint.org/docs/rules/{rule-name} for docs
     rules: {
-        indent: ['error', 4],
+        indent: ['error', 4, {
+            SwitchCase: 1
+        }],
         quotes: ['error', 'single'],
         semi: ['error', 'always'],
 
