@@ -1,4 +1,4 @@
-var geolib = require('geolib')
+var geolib = require('geolib');
 
 //constructor for fake WAM-V
 module.exports = function(){
@@ -201,7 +201,7 @@ module.exports = function(){
         this.mode = 'killed';
         this.speed = 0;
         return null;
-    }
+    };
     //de-activate kill switch (returns null on success, or an error message)
     this.unkill = function(){
         if (this.mode != 'killed'){
@@ -210,5 +210,5 @@ module.exports = function(){
         this.mode = 'idle';
         this.missionIndex = 0;
         return null;
-    }
-}
+    };
+};

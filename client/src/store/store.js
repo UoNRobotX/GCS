@@ -271,7 +271,7 @@ const mutations = {
     FAIL_UNKILL(state, msg) {
         state.messageState.unkill.$set(0, state.messageState.FAILURE);
         state.messageState.unkill.$set(1, msg);
-    },
+    }
 };
 
 export default new Vuex.Store({

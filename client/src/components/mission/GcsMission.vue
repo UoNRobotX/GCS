@@ -10,6 +10,10 @@
 
             <div slot="actions">
                 <ui-icon-button
+                    type="clear" icon="file_upload" tooltip="Upload Mission" @click="uploadMission"
+                ></ui-icon-button>
+
+                <ui-icon-button
                     type="clear" icon="clear_all" tooltip="Clear all" @click="clearWaypoints"
                 ></ui-icon-button>
 

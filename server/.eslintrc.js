@@ -4,7 +4,8 @@ module.exports = {
 
     parserOptions: {
         ecmaFeatures: {
-            modules: true // Allows ESLint to understand ES6+ module syntax
+            modules: true, // Allows ESLint to understand ES6+ module syntax
+            classes: true
         }
     },
 
