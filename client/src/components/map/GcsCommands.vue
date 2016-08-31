@@ -1,42 +1,19 @@
 <template>
     <div class="gcs-commands">
-        <div class="row">
-            <ui-button @click="uploadMission">Upload Mission</ui-button>
-        </div>
+        <ui-button
+            @click="toggleMission" :text="startButtonText" :disabled="wamv.mode === 'killed'"
+        ></ui-button>
 
-        <div class="row">
-            <ui-button @click="downloadMission">Download Mission</ui-button>
-        </div>
+        <ui-button v-if="wamv.mode == 'auto'" @click="stopMission">Stop</ui-button>
 
-        <div class="row">
-            <ui-button
-                v-if="wamv.mode == 'idle' || wamv.mode == 'paused'"
-                @click="startMission"
-            >Start</ui-button>
-            <ui-button
-                v-if="wamv.mode == 'paused'"
-                @click="resumeMission"
-            >Resume</ui-button>
-            <ui-button
-                v-if="wamv.mode == 'auto'"
-                @click="stopMission"
-            >Stop</ui-button>
-        </div>
+        <ui-button
+            color="danger" :text="wamv.mode === 'killed' ? 'Revive' : 'Kill'" @click="toggleKill"
+        ></ui-button>
 
-        <div class="row" v-if="wamv.loaded">
-            <div class="column one-half"> {{ isArmed ? 'Armed' : 'Disarmed' }}</div>
-            <div class="column one-half">
-                <ui-switch :value.sync="isArmed"></ui-switch>
-            </div>
-        </div>
-
-        <div class="row">
-            <ui-button color="danger"
-                v-if="wamv.mode != 'killed'" @click="kill"
-            >Kill</ui-button>
-            <ui-button
-                v-if="wamv.mode == 'killed'" @click="unkill"
-            >Unkill</ui-button>
+        <div class="armed-toggle" v-if="wamv.loaded">
+            <ui-switch
+                :value.sync="isArmed" :label="isArmed ? 'Armed' : 'Disarmed'" label-left
+            ></ui-switch>
         </div>
     </div>
 </template>
@@ -94,7 +71,7 @@ export default {
             killState:            getKillState,
             killData:             getKillData,
             unkillState:          getUnkillState,
-            unkillData:           getUnkillData,
+            unkillData:           getUnkillData
         },
 
         actions: {
@@ -122,6 +99,20 @@ export default {
     },
 
     computed: {
+        startButtonText() {
+            switch (this.wamv.mode) {
+                case 'idle':
+                case 'killed':
+                    return 'Start';
+                case 'paused':
+                    return 'Resume';
+                case 'auto':
+                    return 'Pause';
+                default:
+                    return '';
+            }
+        },
+
         // TODO: ui-switch doesn't represent state when set() fails
         isArmed: {
             get() {
@@ -166,6 +157,17 @@ export default {
                 }
             }, 1000);
         },
+
+        toggleMission() {
+            if (this.wamv.mode === 'idle') {
+                this.startMission();
+            } else if (this.wamv.mode === 'paused') {
+                this.resumeMission();
+            } else if (this.wamv.mode === 'auto') {
+                this.stopMission();
+            }
+        },
+
         startMission(){
             this.sendStartMission();
             setTimeout(() => {
@@ -190,6 +192,17 @@ export default {
                 }
             }, 1000);
         },
+
+        toggleKill() {
+            if (this.wamv.mode !== 'killed') {
+                this.kill();
+            }
+
+            if (this.wamv.mode === 'killed') {
+                this.unkill();
+            }
+        },
+
         kill(){
             this.sendKill();
             setTimeout(() => {
@@ -299,14 +312,35 @@ export default {
 @import '~styles/_variables';
 
 .gcs-commands {
-    min-width: 100px;
+    position: absolute;
+    right: 12px;
+    top: 16px;
+    z-index: 1;
 
-    .row {
-        margin-bottom: 8px;
+    padding: 8px;
+    display: flex;
+    min-width: 300px;
+    border-radius: 2px;
+    background-color: white; // alpha(white, 0.9);
+    box-shadow: 0 2px 5px 0 alpha(black, 0.2), 0 2px 10px 0 alpha(black, 0.16);
 
-        &:last-child {
-            margin-bottom: 0;
+    .armed-toggle {
+        display: flex;
+        width: 118px;
+        justify-content: flex-end;
+        border-left: 1px solid #DDD;
+        padding-left: 8px;
+        margin-left: 4px;
+
+        .ui-switch-label-text {
+            margin-right: 8px;
         }
+    }
+
+    .ui-button {
+        height: 32px;
+        margin-right: 8px;
+        line-height: 1;
     }
 }
 </style>

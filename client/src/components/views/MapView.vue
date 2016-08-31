@@ -8,6 +8,8 @@
             :show-sidebar="showSidebar" @toggle-sidebar="toggleSidebar"
         ></gcs-sidebar-controls>
 
+        <gcs-commands></gcs-commands>
+
         <gcs-wamv v-if="wamv.loaded"
             :lat="wamv.position.lat" :lng="wamv.position.lng"
             :rotation="wamv.heading"
@@ -19,6 +21,7 @@
 import GcsMap from 'map/GcsMap.vue';
 import GcsMapControls from 'map/GcsMapControls.vue';
 import GcsMapSidebar from 'map/GcsMapSidebar.vue';
+import GcsCommands from 'map/GcsCommands.vue';
 import GcsSidebarControls from 'map/GcsSidebarControls.vue';
 import GcsWamv from 'markers/GcsWamv.vue';
 
@@ -48,7 +51,8 @@ export default {
         GcsWamv,
         GcsMapControls,
         GcsMapSidebar,
-        GcsSidebarControls
+        GcsSidebarControls,
+        GcsCommands
     }
 };
 </script>

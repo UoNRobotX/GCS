@@ -6,26 +6,13 @@
         <ui-button
             :color="showSidebar ? 'primary' : 'default'" @click="toggleSidebar"
         >Missions</ui-button>
-
-        <ui-button v-if="currentMissionIndex != -1" has-popover text="Commands">
-            <div slot="popover" class="gcs-sidebar-controls-popover">
-                <gcs-commands></gcs-commands>
-            </div>
-        </ui-button>
     </div>
 </template>
 
 <script>
 import GcsCommands from 'map/GcsCommands.vue';
-import { getCurrentMissionIndex } from 'store/getters';
 
 export default {
-    vuex: {
-        getters: {
-            currentMissionIndex: getCurrentMissionIndex
-        }
-    },
-
     props: {
         showSidebar: {
             type: Boolean,
