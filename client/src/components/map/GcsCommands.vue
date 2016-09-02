@@ -22,7 +22,6 @@
 import {
     getWamv, getMissions, getCurrentMissionIndex,
     getMessageStateWaiting, getMessageStateSuccess, getMessageStateFailure,
-    getUploadMissionState, getUploadMissionData,
     getDownloadMissionState, getDownloadMissionData,
     getStartMissionState, getStartMissionData,
     getStopMissionState, getStopMissionData,
@@ -34,7 +33,6 @@ import {
 } from 'store/getters';
 import {
     setWamvArmed, setCurrentMission,
-    sendUploadMission, failUploadMission,
     sendDownloadMission, failDownloadMission,
     sendStartMission, failStartMission,
     sendStopMission, failStopMission,
@@ -50,12 +48,10 @@ export default {
         getters: {
             wamv:                 getWamv,
             missions:             getMissions,
+            currentMissionIndex:  getCurrentMissionIndex,
             WAITING:              getMessageStateWaiting,
             SUCCESS:              getMessageStateSuccess,
             FAILURE:              getMessageStateFailure,
-            currentMissionIndex:  getCurrentMissionIndex,
-            uploadMissionState:   getUploadMissionState,
-            uploadMissionData:    getUploadMissionData,
             downloadMissionState: getDownloadMissionState,
             downloadMissionData:  getDownloadMissionData,
             startMissionState:    getStartMissionState,
@@ -77,8 +73,6 @@ export default {
         actions: {
             setArmed: setWamvArmed,
             setCurrentMission,
-            sendUploadMission,
-            failUploadMission,
             sendDownloadMission,
             failDownloadMission,
             sendStartMission,
@@ -140,15 +134,6 @@ export default {
     },
 
     methods: {
-        uploadMission() {
-            let mission = this.missions[this.currentMissionIndex];
-            this.sendUploadMission(mission);
-            setTimeout(() => {
-                if (this.uploadMissionState == this.WAITING){
-                    this.failUploadMission('Timeout reached.');
-                }
-            }, 1000);
-        },
         downloadMission() {
             this.sendDownloadMission();
             setTimeout(() => {
@@ -222,15 +207,6 @@ export default {
     },
 
     watch: {
-        uploadMissionState(state, oldState){
-            if (state != oldState){
-                if (state == this.SUCCESS){ //successful response
-                    console.log('Mission uploaded.');
-                } else if (state == this.FAILURE){ //failure response
-                    console.log('Unable to upload mission: ' + this.uploadMissionData);
-                }
-            }
-        },
         downloadMissionState(state, oldState){
             if (state != oldState){
                 if (state == this.SUCCESS){

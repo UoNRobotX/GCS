@@ -10,6 +10,10 @@
 
             <div slot="actions">
                 <ui-icon-button
+                    type="clear" icon="file_upload" tooltip="Upload mission" @click="uploadMission"
+                ></ui-icon-button>
+
+                <ui-icon-button
                     type="clear" icon="clear_all" tooltip="Clear all" @click="clearWaypoints"
                 ></ui-icon-button>
 
@@ -57,17 +61,35 @@ import GcsWaypointLink from 'markers/GcsWaypointLink.vue';
 import element from 'util/element-scroll';
 import numberToLetter from 'util/number-to-letter';
 
-import { setMapEditing } from 'store/actions';
-import { getMapEditing } from 'store/getters';
+import {
+    getMapEditing,
+    getMissions, getCurrentMissionIndex,
+    getMessageStateWaiting, getMessageStateSuccess, getMessageStateFailure,
+    getUploadMissionState, getUploadMissionData
+} from 'store/getters';
+import {
+    setMapEditing,
+    sendUploadMission, failUploadMission,
+} from 'store/actions';
+
 
 export default {
     vuex: {
         getters: {
-            mapEditing: getMapEditing
+            mapEditing:           getMapEditing,
+            missions:             getMissions,
+            currentMissionIndex:  getCurrentMissionIndex,
+            WAITING:              getMessageStateWaiting,
+            SUCCESS:              getMessageStateSuccess,
+            FAILURE:              getMessageStateFailure,
+            uploadMissionState:   getUploadMissionState,
+            uploadMissionData:    getUploadMissionData
         },
 
         actions: {
-            setMapEditing
+            setMapEditing,
+            sendUploadMission,
+            failUploadMission
         }
     },
 
@@ -190,6 +212,28 @@ export default {
 
             this.waypointsVisible = true;
             this.setMapEditing(true);
+        },
+
+        uploadMission() {
+            let mission = this.missions[this.currentMissionIndex];
+            this.sendUploadMission(mission);
+            setTimeout(() => {
+                if (this.uploadMissionState == this.WAITING){
+                    this.failUploadMission('Timeout reached.');
+                }
+            }, 1000);
+        },
+    },
+
+    watch: {
+        uploadMissionState(state, oldState){
+            if (state != oldState){
+                if (state == this.SUCCESS){ //successful response
+                    console.log('Mission uploaded.');
+                } else if (state == this.FAILURE){ //failure response
+                    console.log('Unable to upload mission: ' + this.uploadMissionData);
+                }
+            }
         }
     },
 
