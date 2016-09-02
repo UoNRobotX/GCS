@@ -9,6 +9,10 @@
                         ></ui-icon-button>
 
                         <ui-icon-button
+                            type="clear" icon="file_download" tooltip="Download mission" @click="downloadMission"
+                        ></ui-icon-button>
+
+                        <ui-icon-button
                             type="clear" icon="more_vert" has-dropdown-menu
                             dropdown-position="bottom right" :menu-options="overflowMenu"
                             @menu-option-selected="menuOptionSelected"
@@ -43,12 +47,14 @@ import GcsMissionRow from 'mission/GcsMissionRow.vue';
 
 import {
     setMissions, setCurrentMissionIndex,
+    sendDownloadMission, failDownloadMission,
     sendSaveMissions, failSaveMissions,
     sendLoadMissions, failLoadMissions
 } from 'store/actions';
 import {
     getMissions, getCurrentMissionIndex, getCurrentMission,
     getMessageStateWaiting, getMessageStateSuccess, getMessageStateFailure,
+    getDownloadMissionState, getDownloadMissionData,
     getSaveMissionsState, getSaveMissionsData,
     getLoadMissionsState, getLoadMissionsData,
 } from 'store/getters';
@@ -62,6 +68,8 @@ export default {
             WAITING:             getMessageStateWaiting,
             SUCCESS:             getMessageStateSuccess,
             FAILURE:             getMessageStateFailure,
+            downloadMissionState: getDownloadMissionState,
+            downloadMissionData:  getDownloadMissionData,
             saveMissionsState:   getSaveMissionsState,
             saveMissionsData:    getSaveMissionsData,
             loadMissionsState:   getLoadMissionsState,
@@ -71,6 +79,8 @@ export default {
         actions: {
             setMissions,
             setCurrentMissionIndex,
+            sendDownloadMission,
+            failDownloadMission,
             sendSaveMissions,
             failSaveMissions,
             sendLoadMissions,
@@ -110,6 +120,15 @@ export default {
                 description: null,
                 waypoints: []
             })
+        },
+
+        downloadMission() {
+            this.sendDownloadMission();
+            setTimeout(() => {
+                if (this.downloadMissionState == this.WAITING){
+                    this.failDownloadMission('Timeout reached.');
+                }
+            }, 1000);
         },
 
         menuOptionSelected(option){
@@ -180,6 +199,17 @@ export default {
     },
 
     watch: {
+        downloadMissionState(state, oldState){
+            if (state != oldState){
+                if (state == this.SUCCESS){
+                    console.log('Mission downloaded.');
+                    this.missions.push(this.downloadMissionData)
+                } else if (state == this.FAILURE){
+                    console.log('Unable to download mission: ' + this.downloadMissionData);
+                }
+            }
+        },
+
         saveMissionsState(state, oldState){
             if (state != oldState){
                 if (state == this.SUCCESS){ //successful response
@@ -189,6 +219,7 @@ export default {
                 }
             }
         },
+
         loadMissionsState(state, oldState){
             if (state != oldState){
                 if (state == this.SUCCESS){

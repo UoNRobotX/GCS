@@ -22,7 +22,6 @@
 import {
     getWamv, getMissions, getCurrentMissionIndex,
     getMessageStateWaiting, getMessageStateSuccess, getMessageStateFailure,
-    getDownloadMissionState, getDownloadMissionData,
     getStartMissionState, getStartMissionData,
     getStopMissionState, getStopMissionData,
     getResumeMissionState, getResumeMissionData,
@@ -32,8 +31,7 @@ import {
     getUnkillState, getUnkillData
 } from 'store/getters';
 import {
-    setWamvArmed, setCurrentMission,
-    sendDownloadMission, failDownloadMission,
+    setWamvArmed,
     sendStartMission, failStartMission,
     sendStopMission, failStopMission,
     sendResumeMission, failResumeMission,
@@ -52,8 +50,6 @@ export default {
             WAITING:              getMessageStateWaiting,
             SUCCESS:              getMessageStateSuccess,
             FAILURE:              getMessageStateFailure,
-            downloadMissionState: getDownloadMissionState,
-            downloadMissionData:  getDownloadMissionData,
             startMissionState:    getStartMissionState,
             startMissionData:     getStartMissionData,
             stopMissionState:     getStopMissionState,
@@ -72,9 +68,6 @@ export default {
 
         actions: {
             setArmed: setWamvArmed,
-            setCurrentMission,
-            sendDownloadMission,
-            failDownloadMission,
             sendStartMission,
             failStartMission,
             sendStopMission,
@@ -134,15 +127,6 @@ export default {
     },
 
     methods: {
-        downloadMission() {
-            this.sendDownloadMission();
-            setTimeout(() => {
-                if (this.downloadMissionState == this.WAITING){
-                    this.failDownloadMission('Timeout reached.');
-                }
-            }, 1000);
-        },
-
         toggleMission() {
             if (this.wamv.mode === 'idle') {
                 this.startMission();
@@ -207,16 +191,6 @@ export default {
     },
 
     watch: {
-        downloadMissionState(state, oldState){
-            if (state != oldState){
-                if (state == this.SUCCESS){
-                    console.log('Mission downloaded.');
-                    this.setCurrentMission(this.downloadMissionData);
-                } else if (state == this.FAILURE){
-                    console.log('Unable to download mission: ' + this.downloadMissionData);
-                }
-            }
-        },
         startMissionState(state, oldState){
             if (state != oldState){
                 if (state == this.SUCCESS){

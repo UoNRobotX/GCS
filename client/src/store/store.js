@@ -104,10 +104,6 @@ const mutations = {
         state.currentMissionIndex = index;
     },
 
-    SET_CURRENT_MISSION(state, mission) {
-        state.missions.$set(state.currentMissionIndex, mission);
-    },
-
     SET_PARAMETERS(state, parameters) {
         state.parameters = parameters;
     },

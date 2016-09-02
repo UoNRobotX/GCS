@@ -95,13 +95,6 @@ export function setCurrentMissionIndex({ dispatch, state }, index) {
 }
 
 /**
- * Set the current mission
- */
-export function setCurrentMission({ dispatch, state }, mission) {
-    dispatch('SET_CURRENT_MISSION', mission);
-}
-
-/**
  * Set the parameters
  */
 export function setParameters({ dispatch, state }, parameters) {
