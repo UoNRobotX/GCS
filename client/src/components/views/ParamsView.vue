@@ -35,31 +35,12 @@
 </template>
 
 <script>
-import {
-    getParameters,
-    getMessageStateWaiting, getMessageStateSuccess, getMessageStateFailure,
-    getSetParametersState, getSetParametersData
-} from 'store/getters';
-import {
-    sendSetParameters, failSetParameters,
-    sendGetParameters
-} from 'store/actions';
+import { getParameters } from 'store/getters';
 
 export default {
     vuex: {
         getters: {
-            parameters:           getParameters,
-            WAITING:              getMessageStateWaiting,
-            SUCCESS:              getMessageStateSuccess,
-            FAILURE:              getMessageStateFailure,
-            setParametersState:    getSetParametersState,
-            setParametersData:     getSetParametersData
-        },
-
-        actions: {
-            sendSetParameters,
-            failSetParameters,
-            sendGetParameters
+            parameters: getParameters
         }
     },
 
@@ -96,35 +77,17 @@ export default {
                 //console.log(name + ': ' + this.changedParams[name]);
                 data.push({title: name, value: this.changedParams[name]});
             }
-            this.sendSetParameters(data);
-            setTimeout(() => {
-                if (this.setParametersState == this.WAITING){
-                    this.failSetParameters('Timeout reached.');
-                }
-            }, 1000);
+            this.$dispatch('client::set_parameters', data);
         },
 
         resetParams(){
-            this.sendGetParameters();
-            setTimeout(() => {
-                if (this.getParametersState == this.WAITING){
-                    this.failGetParameters('Timeout reached.');
-                }
-            }, 1000);
-            //the reset of the response handling is currently done in SocketIoManager.vue
+            this.$dispatch('client::get_parameters');
         }
     },
-
-    watch: {
-        setParametersState(state, oldState){
-            if (state != oldState){
-                if (state == this.SUCCESS){
-                    console.log('Parameters set.');
-                    this.changedParams = Object.create(null);
-                } else if (state == this.FAILURE){
-                    console.log('Unable to set parameters: ' + this.setParametersData);
-                }
-            }
+    
+    events: {
+        'server::set_parameters:success'(){
+            this.changedParams = Object.create(null);
         }
     }
 };

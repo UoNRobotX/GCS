@@ -61,35 +61,19 @@ import GcsWaypointLink from 'markers/GcsWaypointLink.vue';
 import element from 'util/element-scroll';
 import numberToLetter from 'util/number-to-letter';
 
-import {
-    getMapEditing,
-    getMissions, getCurrentMissionIndex,
-    getMessageStateWaiting, getMessageStateSuccess, getMessageStateFailure,
-    getUploadMissionState, getUploadMissionData
-} from 'store/getters';
-import {
-    setMapEditing,
-    sendUploadMission, failUploadMission,
-} from 'store/actions';
-
+import { getMapEditing, getMissions, getCurrentMissionIndex } from 'store/getters';
+import { setMapEditing } from 'store/actions';
 
 export default {
     vuex: {
         getters: {
-            mapEditing:           getMapEditing,
-            missions:             getMissions,
-            currentMissionIndex:  getCurrentMissionIndex,
-            WAITING:              getMessageStateWaiting,
-            SUCCESS:              getMessageStateSuccess,
-            FAILURE:              getMessageStateFailure,
-            uploadMissionState:   getUploadMissionState,
-            uploadMissionData:    getUploadMissionData
+            mapEditing:          getMapEditing,
+            missions:            getMissions,
+            currentMissionIndex: getCurrentMissionIndex
         },
 
         actions: {
-            setMapEditing,
-            sendUploadMission,
-            failUploadMission
+            setMapEditing
         }
     },
 
@@ -215,26 +199,8 @@ export default {
         },
 
         uploadMission() {
-            let mission = this.missions[this.currentMissionIndex];
-            this.sendUploadMission(mission);
-            setTimeout(() => {
-                if (this.uploadMissionState == this.WAITING){
-                    this.failUploadMission('Timeout reached.');
-                }
-            }, 1000);
+            this.$dispatch('client::upload_mission', this.missions[this.currentMissionIndex]);
         },
-    },
-
-    watch: {
-        uploadMissionState(state, oldState){
-            if (state != oldState){
-                if (state == this.SUCCESS){ //successful response
-                    console.log('Mission uploaded.');
-                } else if (state == this.FAILURE){ //failure response
-                    console.log('Unable to upload mission: ' + this.uploadMissionData);
-                }
-            }
-        }
     },
 
     components: {

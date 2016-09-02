@@ -45,46 +45,20 @@
 import GcsMission from 'mission/GcsMission.vue';
 import GcsMissionRow from 'mission/GcsMissionRow.vue';
 
-import {
-    setMissions, setCurrentMissionIndex,
-    sendDownloadMission, failDownloadMission,
-    sendSaveMissions, failSaveMissions,
-    sendLoadMissions, failLoadMissions
-} from 'store/actions';
-import {
-    getMissions, getCurrentMissionIndex, getCurrentMission,
-    getMessageStateWaiting, getMessageStateSuccess, getMessageStateFailure,
-    getDownloadMissionState, getDownloadMissionData,
-    getSaveMissionsState, getSaveMissionsData,
-    getLoadMissionsState, getLoadMissionsData,
-} from 'store/getters';
+import { setMissions, setCurrentMissionIndex } from 'store/actions';
+import { getMissions, getCurrentMissionIndex, getCurrentMission } from 'store/getters';
 
 export default {
     vuex: {
         getters: {
             missions:            getMissions,
             currentMissionIndex: getCurrentMissionIndex,
-            currentMission:      getCurrentMission,
-            WAITING:             getMessageStateWaiting,
-            SUCCESS:             getMessageStateSuccess,
-            FAILURE:             getMessageStateFailure,
-            downloadMissionState: getDownloadMissionState,
-            downloadMissionData:  getDownloadMissionData,
-            saveMissionsState:   getSaveMissionsState,
-            saveMissionsData:    getSaveMissionsData,
-            loadMissionsState:   getLoadMissionsState,
-            loadMissionsData:    getLoadMissionsData
+            currentMission:      getCurrentMission
         },
 
         actions: {
             setMissions,
-            setCurrentMissionIndex,
-            sendDownloadMission,
-            failDownloadMission,
-            sendSaveMissions,
-            failSaveMissions,
-            sendLoadMissions,
-            failLoadMissions
+            setCurrentMissionIndex
         }
     },
 
@@ -123,32 +97,17 @@ export default {
         },
 
         downloadMission() {
-            this.sendDownloadMission();
-            setTimeout(() => {
-                if (this.downloadMissionState == this.WAITING){
-                    this.failDownloadMission('Timeout reached.');
-                }
-            }, 1000);
+            this.$dispatch('client::download_mission');
         },
 
         menuOptionSelected(option){
             switch (option.id){
                 case 'save': {
-                    this.sendSaveMissions(this.missions);
-                    setTimeout(() => {
-                        if (this.saveMissionsState == this.WAITING){
-                            this.failSaveMissions('Timeout reached.');
-                        }
-                    }, 1000);
+                    this.$dispatch('client::save_missions', this.missions);
                     break;
                 }
                 case 'load': {
-                    this.sendLoadMissions(this.missions);
-                    setTimeout(() => {
-                        if (this.loadMissionsState == this.WAITING){
-                            this.failLoadMissions('Timeout reached.');
-                        }
-                    }, 1000);
+                    this.$dispatch('client::load_missions');
                     break;
                 }
                 case 'import': {
@@ -194,40 +153,6 @@ export default {
                 };
                 //start file read
                 reader.readAsText(file);
-            }
-        }
-    },
-
-    watch: {
-        downloadMissionState(state, oldState){
-            if (state != oldState){
-                if (state == this.SUCCESS){
-                    console.log('Mission downloaded.');
-                    this.missions.push(this.downloadMissionData)
-                } else if (state == this.FAILURE){
-                    console.log('Unable to download mission: ' + this.downloadMissionData);
-                }
-            }
-        },
-
-        saveMissionsState(state, oldState){
-            if (state != oldState){
-                if (state == this.SUCCESS){ //successful response
-                    console.log('Missions saved.');
-                } else if (state == this.FAILURE){ //failure response
-                    console.log('Unable to save missions: ' + this.saveMissionsData);
-                }
-            }
-        },
-
-        loadMissionsState(state, oldState){
-            if (state != oldState){
-                if (state == this.SUCCESS){
-                    this.setMissions(this.loadMissionsData);
-                    console.log('Missions loaded.');
-                } else if (state == this.FAILURE){
-                    console.log('Unable to load missions: ' + this.loadMissionsData);
-                }
             }
         }
     },
