@@ -14,21 +14,54 @@ module.exports = function(){
     this.signal = 100; //unrealistically, for the fake WAM-V, this is always 100
     this.mission = null; //the vehicle's current mission
     this.missionIndex = 0; //if completing a mission, the index of the next waypoint
-    this.parameters = {
-        'Test Parameter 1': ['double', 3.2],
-        'Test Parameter Group 1': {
-            'Test Parameter 2': ['vec3', [3,-2.3,1000]]
-        },
-        'State Estimator': {
-            'IMU': {
-                'mag scale':  ['double',  0],
-                'mag vector': ['vector3', [0,0,0]],
-                'Rib':        ['mat3',    [0,0,0,0,0,0,0,0,0]],
-                'rIBb':       ['vec3',    [0,0,0]],
-                'gbBNi':      ['vec3',    [0,0,0]]
-            }
-        }
-    };
+    this.parameters = [{
+        title: 'State Estimator',
+        subSections: [{
+            title: 'IMU',
+            params: [{
+                title: 'mag_scale',
+                type: 'double',
+                value: 0
+            }, {
+                title: 'mag vector',
+                type: 'vec3',
+                value: '0,0,0' // [0, 0, 0]
+            }, {
+                title: 'Rib',
+                type: 'mat3',
+                value: '0,0,0;0,0,0;0,0,0' // [0, 0, 0, 0, 0, 0, 0, 0, 0]
+            }, {
+                title: 'rIBb',
+                type: 'vec3',
+                value: '0,0,0' // [0, 0, 0]
+            }, {
+                title: 'gbBNi',
+                type: 'vec3',
+                value: '0,0,0' // [0, 0, 0]
+            }]
+        }]
+    }, {
+        title: 'Test section',
+        subSections: [{
+            title: 'Test subsection 1',
+            params: [{
+                title: 'Test parameter 1',
+                type: 'double',
+                value: -1.2
+            }, {
+                title: 'Test parameter 2',
+                type: 'vec3',
+                value: '3,-0.2,100'
+            }]
+        }, {
+            title: 'Test subsection 2',
+            params: [{
+                title: 'Test parameter 3',
+                type: 'mat3',
+                value: '1,2,3;4,5,6;7,8,9'
+            }]
+        }]
+    }];
     //update fake WAM-V (returns null, or a string if something important has happened)
     this.update = function(){
         var msg = ''; //used for return value

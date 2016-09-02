@@ -55,15 +55,15 @@ var vehicle = new Vehicle();
  *          }
  *     - For 'get_parameters':
  *         If sent from the client, no data is sent.
- *         If sent from the server, the data is an object.
- *             Each of the object's properties specifies a parameter or parameter group.
- *             Each property can have one of these forms:
- *                 parameterName1: ['boolean', b1] //the elements specify the type and value
- *                 parameterName1: ['double',  n1]
- *                 parameterName1: ['vector3', [x1, y1, z1]]
- *                 parameterName1: ['mat3',    [x11,x12,x13, x21,x22,x23, x31,x32,x33]]
- *                 parameterGroupName1: parameters1 //parameters1 has the same form as the data object
- *             Parameter names may not contain a '|' (these are used by 'set_parameter').
+ *         If sent from the server, the data is an array that specifies parameters.
+ *             The array contains objects that specify sections:
+ *                 [{title: sectionTitle1, subSections: subsections1}, ...]
+ *             'subsections1' is an array that contains objects that specify subsections:
+ *                 [{title: subsectionTitle1, params: params1}, ...]
+ *             'params1' is an array that contains objects that specify parameters:
+ *                 [{title: parameterTitle1, type: type1, value value1}, ...]
+ *             'type1' is 'double', 'vector3', or 'mat3'.
+ *             'value1' is a number, or a string 'n1,n2,n3', or a string 'n11,n12,n13,n21,n22,n23,n31,n32,n33'
  *     - For 'set_parameter', the data has this form: {name: parameterName1, value: value1}
  *         A parameter in a group can be named using '|', eg: 'Group1|Subgroup1|ParameterName1'
  *     - For 'save_missions', the data specifies a list of missions

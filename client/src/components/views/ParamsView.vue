@@ -9,13 +9,13 @@
                 <div class="page-sidebar">
                     <div class="sidebar-menu">
                         <a
-                            href="#" class="sidebar-menu-item" v-for="(index, section) in params"
+                            href="#" class="sidebar-menu-item" v-for="(index, section) in parameters"
                             @click="selectSection(index)" :class="{ 'selected': index === currentSectionIndex }"
                         >{{ section.title }}</a>
                     </div>
                 </div>
 
-                <div class="page-main">
+                <div class="page-main" v-if="parameters.length > 0">
                     <ui-collapsible
                         v-for="section in currentSection.subSections" :header="section.title"
                     >
@@ -27,32 +27,6 @@
                         </div>
                     </ui-collapsible>
                 </div>
-
-                <!-- display parameters (up to hierarchy depth 3) -->
-               <!--  <div v-for="(name, val) in parameters">
-                    <span v-if="isArray(val)"
-                        v-text="name + ' (' + val[0] + '): ' + val[1]"
-                    ></span>
-                    <div v-else>
-                        <span v-text="name"></span>
-                        <div v-for="(name2, val2) in val">
-                            <span v-if="isArray(val2)"
-                                v-text="'> ' + name2 + ' (' + val2[0] + '): ' + val2[1]"
-                            ></span>
-                            <div v-else>
-                                <span v-text="'> ' + name2"></span>
-                                <div v-for="(name3, val3) in val2">
-                                    <span v-if="isArray(val3)"
-                                        v-text="'> > ' + name3 + ' (' + val3[0] + '): ' + val3[1]"
-                                    ></span>
-                                    <span v-else
-                                        v-text="'> > ' + name3 + ': ...'">
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div> -->
             </div>
         </div>
     </div>
@@ -70,63 +44,13 @@ export default {
 
     data() {
         return {
-            currentSectionIndex: 0,
-            params: [{
-                title: 'State Estimator',
-                subSections: [{
-                    title: 'IMU',
-                    params: [{
-                        title: 'mag_scale',
-                        type: 'double',
-                        value: 0
-                    }, {
-                        title: 'mag vector',
-                        type: 'vector3',
-                        value: '0,0,0' // [0, 0, 0]
-                    }, {
-                        title: 'Rib',
-                        type: 'mat3',
-                        value: '0,0,0;0,0,0;0,0,0' // [0, 0, 0, 0, 0, 0, 0, 0, 0]
-                    }, {
-                        title: 'rIBb',
-                        type: 'vec3',
-                        value: '0,0,0' // [0, 0, 0]
-                    }, {
-                        title: 'gbBNi',
-                        type: 'vec3',
-                        value: '0,0,0' // [0, 0, 0]
-                    }]
-                }, {
-                    title: 'Test Section',
-                    params: [{
-                        title: 'mag_scale',
-                        type: 'double',
-                        value: 0
-                    }, {
-                        title: 'mag vector',
-                        type: 'vector3',
-                        value: '0,0,0' // [0, 0, 0]
-                    }, {
-                        title: 'Rib',
-                        type: 'mat3',
-                        value: '0,0,0;0,0,0;0,0,0' // [0, 0, 0, 0, 0, 0, 0, 0, 0]
-                    }, {
-                        title: 'rIBb',
-                        type: 'vec3',
-                        value: '0,0,0' // [0, 0, 0]
-                    }, {
-                        title: 'gbBNi',
-                        type: 'vec3',
-                        value: '0,0,0' // [0, 0, 0]
-                    }]
-                }]
-            }]
+            currentSectionIndex: 0
         };
     },
 
     computed: {
         currentSection() {
-            return this.params[this.currentSectionIndex];
+            return this.parameters[this.currentSectionIndex];
         }
     },
 

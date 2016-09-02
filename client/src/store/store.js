@@ -26,7 +26,7 @@ const initialState = {
     settingsLoaded: false,
     missions: [],
     currentMissionIndex: -1,
-    parameters: {},
+    parameters: [],
     messageState: {
         //constants for indicating state
         INITIAL: 0,
