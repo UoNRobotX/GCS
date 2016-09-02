@@ -1,5 +1,7 @@
 <template>
     <div class="gcs-commands">
+        <ui-button v-if="wamv.mode == 'paused'" @click="startMission">Restart</ui-button>
+
         <ui-button
             @click="toggleMission" :text="startButtonText" :disabled="wamv.mode === 'killed'"
         ></ui-button>
@@ -143,6 +145,7 @@ export default {
                 }
             }, 1000);
         },
+
         stopMission(){
             this.sendStopMission();
             setTimeout(() => {
@@ -151,6 +154,7 @@ export default {
                 }
             }, 1000);
         },
+
         resumeMission(){
             this.sendResumeMission();
             setTimeout(() => {
@@ -178,6 +182,7 @@ export default {
                 }
             }, 1000);
         },
+
         unkill(){
             this.sendUnkill();
             setTimeout(() => {
