@@ -33,7 +33,7 @@ import SocketIoManager from 'components/SocketIoManager.vue';
 
 export default {
     data() {
-        return {}
+        return {};
     },
 
     events: {

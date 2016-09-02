@@ -41,13 +41,14 @@
                 <gcs-waypoint
                     v-for="(index, waypoint) in mission.waypoints" :index="index"
                     :label="toLetter(index + 1)" :title="waypoint.title" :type="waypoint.type"
-                    :lat="waypoint.position.lat" :lng="waypoint.position.lng" :visible="waypointsVisible"
-                    :rotation="waypoint.rotation" :scale="10" :draggable="mapEditing"
+                    :lat="waypoint.position.lat" :lng="waypoint.position.lng"
+                    :rotation="waypoint.rotation" :scale="10"
+                    :draggable="mapEditing" :visible="waypointsVisible"
                     @delete="deleteWaypoint(index)"
                 ></gcs-waypoint>
+
                 <gcs-waypoint-link
-                    v-for="(index, waypoint) in mission.waypoints"
-                    :index="index"
+                    v-for="(index, waypoint) in mission.waypoints" :index="index"
                     :start="waypoint.position"
                     :end="mission.waypoints[(index+1) % mission.waypoints.length].position;"
                     :visible="waypointsVisible"
@@ -193,7 +194,7 @@ export default {
 
         uploadMission() {
             this.$dispatch('client::upload_mission', this.missions[this.currentMissionIndex]);
-        },
+        }
     },
 
     components: {

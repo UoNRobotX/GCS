@@ -63,7 +63,7 @@ export default {
         return {
             dragging: false,
             highlighted: false,
-            fillColor: {normal: 'yellow', hover: 'lime'},
+            fillColor: {normal: 'yellow', hover: 'lime'}
         };
     },
 

@@ -48,10 +48,10 @@ export default {
         return {
             mapType: 'Satellite',
             mapTypesMenu: [
-                { 'value': 'ROADMAP', text: 'Road' },
-                { 'value': 'TERRAIN', text: 'Terrain' },
+                { 'value': 'ROADMAP',   text: 'Road'      },
+                { 'value': 'TERRAIN',   text: 'Terrain'   },
                 { 'value': 'SATELLITE', text: 'Satellite' },
-                { 'value': 'HYBRID', text: 'Hybrid' }
+                { 'value': 'HYBRID',    text: 'Hybrid'    }
             ]
         };
     },

@@ -46,7 +46,7 @@ export default {
         //initialise socket
         this.socket = socket_io_client('localhost:3000');
         this.socket.on('connect', () => {
-            console.log('connected to server')
+            console.log('connected to server');
             //get parameters once at startup
             this.sendGetParameters();
             //load missions once at startup
@@ -147,6 +147,7 @@ export default {
                 }, this.TIMEOUT);
             }
         },
+
         sendSetParameters(parameterSettings){
             if (this.waitTimers.set_parameters == null){
                 this.socket.emit('set_parameters', parameterSettings);
@@ -157,6 +158,7 @@ export default {
                 }, this.TIMEOUT);
             }
         },
+
         sendSaveMissions(missions){
             if (this.waitTimers.save_missions == null){
                 this.socket.emit('save_missions', missions);
@@ -167,6 +169,7 @@ export default {
                 }, this.TIMEOUT);
             }
         },
+
         sendLoadMissions(){
             if (this.waitTimers.load_missions == null){
                 this.socket.emit('load_missions');
@@ -177,6 +180,7 @@ export default {
                 }, this.TIMEOUT);
             }
         },
+
         sendUploadMission(mission){
             if (this.waitTimers.upload_mission == null){
                 this.socket.emit('upload_mission', mission);
@@ -187,6 +191,7 @@ export default {
                 }, this.TIMEOUT);
             }
         },
+
         sendDownloadMission(){
             if (this.waitTimers.download_mission == null){
                 this.socket.emit('download_mission');
@@ -197,6 +202,7 @@ export default {
                 }, this.TIMEOUT);
             }
         },
+
         sendArm(){
             if (this.waitTimers.arm == null){
                 this.socket.emit('arm');
@@ -207,6 +213,7 @@ export default {
                 }, this.TIMEOUT);
             }
         },
+
         sendDisarm(){
             if (this.waitTimers.disarm == null){
                 this.socket.emit('disarm');
@@ -217,6 +224,7 @@ export default {
                 }, this.TIMEOUT);
             }
         },
+
         sendStartMission(){
             if (this.waitTimers.start_mission == null){
                 this.socket.emit('start_mission');
@@ -227,6 +235,7 @@ export default {
                 }, this.TIMEOUT);
             }
         },
+
         sendStopMission(){
             if (this.waitTimers.stop_mission == null){
                 this.socket.emit('stop_mission');
@@ -237,6 +246,7 @@ export default {
                 }, this.TIMEOUT);
             }
         },
+
         sendResumeMission(){
             if (this.waitTimers.resume_mission == null){
                 this.socket.emit('resume_mission');
@@ -247,6 +257,7 @@ export default {
                 }, this.TIMEOUT);
             }
         },
+
         sendKill(){
             if (this.waitTimers.kill == null){
                 this.socket.emit('kill');
@@ -257,6 +268,7 @@ export default {
                 }, this.TIMEOUT);
             }
         },
+
         sendUnkill(){
             if (this.waitTimers.unkill == null){
                 this.socket.emit('unkill');
@@ -273,44 +285,56 @@ export default {
         'client::get_parameters'() {
             this.sendGetParameters();
         },
+
         'client::set_parameters'(parameterSettings) {
             this.sendSetParameters(parameterSettings);
         },
+
         'client::save_missions'(missions) {
             this.sendSaveMissions(missions);
         },
+
         'client::load_missions'() {
             this.sendLoadMissions();
         },
+
         'client::upload_mission'(mission) {
             this.sendUploadMission(mission);
         },
+
         'client::download_mission'() {
             this.sendDownloadMission();
         },
+
         'client::arm'() {
             this.sendArm();
         },
+
         'client::disarm'() {
             this.sendDisarm();
         },
+
         'client::start_mission'() {
             this.sendStartMission();
         },
+
         'client::stop_mission'() {
             this.sendStopMission();
         },
+
         'client::resume_mission'() {
             this.sendResumeMission();
         },
+
         'client::kill'() {
             this.sendKill();
         },
+
         'client::unkill'() {
             this.sendUnkill();
         }
     }
-}
+};
 </script>
 
 <style lang="stylus">

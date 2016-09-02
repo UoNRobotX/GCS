@@ -66,13 +66,13 @@ export default {
         return {
             currentView: 'listing',
             overflowMenu: [
-                { id: 'save', text: 'Save to server' },
-                { id: 'load', text: 'Load from server' },
-                { id: 'sep1', text: '', type: 'divider' },
-                { id: 'export', text: 'Export to file' },
-                { id: 'import', text: 'Import from file' },
-                { id: 'sep2', text: '', type: 'divider' },
-                { id: 'clear', text: 'Clear all' },
+                { id: 'save',   text: 'Save to server'                   },
+                { id: 'load',   text: 'Load from server'                 },
+                { id: 'sep1',   text: '',                type: 'divider' },
+                { id: 'export', text: 'Export to file'                   },
+                { id: 'import', text: 'Import from file'                 },
+                { id: 'sep2',   text: '',                type: 'divider' },
+                { id: 'clear',  text: 'Clear all'                        }
             ]
         };
     },
@@ -93,7 +93,7 @@ export default {
                 title: 'Mission ' + (this.missions.length + 1),
                 description: null,
                 waypoints: []
-            })
+            });
         },
 
         downloadMission() {
@@ -201,6 +201,7 @@ export default {
         'delete-mission'(index){
             this.missions.splice(index, 1);
         },
+
         'delete-waypoint'(index){
             this.currentMission.waypoints.splice(index, 1);
         }

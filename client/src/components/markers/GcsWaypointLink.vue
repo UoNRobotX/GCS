@@ -18,14 +18,17 @@ export default {
             type: Number,
             required: true
         },
+
         start: {
             type: Object,
             required: true
         },
+
         end: {
             type: Object,
             required: true
         },
+
         visible: {
             type: Boolean,
             default: true
@@ -118,6 +121,7 @@ export default {
                 return true;
             }
         },
+
         'waypointLink:drag_end'(index, lat, lng){
             if (this.index == index){
                 this.end = {lat: lat, lng: lng};

@@ -1,4 +1,4 @@
-var geolib = require('geolib')
+var geolib = require('geolib');
 
 //constructor for fake WAM-V
 module.exports = function(){
@@ -135,21 +135,21 @@ module.exports = function(){
     this.setParameters = function(paramSettings){
         var params = []; //will contain the parameters to be set
         //verify settings
+        var c, i, j, k;
         ParamSearch:
-        for (var c = 0; c < paramSettings.length; c++){
+        for (c = 0; c < paramSettings.length; c++){
             var setting = paramSettings[c];
             var titles = setting.title.split('|');
             if (titles.length != 3){
                 return 'A parameter title was invalid.';
             }
-            var found = false;
-            for (var i = 0; i < this.parameters.length; i++){
+            for (i = 0; i < this.parameters.length; i++){
                 var section = this.parameters[i];
                 if (section.title == titles[0]){
-                    for (var j = 0; j < section.subSections.length; j++){
+                    for (j = 0; j < section.subSections.length; j++){
                         var subSection = section.subSections[j];
                         if (subSection.title == titles[1]){
-                            for (var k = 0; k < subSection.params.length; k++){
+                            for (k = 0; k < subSection.params.length; k++){
                                 var param = subSection.params[k];
                                 if (param.title == titles[2]){
                                     // TODO: perform type and value checking
@@ -157,16 +157,16 @@ module.exports = function(){
                                     continue ParamSearch;
                                 }
                             }
-                            return 'A parameter was not found.'
+                            return 'A parameter was not found.';
                         }
                     }
-                    return 'A parameter was not found.'
+                    return 'A parameter was not found.';
                 }
             }
-            return 'A parameter was not found.'
+            return 'A parameter was not found.';
         }
         //use settings
-        for (var i = 0; i < paramSettings.length; i++){
+        for (i = 0; i < paramSettings.length; i++){
             params[i].value = paramSettings[i].value;
         }
     };
@@ -255,7 +255,7 @@ module.exports = function(){
         this.mode = 'killed';
         this.speed = 0;
         return null;
-    }
+    };
     //de-activate kill switch (returns null on success, or an error message)
     this.unkill = function(){
         if (this.mode != 'killed'){
@@ -264,5 +264,5 @@ module.exports = function(){
         this.mode = 'idle';
         this.missionIndex = 0;
         return null;
-    }
-}
+    };
+};

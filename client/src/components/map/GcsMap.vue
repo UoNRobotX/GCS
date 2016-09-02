@@ -48,7 +48,6 @@ export default {
             });
     },
 
-
     events: {
         'map::pan-up'() {
             this.map.panBy(0, -1 * (this.mapEl.clientHeight / 4));

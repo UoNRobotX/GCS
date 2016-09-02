@@ -21,7 +21,6 @@
 
 <script>
 import { getWamv } from 'store/getters';
-import { setWamvArmed } from 'store/actions';
 
 export default {
     vuex: {

@@ -42,7 +42,7 @@ export default {
 
         speed() {
             let spd = Math.round(this.wamv.speed*100)/100; //2 decimal places
-            return this.wamv.speed + ' KMPH';
+            return spd + ' KMPH';
         },
 
         battery() {

@@ -5,7 +5,6 @@ var openUrl = require('openurl');
 var serve = require('koa-static');
 var socket_io = require('socket.io');
 var fs = require('fs');
-var path = require('path');
 var Vehicle = require('./js/vehicle.js');
 
 var app = koa();
@@ -163,7 +162,7 @@ fs.readFile(missionsFile, function(err, data){
         console.log('Unable to read missions file. Using empty missions list.');
     } else {
         try {
-            var data = JSON.parse(data.toString());
+            data = JSON.parse(data.toString());
             if (!isMissionList(data)){
                 console.log('Missions file is invalid. Using empty missions list.');
             } else {
@@ -285,7 +284,7 @@ io.on('connection', function(socket){
     });
     socket.on('disarm', function(){
         console.log('got "disarm" message');
-        msg = vehicle.disarm();
+        var msg = vehicle.disarm();
         if (msg == null){
             socket.emit('success', 'disarm');
         } else {
@@ -294,7 +293,7 @@ io.on('connection', function(socket){
     });
     socket.on('start_mission', function(){
         console.log('got "start_mission" message');
-        msg = vehicle.start(true);
+        var msg = vehicle.start(true);
         if (msg == null){
             socket.emit('success', 'start_mission');
         } else {
@@ -303,7 +302,7 @@ io.on('connection', function(socket){
     });
     socket.on('stop_mission', function(){
         console.log('got "stop_mission" message');
-        msg = vehicle.stop();
+        var msg = vehicle.stop();
         if (msg == null){
             socket.emit('success', 'stop_mission');
         } else {
@@ -312,7 +311,7 @@ io.on('connection', function(socket){
     });
     socket.on('resume_mission', function(){
         console.log('got "resume_mission" message');
-        msg = vehicle.start(false);
+        var msg = vehicle.start(false);
         if (msg == null){
             socket.emit('success', 'resume_mission');
         } else {
@@ -321,7 +320,7 @@ io.on('connection', function(socket){
     });
     socket.on('kill', function(){
         console.log('got "kill" message');
-        msg = vehicle.kill();
+        var msg = vehicle.kill();
         if (msg == null){
             socket.emit('success', 'kill');
         } else {
@@ -330,7 +329,7 @@ io.on('connection', function(socket){
     });
     socket.on('unkill', function(){
         console.log('got "unkill" message');
-        msg = vehicle.unkill();
+        var msg = vehicle.unkill();
         if (msg == null){
             socket.emit('success', 'unkill');
         } else {
