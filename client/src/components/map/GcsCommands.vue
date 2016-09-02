@@ -13,6 +13,7 @@
         <div class="armed-toggle" v-if="wamv.loaded">
             <ui-switch
                 :value.sync="isArmed" :label="isArmed ? 'Armed' : 'Disarmed'" label-left
+                :disabled="wamv.mode == 'auto'"
             ></ui-switch>
         </div>
     </div>
