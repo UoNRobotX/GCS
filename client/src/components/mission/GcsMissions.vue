@@ -145,15 +145,55 @@ export default {
                     let contents = e.target.result;
                     try {
                         let newMissions = JSON.parse(contents);
-                        // TODO: verify missions object format
-                        this.setMissions(newMissions);
+                        if (!this.isMissionList(newMissions)){
+                            console.log('File content does not represent a valid mission list');
+                        } else {
+                            this.setMissions(newMissions);
+                        }
                     } catch (e){
-                        console.log('file contents are invalid: ' + e.message);
+                        console.log('File content is not valid JSON: ' + e.message);
                     }
                 };
                 //start file read
                 reader.readAsText(file);
             }
+        },
+
+        isMissionList(data){
+            if (!Array.isArray(data)){
+                return false;
+            }
+            for (var i = 0; i < data.length; i++){
+                var mission = data[i];
+                if (typeof mission != 'object' ||
+                    !mission.hasOwnProperty('title') ||
+                    mission.title != null && typeof mission.title != 'string' ||
+                    !mission.hasOwnProperty('description') ||
+                    mission.description != null && typeof mission.description != 'string' ||
+                    !mission.hasOwnProperty('waypoints') ||
+                    !Array.isArray(mission.waypoints)){
+                    return false;
+                }
+                for (var j = 0; j < mission.waypoints.length; j++){
+                    var wp = mission.waypoints[j];
+                    if (typeof wp != 'object' ||
+                        !wp.hasOwnProperty('title') ||
+                        wp.title != null && typeof wp.title != 'string' ||
+                        !wp.hasOwnProperty('type') ||
+                        typeof wp.type != 'string' ||
+                        !wp.hasOwnProperty('visible') ||
+                        typeof wp.visible != 'boolean' ||
+                        !wp.hasOwnProperty('position') ||
+                        typeof wp.position != 'object' ||
+                        !wp.position.hasOwnProperty('lat') ||
+                        typeof wp.position.lat != 'number' ||
+                        !wp.position.hasOwnProperty('lng') ||
+                        typeof wp.position.lng != 'number'){
+                        return false;
+                    }
+                }
+            }
+            return true;
         }
     },
 

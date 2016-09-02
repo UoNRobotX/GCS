@@ -79,8 +79,9 @@ var vehicle = new Vehicle();
  *             description: desc1,  //a string, or null
  *             waypoints: [
  *                 {
- *                     title:       title1, //a string, or null
- *                     description: desc1,  //a string, or null
+ *                     title:   title1,   //a string, or null
+ *                     type:    type1,    //a string
+ *                     visible: visible1, //a boolean
  *                     position: {
  *                         lat: lat1,
  *                         lng: lng1
@@ -109,7 +110,8 @@ function isMission(data){
     }
     for (var i = 0; i < data.waypoints.length; i++){
         var wp = data.waypoints[i];
-        if (!wp.hasOwnProperty('position') ||
+        if (typeof wp != 'object' ||
+            !wp.hasOwnProperty('position') ||
             typeof wp.position != 'object' ||
             !wp.position.hasOwnProperty('lat') ||
             typeof wp.position.lat != 'number' ||
