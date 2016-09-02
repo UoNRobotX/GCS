@@ -4,6 +4,7 @@
             <h1 class="page-header">
                 <span class="title">Params</span>
                 <ui-button class="pull-right" color="primary" @click="saveParams">Save</ui-button>
+                <ui-button class="pull-right" color="primary" @click="resetParams">Reset</ui-button>
             </h1>
 
             <div class="page-content">
@@ -40,7 +41,8 @@ import {
     getSetParametersState, getSetParametersData
 } from 'store/getters';
 import {
-    sendSetParameters, failSetParameters
+    sendSetParameters, failSetParameters,
+    sendGetParameters
 } from 'store/actions';
 
 export default {
@@ -56,7 +58,8 @@ export default {
 
         actions: {
             sendSetParameters,
-            failSetParameters
+            failSetParameters,
+            sendGetParameters
         }
     },
 
@@ -99,6 +102,16 @@ export default {
                     this.failSetParameters('Timeout reached.');
                 }
             }, 1000);
+        },
+
+        resetParams(){
+            this.sendGetParameters();
+            setTimeout(() => {
+                if (this.getParametersState == this.WAITING){
+                    this.failGetParameters('Timeout reached.');
+                }
+            }, 1000);
+            //the reset of the response handling is currently done in SocketIoManager.vue
         }
     },
 
