@@ -69,7 +69,8 @@ export default {
 
     events: {
         click() {
-            element.scrollIntoView(this.$el, null, 56); // 56px margin for UiToolbar
+            element.scrollIntoView(this.$el, this.$el.parentElement.parentElement, 56);
+                // 56px margin for UiToolbar
         },
 
         rightclick() {
