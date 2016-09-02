@@ -87,228 +87,55 @@ export default {
                 this.$dispatch('server::download_mission:success');
             }
         });
-        this.socket.on('success', (data) => {
+        this.socket.on('success', (msgType) => {
             console.log('received "success" message');
-            switch (data){
-                case 'set_parameters': {
-                    clearTimeout(this.waitTimers.set_parameters);
-                    if (this.waitTimers.set_parameters != null){
-                        this.waitTimers.set_parameters = null;
-                        console.log('Parameters set.');
-                        this.$dispatch('server::set_parameters:success');
-                    }
-                    break;
+            clearTimeout(this.waitTimers[msgType]);
+            if (this.waitTimers[msgType] != null){
+                this.waitTimers[msgType] = null;
+                switch (msgType){
+                    case 'set_parameters': {console.log('Parameters set.');          break;}
+                    case 'save_missions':  {console.log('Missions saved.');          break;}
+                    case 'upload_mission': {console.log('Mission uploaded.');        break;}
+                    case 'arm':            {console.log('Vehicle armed.');           break;}
+                    case 'disarm':         {console.log('Vehicle disarmed.');        break;}
+                    case 'start_mission':  {console.log('Mission started.');         break;}
+                    case 'stop_mission':   {console.log('Mission stopped.');         break;}
+                    case 'resume_mission': {console.log('Mission resumed.');         break;}
+                    case 'kill':           {console.log('Kill switch activated.');   break;}
+                    case 'unkill':         {console.log('Kill switch deactivated.'); break;}
                 }
-                case 'save_missions': {
-                    clearTimeout(this.waitTimers.save_missions);
-                    if (this.waitTimers.save_missions != null){
-                        this.waitTimers.save_missions = null;
-                        console.log('Missions saved.');
-                        this.$dispatch('server::save_missions:success');
-                    }
-                    break;
-                }
-                case 'upload_mission': {
-                    clearTimeout(this.waitTimers.upload_mission);
-                    if (this.waitTimers.upload_mission != null){
-                        this.waitTimers.upload_mission = null;
-                        console.log('Mission uploaded.');
-                        this.$dispatch('server::upload_mission:success');
-                    }
-                    break;
-                }
-                case 'arm': {
-                    clearTimeout(this.waitTimers.arm);
-                    if (this.waitTimers.arm != null){
-                        this.waitTimers.arm = null;
-                        console.log('Vehicle armed.');
-                        this.$dispatch('server::arm:success');
-                    }
-                    break;
-                }
-                case 'disarm': {
-                    clearTimeout(this.waitTimers.disarm);
-                    if (this.waitTimers.disarm != null){
-                        this.waitTimers.disarm = null;
-                        console.log('Vehicle disarmed.');
-                        this.$dispatch('server::disarm:success');
-                    }
-                    break;
-                }
-                case 'start_mission': {
-                    clearTimeout(this.waitTimers.start_mission);
-                    if (this.waitTimers.start_mission != null){
-                        this.waitTimers.start_mission = null;
-                        console.log('Mission started.');
-                        this.$dispatch('server::start_mission:success');
-                    }
-                    break;
-                }
-                case 'stop_mission': {
-                    clearTimeout(this.waitTimers.stop_mission);
-                    if (this.waitTimers.stop_mission != null){
-                        this.waitTimers.stop_mission = null;
-                        console.log('Mission stopped.');
-                        this.$dispatch('server::stop_mission:success');
-                    }
-                    break;
-                }
-                case 'resume_mission': {
-                    clearTimeout(this.waitTimers.resume_mission);
-                    if (this.waitTimers.resume_mission != null){
-                        this.waitTimers.resume_mission = null;
-                        console.log('Mission resumed.');
-                        this.$dispatch('server::resume_mission:success');
-                    }
-                    break;
-                }
-                case 'kill': {
-                    clearTimeout(this.waitTimers.kill);
-                    if (this.waitTimers.kill != null){
-                        this.waitTimers.kill = null;
-                        console.log('Kill switch activated.');
-                        this.$dispatch('server::kill:success');
-                    }
-                    break;
-                }
-                case 'unkill': {
-                    clearTimeout(this.waitTimers.unkill);
-                    if (this.waitTimers.unkill != null){
-                        this.waitTimers.unkill = null;
-                        console.log('Kill switch deactivated.');
-                        this.$dispatch('server::unkill:success');
-                    }
-                    break;
-                }
+                this.$dispatch('server::' + msgType + ':success');
             }
         });
         this.socket.on('failure', (data) => {
             console.log('received "failure" message');
-            switch (data[0]){
-                case 'get_parameters': {
-                    clearTimeout(this.waitTimers.get_parameters);
-                    if (this.waitTimers.get_parameters != null){
-                        this.waitTimers.get_parameters = null;
-                        console.log('Could not load parameters: ' + data[1]);
-                        this.$dispatch('server::get_parameters:failure');
-                    }
-                    break;
+            var msgType = data[0], errorMsg = data[1];
+            clearTimeout(this.waitTimers[msgType]);
+            if (this.waitTimers[msgType] != null){
+                this.waitTimers[msgType] = null;
+                switch (msgType){
+                    case 'get_parameters':   {console.log('Unable to load parameters: '        + errorMsg); break;}
+                    case 'set_parameters':   {console.log('Unable to set parameters: '         + errorMsg); break;}
+                    case 'save_missions':    {console.log('Unable to save missions: '          + errorMsg); break;}
+                    case 'load_missions':    {console.log('Unable to load missions: '          + errorMsg); break;}
+                    case 'upload_mission':   {console.log('Unable to upload mission: '         + errorMsg); break;}
+                    case 'download_mission': {console.log('Unable to download mission: '       + errorMsg); break;}
+                    case 'arm':              {console.log('Unable to arm vehicle: '            + errorMsg); break;}
+                    case 'disarm':           {console.log('Unable to disarm vehicle: '         + errorMsg); break;}
+                    case 'start_mission':    {console.log('Unable to start mission: '          + errorMsg); break;}
+                    case 'stop_mission':     {console.log('Unable to stop mission: '           + errorMsg); break;}
+                    case 'resume_mission':   {console.log('Unable to resume mission: '         + errorMsg); break;}
+                    case 'kill':             {console.log('Unable to activate kill switch: '   + errorMsg); break;}
+                    case 'unkill':           {console.log('Unable to deactivate kill switch: ' + errorMsg); break;}
                 }
-                case 'set_parameters': {
-                    clearTimeout(this.waitTimers.set_parameters);
-                    if (this.waitTimers.set_parameters != null){
-                        this.waitTimers.set_parameters = null;
-                        console.log('Could not set parameters: ' + data[1]);
-                        this.$dispatch('server::set_parameters:failure');
-                    }
-                    break;
-                }
-                case 'save_missions': {
-                    clearTimeout(this.waitTimers.save_missions);
-                    if (this.waitTimers.save_missions != null){
-                        this.waitTimers.save_missions = null;
-                        console.log('Could not save missions: ' + data[1]);
-                        this.$dispatch('server::save_missions:failure');
-                    }
-                    break;
-                }
-                case 'load_missions': {
-                    clearTimeout(this.waitTimers.load_missions);
-                    if (this.waitTimers.load_missions != null){
-                        this.waitTimers.load_missions = null;
-                        console.log('Could not load missions: ' + data[1]);
-                        this.$dispatch('server::load_missions:failure');
-                    }
-                    break;
-                }
-                case 'upload_mission': {
-                    clearTimeout(this.waitTimers.upload_mission);
-                    if (this.waitTimers.upload_mission != null){
-                        this.waitTimers.upload_mission = null;
-                        console.log('Could not upload mission: ' + data[1]);
-                        this.$dispatch('server::upload_mission:failure');
-                    }
-                    break;
-                }
-                case 'download_mission': {
-                    clearTimeout(this.waitTimers.download_mission);
-                    if (this.waitTimers.download_mission != null){
-                        this.waitTimers.download_mission = null;
-                        console.log('Could not download mission: ' + data[1]);
-                        this.$dispatch('server::download_mission:failure');
-                    }
-                    break;
-                }
-                case 'arm': {
-                    clearTimeout(this.waitTimers.arm);
-                    if (this.waitTimers.arm != null){
-                        this.waitTimers.arm = null;
-                        console.log('Could not arm vehicle: ' + data[1]);
-                        this.$dispatch('server::arm:failure');
-                    }
-                    break;
-                }
-                case 'disarm': {
-                    clearTimeout(this.waitTimers.disarm);
-                    if (this.waitTimers.disarm != null){
-                        this.waitTimers.disarm = null;
-                        console.log('Could not disarm vehicle: ' + data[1]);
-                        this.$dispatch('server::disarm:failure');
-                    }
-                    break;
-                }
-                case 'start_mission': {
-                    clearTimeout(this.waitTimers.start_mission);
-                    if (this.waitTimers.start_mission != null){
-                        this.waitTimers.start_mission = null;
-                        console.log('Could not start mission: ' + data[1]);
-                        this.$dispatch('server::start_mission:failure');
-                    }
-                    break;
-                }
-                case 'stop_mission': {
-                    clearTimeout(this.waitTimers.stop_mission);
-                    if (this.waitTimers.stop_mission != null){
-                        this.waitTimers.stop_mission = null;
-                        console.log('Could not stop mission: ' + data[1]);
-                        this.$dispatch('server::stop_mission:failure');
-                    }
-                    break;
-                }
-                case 'resume_mission': {
-                    clearTimeout(this.waitTimers.resume_mission);
-                    if (this.waitTimers.resume_mission != null){
-                        this.waitTimers.resume_mission = null;
-                        console.log('Could not resume mission: ' + data[1]);
-                        this.$dispatch('server::resume_mission:failure');
-                    }
-                    break;
-                }
-                case 'kill': {
-                    clearTimeout(this.waitTimers.kill);
-                    if (this.waitTimers.kill != null){
-                        this.waitTimers.kill = null;
-                        console.log('Could not activate kill switch: ' + data[1]);
-                        this.$dispatch('server::kill:failure');
-                    }
-                    break;
-                }
-                case 'unkill': {
-                    clearTimeout(this.waitTimers.unkill);
-                    if (this.waitTimers.unkill != null){
-                        this.waitTimers.unkill = null;
-                        console.log('Could not deactivate kill switch: ' + data[1]);
-                        this.$dispatch('server::unkill:failure');
-                    }
-                    break;
-                }
+                this.$dispatch('server::' + msgType + ':failure');
             }
         });
         this.socket.on('attention', (data) => {
             console.log('Attention: ' + data);
         });
     },
-    
+
     methods: {
         sendGetParameters(){
             if (this.waitTimers.get_parameters == null){
@@ -441,7 +268,7 @@ export default {
             }
         }
     },
-    
+
     events: {
         'client::get_parameters'() {
             this.sendGetParameters();

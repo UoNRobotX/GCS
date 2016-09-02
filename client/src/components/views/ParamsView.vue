@@ -84,7 +84,7 @@ export default {
             this.$dispatch('client::get_parameters');
         }
     },
-    
+
     events: {
         'server::set_parameters:success'(){
             this.changedParams = Object.create(null);
