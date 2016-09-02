@@ -9,6 +9,7 @@ import {
     setWamv, setParameters,
     sendGetParameters, succeedGetParameters, failGetParameters,
     sendLoadMissions,  succeedLoadMissions,  failLoadMissions,
+    succeedSetParameters,   failSetParameters,
     succeedSaveMissions,    failSaveMissions,
     succeedUploadMission,   failUploadMission,
     succeedDownloadMission, failDownloadMission,
@@ -22,7 +23,8 @@ import {
 } from 'store/actions';
 import {
     getMessageStateWaiting, getMessageStateSuccess, getMessageStateFailure,
-    getGetParameterState,    getGetParameterData,
+    getGetParametersState,   getGetParametersData,
+    getSetParametersState,   getSetParametersData,
     getSaveMissionsState,    getSaveMissionsData,
     getLoadMissionsState,    getLoadMissionsData,
     getUploadMissionState,   getUploadMissionData,
@@ -42,8 +44,10 @@ export default {
             WAITING:              getMessageStateWaiting,
             SUCCESS:              getMessageStateSuccess,
             FAILURE:              getMessageStateFailure,
-            getParameterState:    getGetParameterState,
-            getParameterData:     getGetParameterData,
+            getParametersState:   getGetParametersState,
+            getParametersData:    getGetParametersData,
+            setParametersState:   getSetParametersState,
+            setParametersData:    getSetParametersData,
             saveMissionsState:    getSaveMissionsState,
             saveMissionsData:     getSaveMissionsData,
             loadMissionsState:    getLoadMissionsState,
@@ -73,6 +77,8 @@ export default {
             sendGetParameters,
             succeedGetParameters,
             failGetParameters,
+            succeedSetParameters,
+            failSetParameters,
             succeedLoadMissions,
             sendLoadMissions,
             failLoadMissions,
@@ -113,7 +119,7 @@ export default {
             //get parameters once at startup
             this.sendGetParameters();
             setTimeout(() => {
-                if (this.getParameterState == this.WAITING){
+                if (this.getParametersState == this.WAITING){
                     this.failGetParameters('Timeout reached.');
                 }
             }, 1000);
@@ -135,7 +141,7 @@ export default {
         });
         this.socket.on('get_parameters', (data) => {
             console.log('received "get_parameters" message');
-            if (this.getParameterState == this.WAITING){
+            if (this.getParametersState == this.WAITING){
                 this.succeedGetParameters(data);
             }
         });
@@ -153,7 +159,9 @@ export default {
         });
         this.socket.on('success', (data) => {
             console.log('received "success" message');
-            if (data == 'save_missions' && this.saveMissionsState == this.WAITING){
+            if (data == 'set_parameters' && this.setParametersState == this.WAITING){
+                this.succeedSetParameters();
+            } else if (data == 'save_missions' && this.saveMissionsState == this.WAITING){
                 this.succeedSaveMissions();
             } else if (data == 'upload_mission' && this.uploadMissionState == this.WAITING){
                 this.succeedUploadMission();
@@ -178,6 +186,10 @@ export default {
             switch (data[0]){
                 case 'get_parameters': {
                     this.failGetParameters(data[1]);
+                    break;
+                }
+                case 'set_parameters': {
+                    this.failSetParameters(data[1]);
                     break;
                 }
                 case 'save_missions': {
@@ -232,15 +244,23 @@ export default {
     },
 
     watch: {
-        getParameterState(state, oldState){
+        getParametersState(state, oldState){
             if (state != oldState){
                 //handle get_parameter messages
                 if (state == this.WAITING){ //send message
                     this.socket.emit('get_parameters');
                 } else if (state == this.SUCCESS){ //successful response
-                    this.setParameters(this.getParameterData);
+                    this.setParameters(this.getParametersData);
                 } else if (state == this.FAILURE){ //failure response
-                    console.log('Unable to get parameters: ' + this.getParameterData);
+                    console.log('Unable to get parameters: ' + this.getParametersData);
+                }
+            }
+        },
+
+        setParametersState(state, oldState){
+            if (state != oldState){
+                if (state == this.WAITING){
+                    this.socket.emit('set_parameters', this.setParametersData);
                 }
             }
         },

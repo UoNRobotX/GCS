@@ -24,7 +24,7 @@ var vehicle = new Vehicle();
  *  Each socket.io message will have one of these types:
  *      - 'status'           -> sent to client, contains vehicle position, heading, etc
  *      - 'get_parameters'   -> sent to server/client, requests/contains vehicle parameters
- *      - 'set_parameter'    -> sent to server, requests that a vehicle parameter be set
+ *      - 'set_parameters'   -> sent to server, requests that vehicle parameters be set
  *      - 'save_missions'    -> sent to server, contains missions to be saved on the server
  *      - 'load_missions'    -> sent to server/client, requests/contains missions saved on the server
  *      - 'upload_mission'   -> sent to server, contains a mission to send to the vehicle
@@ -63,9 +63,10 @@ var vehicle = new Vehicle();
  *             'params1' is an array that contains objects that specify parameters:
  *                 [{title: parameterTitle1, type: type1, value value1}, ...]
  *             'type1' is 'double', 'vector3', or 'mat3'.
- *             'value1' is a number, or a string 'n1,n2,n3', or a string 'n11,n12,n13,n21,n22,n23,n31,n32,n33'
- *     - For 'set_parameter', the data has this form: {name: parameterName1, value: value1}
- *         A parameter in a group can be named using '|', eg: 'Group1|Subgroup1|ParameterName1'
+ *             'value1' is a string containing a number, or 3 numbers, or 9 numbers
+ *                 eg: '100', '1,2,3', '1,2,3;4,5,6;7,8,9'
+ *     - For 'set_parameters', the data is an array of objects specifying parameters to set:
+ *         [{title: 'section1|subsection1|title1', value: value1}, ...]
  *     - For 'save_missions', the data specifies a list of missions
  *         The data is an array of objects, each of the same form as with 'upload_mission'
  *     - For 'load_missions':
@@ -127,6 +128,24 @@ function isMissionList(data){
     }
     for (var i = 0; i < data.length; i++){
         if (!isMission(data[i])){
+            return false;
+        }
+    }
+    return true;
+}
+
+//used to check if sent data corresponds to list of parameter settings
+function isParameterList(data){
+    if (!Array.isArray(data)){
+        return false;
+    }
+    for (var i = 0; i < data.length; i++){
+        var setting = data[i];
+        if (typeof setting != 'object' ||
+            !setting.hasOwnProperty('title') ||
+            typeof setting.title != 'string' ||
+            !setting.hasOwnProperty('value') ||
+            typeof setting.value != 'string'){
             return false;
         }
     }
@@ -203,21 +222,19 @@ io.on('connection', function(socket){
             socket.emit('failure', ['get_parameters', data]);
         }
     });
-    socket.on('set_parameter', function(data){
-        console.log('got "set_parameter" message');
+    socket.on('set_parameters', function(data){
+        console.log('got "set_parameters" message');
         //check data format
-        if (typeof data != 'object' ||
-            !data.hasOwnProperty('name') ||
-            !data.hasOwnProperty('value') ||
-            typeof data.name != 'string'){
-            socket.emit('failure', ['set_parameter', 'Message has invalid format.']);
+        if (!isParameterList(data)){
+            socket.emit('failure', ['set_parameters', 'Message has invalid format.']);
         }
         //set parameter
-        var msg = vehicle.setParameter(data.name, data.value);
+        var msg = vehicle.setParameters(data);
         if (msg != null){
-            socket.emit('failure', ['set_parameter', msg]);
+            socket.emit('failure', ['set_parameters', msg]);
         } else {
-            socket.emit('success', 'set_parameter');
+            socket.emit('success', 'set_parameters');
+            //console.log(JSON.stringify(vehicle.getParameters()))
         }
     });
     socket.on('save_missions', function(data){

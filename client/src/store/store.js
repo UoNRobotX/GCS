@@ -39,7 +39,7 @@ const initialState = {
         //when a server response is received, T[0] is set to SUCCESS, and T[1] to the response data
             //if the request failed, T[0] is instead set to FAILURE, and T[1] to the failure message
         get_parameters:   [0, null],
-        set_parameter:    [0, null],
+        set_parameters:   [0, null],
         save_missions:    [0, null],
         load_missions:    [0, null],
         upload_mission:   [0, null],
@@ -120,6 +120,20 @@ const mutations = {
     FAIL_GET_PARAMETERS(state, msg) {
         state.messageState.get_parameters.$set(0, state.messageState.FAILURE);
         state.messageState.get_parameters.$set(1, msg);
+    },
+
+    SEND_SET_PARAMETERS(state, parameterSettings) {
+        state.messageState.set_parameters.$set(0, state.messageState.WAITING);
+        state.messageState.set_parameters.$set(1, parameterSettings);
+    },
+
+    SUCCEED_SET_PARAMETERS(state) {
+        state.messageState.set_parameters.$set(0, state.messageState.SUCCESS);
+    },
+
+    FAIL_SET_PARAMETERS(state, msg) {
+        state.messageState.set_parameters.$set(0, state.messageState.FAILURE);
+        state.messageState.set_parameters.$set(1, msg);
     },
 
     SEND_SAVE_MISSIONS(state, missions) {

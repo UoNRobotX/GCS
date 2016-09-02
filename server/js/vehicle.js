@@ -21,7 +21,7 @@ module.exports = function(){
             params: [{
                 title: 'mag_scale',
                 type: 'double',
-                value: 0
+                value: '0'
             }, {
                 title: 'mag vector',
                 type: 'vec3',
@@ -47,7 +47,7 @@ module.exports = function(){
             params: [{
                 title: 'Test parameter 1',
                 type: 'double',
-                value: -1.2
+                value: '-1.2'
             }, {
                 title: 'Test parameter 2',
                 type: 'vec3',
@@ -132,21 +132,42 @@ module.exports = function(){
         return this.parameters;
     };
     //set parameter (returns null on success, or an error message)
-    this.setParameter = function(name, value){
-        var obj = this.parameters;
-        var names = name.split('|');
-        for (var i = 0; i < names.length; i++){
-            if (obj.hasOwnProperty(names[i])){
-                if (i < names.length-1){
-                    obj = obj[names[i]];
-                } else {
-                    // TODO: perform parameter type checking
-                    obj[names[i]].value = value;
-                    return null;
-                }
-            } else {
-                return 'Parameter not found';
+    this.setParameters = function(paramSettings){
+        var params = []; //will contain the parameters to be set
+        //verify settings
+        ParamSearch:
+        for (var c = 0; c < paramSettings.length; c++){
+            var setting = paramSettings[c];
+            var titles = setting.title.split('|');
+            if (titles.length != 3){
+                return 'A parameter title was invalid.';
             }
+            var found = false;
+            for (var i = 0; i < this.parameters.length; i++){
+                var section = this.parameters[i];
+                if (section.title == titles[0]){
+                    for (var j = 0; j < section.subSections.length; j++){
+                        var subSection = section.subSections[j];
+                        if (subSection.title == titles[1]){
+                            for (var k = 0; k < subSection.params.length; k++){
+                                var param = subSection.params[k];
+                                if (param.title == titles[2]){
+                                    // TODO: perform type and value checking
+                                    params.push(param);
+                                    continue ParamSearch;
+                                }
+                            }
+                            return 'A parameter was not found.'
+                        }
+                    }
+                    return 'A parameter was not found.'
+                }
+            }
+            return 'A parameter was not found.'
+        }
+        //use settings
+        for (var i = 0; i < paramSettings.length; i++){
+            params[i].value = paramSettings[i].value;
         }
     };
     //set mission (returns null on success, or an error message)

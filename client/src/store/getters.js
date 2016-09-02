@@ -54,12 +54,20 @@ export function getMessageStateFailure(state) {
     return state.messageState.FAILURE;
 }
 
-export function getGetParameterState(state) {
+export function getGetParametersState(state) {
     return state.messageState.get_parameters[0];
 }
 
-export function getGetParameterData(state) {
+export function getGetParametersData(state) {
     return state.messageState.get_parameters[1];
+}
+
+export function getSetParametersState(state) {
+    return state.messageState.set_parameters[0];
+}
+
+export function getSetParametersData(state) {
+    return state.messageState.set_parameters[1];
 }
 
 export function getSaveMissionsState(state) {

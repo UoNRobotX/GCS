@@ -123,6 +123,27 @@ export function failGetParameters({ dispatch, state }, msg) {
 }
 
 /**
+ * Send set_parameters message
+ */
+export function sendSetParameters({ dispatch, state }, parameterSettings) {
+    dispatch('SEND_SET_PARAMETERS', parameterSettings);
+}
+
+/**
+ * Indicate a successful response to a set_parameters message
+ */
+export function succeedSetParameters({ dispatch, state }) {
+    dispatch('SUCCEED_SET_PARAMETERS');
+}
+
+/**
+ * Indicate failure of a set_parameters message
+ */
+export function failSetParameters({ dispatch, state }, msg) {
+    dispatch('FAIL_SET_PARAMETERS', msg);
+}
+
+/**
  * Send save_missions message
  */
 export function sendSaveMissions({ dispatch, state }, missions) {
