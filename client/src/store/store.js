@@ -10,7 +10,7 @@ const initialState = {
     map: null,
     mapEl: null,
     mapLoaded: false,
-    mapEditing: false,
+    waypointsVisible: true,
     wamv: {
         loaded: false,
         position: {lat: -32.8883338, lng: 151.7075279},
@@ -42,8 +42,8 @@ const mutations = {
         state.mapLoaded = loaded;
     },
 
-    SET_MAP_EDITING(state, editing) {
-        state.mapEditing = editing;
+    SET_WAYPOINTS_VISIBLE(state, visible) {
+        state.waypointsVisible = visible;
     },
 
     UPDATE_WAMV_POSITION(state, position) {

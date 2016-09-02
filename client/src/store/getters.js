@@ -10,8 +10,12 @@ export function getMapLoaded(state) {
     return state.mapLoaded;
 }
 
+export function getWayPointsVisible(state){
+    return state.waypointsVisible;
+}
+
 export function getMapEditing(state) {
-    return state.mapEditing;
+    return state.wamv.mode != 'auto' && state.waypointsVisible;
 }
 
 export function getWamv(state) {

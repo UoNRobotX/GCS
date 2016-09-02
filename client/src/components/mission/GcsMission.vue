@@ -11,10 +11,12 @@
             <div slot="actions">
                 <ui-icon-button
                     type="clear" icon="file_upload" tooltip="Upload mission" @click="uploadMission"
+                    :disabled="!waypointsVisible"
                 ></ui-icon-button>
 
                 <ui-icon-button
                     type="clear" icon="clear_all" tooltip="Clear all" @click="clearWaypoints"
+                    :disabled="!waypointsVisible"
                 ></ui-icon-button>
 
                 <ui-icon-button
@@ -39,8 +41,8 @@
                 <gcs-waypoint
                     v-for="(index, waypoint) in mission.waypoints" :index="index"
                     :label="toLetter(index + 1)" :title="waypoint.title" :type="waypoint.type"
-                    :lat="waypoint.position.lat" :lng="waypoint.position.lng" :visible="waypoint.visible"
-                    :rotation="waypoint.rotation" :scale="10" draggable
+                    :lat="waypoint.position.lat" :lng="waypoint.position.lng" :visible="waypointsVisible"
+                    :rotation="waypoint.rotation" :scale="10" :draggable="mapEditing"
                     @delete="deleteWaypoint(index)"
                 ></gcs-waypoint>
                 <gcs-waypoint-link
@@ -62,19 +64,20 @@ import GcsWaypointLink from 'markers/GcsWaypointLink.vue';
 import element from 'util/element-scroll';
 import numberToLetter from 'util/number-to-letter';
 
-import { getMapEditing, getMissions, getCurrentMissionIndex } from 'store/getters';
-import { setMapEditing } from 'store/actions';
+import { getMapEditing, getMissions, getCurrentMissionIndex, getWayPointsVisible } from 'store/getters';
+import { setWaypointsVisible } from 'store/actions';
 
 export default {
     vuex: {
         getters: {
             mapEditing:          getMapEditing,
             missions:            getMissions,
-            currentMissionIndex: getCurrentMissionIndex
+            currentMissionIndex: getCurrentMissionIndex,
+            waypointsVisible:    getWayPointsVisible
         },
 
         actions: {
-            setMapEditing
+            setWaypointsVisible
         }
     },
 
@@ -87,7 +90,6 @@ export default {
 
     data() {
         return {
-            waypointsVisible: true,
             overflowMenu: [
                 { id: 'edit', text: 'Edit mission' },
                 { id: 'delete', text: 'Delete mission' }
@@ -96,11 +98,11 @@ export default {
     },
 
     ready() {
-        this.setMapEditing(true);
+        this.setWaypointsVisible(true);
     },
 
     beforeDestroy() {
-        this.setMapEditing(false);
+        this.setWaypointsVisible(false);
     },
 
     events: {
@@ -177,15 +179,7 @@ export default {
         },
 
         toggleWaypointVisibility() {
-            this.waypointsVisible = !this.waypointsVisible;
-
-            this.mission.waypoints = this.mission.waypoints.map((waypoint) => {
-                waypoint.visible = this.waypointsVisible;
-
-                return waypoint;
-            });
-
-            this.setMapEditing(this.waypointsVisible);
+            this.setWaypointsVisible(!this.waypointsVisible);
         },
 
         deleteWaypoint(index) {
@@ -195,8 +189,7 @@ export default {
         clearWaypoints() {
             this.mission.waypoints = [];
 
-            this.waypointsVisible = true;
-            this.setMapEditing(true);
+            this.setWaypointsVisible(true);
         },
 
         uploadMission() {

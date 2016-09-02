@@ -22,10 +22,10 @@ export function setMapLoaded({ dispatch, state }, loaded) {
 }
 
 /**
- * Set the editing flag
+ * Set the flag indicating whether waypoints are visible
  */
-export function setMapEditing({ dispatch, state }, editing) {
-    dispatch('SET_MAP_EDITING', editing);
+export function setWaypointsVisible({ dispatch, state }, visible) {
+    dispatch('SET_WAYPOINTS_VISIBLE', visible);
 }
 
 /**
