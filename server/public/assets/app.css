@@ -3390,6 +3390,12 @@ body,
   -ms-flex-positive: 1;
       flex-grow: 1;
 }
+.gcs-waypoint .delete-button {
+  color: rgba(0,0,0,0.54);
+}
+.gcs-waypoint .delete-button:hover {
+  color: rgba(0,0,0,0.87);
+}
 .gcs-waypoint-link {
   display: none;
 }
