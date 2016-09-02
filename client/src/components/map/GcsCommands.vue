@@ -4,8 +4,6 @@
             @click="toggleMission" :text="startButtonText" :disabled="wamv.mode === 'killed'"
         ></ui-button>
 
-        <ui-button v-if="wamv.mode == 'auto'" @click="stopMission">Stop</ui-button>
-
         <ui-button
             color="danger" :text="wamv.mode === 'killed' ? 'Revive' : 'Kill'" @click="toggleKill"
         ></ui-button>
