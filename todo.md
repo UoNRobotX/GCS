@@ -1,9 +1,19 @@
 # Todo list
 
 ## Stuff that needs doing
-* Add delete mission buttons.
+* Adjust positions of parameter save and reset buttons.
+* Validate parameter input.
+* Make parameter reset only request changed parameters.
+* Decide what to call the unkill/revive/resurrect/etc button.
+* Use a more visible method of showing messages, instead of logging to console.
+* Make server use ECMAScript 2015.
+* Implement 'edit mission'.
+* Add settings (google maps key, vehicle connection, ).
+* Resolve TODO lines.
+* Try using written code instead of geolib.
+* Add a way to specify areas for waypoints.
+* Add manual mode.
 * Allow for multiple clients.
-* Add parameters and settings.
 * Improve error handling.
 * Test on multiple platforms.
 * Add judges display.
@@ -11,11 +21,9 @@
 * Make stuff look better.
 
 ## Stuff that may need doing
-* Allow reordering waypoints?
+* Allow reordering waypoints.
 * Add vehicle message log.
-* Add de-activate kill-switch button?
 * Add ground station marker.
 * Allow specifying hold times for waypoints.
 * Allow for changing a mission while it is being completed.
-* Add a 'manual mode'?
 * Allow specification of a GPS origin?
