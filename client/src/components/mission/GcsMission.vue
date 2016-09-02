@@ -48,6 +48,7 @@
                     :index="index"
                     :start="waypoint.position"
                     :end="mission.waypoints[(index+1) % mission.waypoints.length].position;"
+                    :visible="waypointsVisible"
                 ></gcs-waypoint-link>
             </component>
         </div>

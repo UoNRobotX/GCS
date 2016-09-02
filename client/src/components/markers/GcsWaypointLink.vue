@@ -73,6 +73,12 @@ export default {
             if (this.link){
                 this.link.getPath().setAt(1, new google.maps.LatLng(this.end.lat, this.end.lng));
             }
+        },
+
+        visible(){
+            if (this.link){
+                this.link.setVisible(this.visible);
+            }
         }
     },
 
