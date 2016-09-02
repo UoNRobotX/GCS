@@ -160,6 +160,9 @@ export default {
     events: {
         'delete-mission'(index){
             this.missions.splice(index, 1);
+        },
+        'delete-waypoint'(index){
+            this.currentMission.waypoints.splice(index, 1);
         }
     },
 

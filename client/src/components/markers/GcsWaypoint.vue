@@ -26,6 +26,11 @@
                     class="column one-half" label="Type" name="type" :value.sync="type"
                     :options="[{ text: 'Normal', value: 'normal' }]" :default="type"
                 ></ui-select>
+
+                <ui-icon-button
+                    type="clear" icon="delete" tooltip="Delete" @click="deleteWaypoint"
+                    class='delete-button'
+                ></ui-icon-button>
             </div>
         </div>
     </div>
@@ -111,6 +116,10 @@ export default {
                 strokeColor: 'white',
                 strokeWeight: 2
             };
+        },
+
+        deleteWaypoint(){
+            this.$dispatch('delete-waypoint', this.index);
         }
     },
 
@@ -149,6 +158,13 @@ export default {
 
     .content {
         flex-grow: 1;
+    }
+
+    .delete-button {
+        color: $dark-secondary;
+        &:hover {
+            color: $dark-primary;
+        }
     }
 }
 </style>

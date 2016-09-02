@@ -91,8 +91,7 @@ export default {
     data() {
         return {
             overflowMenu: [
-                { id: 'edit', text: 'Edit mission' },
-                { id: 'delete', text: 'Delete mission' }
+                { id: 'edit', text: 'Edit mission' }
             ]
         };
     },
