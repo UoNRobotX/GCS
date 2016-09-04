@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+message ActuatorState {
+    float motor1_thust = 1;
+    float motor2_thust = 2;
+
+    float motor1_angle = 3;
+    float motor2_angle = 4;
+}

@@ -5,6 +5,7 @@ var openUrl = require('openurl');
 var serve = require('koa-static');
 var socket_io = require('socket.io');
 var fs = require('fs');
+var ProtoBuf = require('protobufjs');
 var Vehicle = require('./js/vehicle.js');
 
 var app = koa();
@@ -17,6 +18,19 @@ var server = http.createServer(app.callback());
 
 //create fake WAM-V
 var vehicle = new Vehicle();
+
+//load proto files
+var builder = ProtoBuf.newBuilder();
+ProtoBuf.loadProtoFile('./messages/ActuatorState.proto', builder);
+ProtoBuf.loadProtoFile('./messages/ActuatorStatus.proto', builder);
+ProtoBuf.loadProtoFile('./messages/AutopilotStatus.proto', builder);
+ProtoBuf.loadProtoFile('./messages/Battery.proto', builder);
+ProtoBuf.loadProtoFile('./messages/Command.proto', builder);
+ProtoBuf.loadProtoFile('./messages/GPS.proto', builder);
+ProtoBuf.loadProtoFile('./messages/Mission.proto', builder);
+ProtoBuf.loadProtoFile('./messages/Parameters.proto', builder);
+ProtoBuf.loadProtoFile('./messages/VehicleState.proto', builder);
+var pkg = builder.build();
 
 /*
  *  Client-server message protocol: (This is just for testing. The real protocol will be different.)
@@ -190,7 +204,7 @@ process.on('SIGINT', saveMissions);
 //handle messages from clients
 var io = socket_io(server);
 io.on('connection', function(socket){
-    var statusTimer, updateTimer; //used for fake WAM-V
+    var statusTimer, updateTimer, protoMessageTimer; //used for fake WAM-V
     //print a message
     var host = socket.client.request.headers.host;
     console.log('connected to: ' + host);
@@ -213,6 +227,51 @@ io.on('connection', function(socket){
         socket.volatile.emit('status', data); //'volatile' allows the message to be dropped
         //console.log('sent status message to: ' + host);
     }, 50);
+    //periodically get and log protocol buffer message
+    protoMessageTimer = setInterval(function(){
+        var data = vehicle.getProtoMessage(); //pretend this was received from a stream
+        console.log('Received ' + data[0] + ' message.');
+        var msg;
+        switch(data[0]){
+            case 'ActuatorState': {
+                msg = pkg.ActuatorState.decode(data[1]);
+                break;
+            }
+            case 'ActuatorStatus': {
+                msg = pkg.ActuatorStatus.decode(data[1]);
+                break;
+            }
+            case 'AutopilotStatus': {
+                msg = pkg.AutopilotStatus.decode(data[1]);
+                break;
+            }
+            case 'Battery': {
+                msg = pkg.Battery.decode(data[1]);
+                break;
+            }
+            case 'Command': {
+                msg = pkg.Command.decode(data[1]);
+                break;
+            }
+            case 'GPS': {
+                msg = pkg.GPS.decode(data[1]);
+                break;
+            }
+            case 'Mission': {
+                msg = pkg.Mission.decode(data[1]);
+                break;
+            }
+            case 'Parameters': {
+                msg = pkg.Parameters.decode(data[1]);
+                break;
+            }
+            case 'VehicleState': {
+                msg = pkg.VehicleState.decode(data[1]);
+                break;
+            }
+        }
+        console.log(msg);
+    }, 3000);
     //handle other messages
     socket.on('get_parameters', function(){
         console.log('got "get_parameters" message');

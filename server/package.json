@@ -14,6 +14,7 @@
     "koa": "^1.2.1",
     "koa-static": "^2.0.0",
     "openurl": "^1.1.1",
+    "protobufjs": "^5.0.1",
     "socket.io": "^1.4.8"
   }
 }

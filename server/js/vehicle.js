@@ -1,4 +1,18 @@
 var geolib = require('geolib');
+var ProtoBuf = require('protobufjs');
+
+//load proto files
+var builder = ProtoBuf.newBuilder();
+ProtoBuf.loadProtoFile('./messages/ActuatorState.proto', builder);
+ProtoBuf.loadProtoFile('./messages/ActuatorStatus.proto', builder);
+ProtoBuf.loadProtoFile('./messages/AutopilotStatus.proto', builder);
+ProtoBuf.loadProtoFile('./messages/Battery.proto', builder);
+ProtoBuf.loadProtoFile('./messages/Command.proto', builder);
+ProtoBuf.loadProtoFile('./messages/GPS.proto', builder);
+ProtoBuf.loadProtoFile('./messages/Mission.proto', builder);
+ProtoBuf.loadProtoFile('./messages/Parameters.proto', builder);
+ProtoBuf.loadProtoFile('./messages/VehicleState.proto', builder);
+var pkg = builder.build();
 
 //constructor for fake WAM-V
 module.exports = function(){
@@ -126,6 +140,76 @@ module.exports = function(){
             mode:     this.mode,
             signal:   this.signal
         };
+    };
+    //returns a generated protocol buffer message
+        //returns an array containing a protocol buffer message's type and data
+    this.getProtoMessage = function(){
+        var types = [
+            'ActuatorState',
+            'ActuatorStatus',
+            'AutopilotStatus',
+            'Battery',
+            'Command',
+            'GPS',
+            'Mission',
+            'Parameters',
+            'VehicleState'
+        ];
+        var i = Math.floor(Math.random()*types.length);
+        var msg;
+        switch (types[i]){
+            case 'ActuatorState': {
+                msg = new pkg.ActuatorState(0.3, 10, 45, -10);
+                break;
+            }
+            case 'ActuatorStatus': {
+                msg = new pkg.ActuatorStatus(true, false);
+                break;
+            }
+            case 'AutopilotStatus': {
+                msg = new pkg.AutopilotStatus(true);
+                break;
+            }
+            case 'Battery': {
+                msg = new pkg.Battery(10, 5);
+                break;
+            }
+            case 'Command': {
+                msg = new pkg.Command(3);
+                break;
+            }
+            case 'GPS': {
+                msg = new pkg.GPS(100, 45, -20);
+                break;
+            }
+            case 'Mission': {
+                msg = new pkg.Mission('Mission 1');
+                msg.add('waypoints', new pkg.Waypoint(45, -100, 0));
+                msg.add('waypoints', new pkg.Waypoint(46, -100, 1));
+                break;
+            }
+            case 'Parameters': {
+                msg = new pkg.Parameters();
+                msg.add('values', new pkg.Parameters.Parameter('param1', 'value1'));
+                msg.add('values', new pkg.Parameters.Parameter('param2', 'value2'));
+                break;
+            }
+            case 'VehicleState': {
+                msg = new pkg.VehicleState(
+                    new pkg.VehicleState.Vec3f(0, 1, 2),
+                    new pkg.VehicleState.Vec4f(0, 1, 2, 3),
+                    new pkg.VehicleState.Vec3f(2, 1, 0),
+                    new pkg.VehicleState.Vec3f(-1, -4, -6),
+                    new pkg.VehicleState.Vec3f(1.2, 1.3, 0.3),
+                    new pkg.VehicleState.Vec4f(-1, 1.1, -100.1, 0),
+                    new pkg.VehicleState.Vec3f(0, 1, 3),
+                    new pkg.VehicleState.Vec3f(0, 1, 4)
+                );
+                break;
+            }
+        }
+        //console.log(msg);
+        return [types[i], msg.toBuffer()];
     };
     //return parameters (returns a parameters object on success, or an error message)
     this.getParameters = function(){

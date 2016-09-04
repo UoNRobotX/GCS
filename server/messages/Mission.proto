@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+message Waypoint {
+    enum Action {
+        GOTO_NEXT = 0;
+        STOP = 1;
+    }
+    sint32 latitude = 1;
+    sint32 longitude = 2;
+    Action action = 3;
+}
+
+message Mission {
+    string name = 1;
+    repeated Waypoint waypoints = 2;
+}
