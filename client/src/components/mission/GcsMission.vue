@@ -105,6 +105,40 @@ export default {
         this.setWaypointsVisible(false);
     },
 
+    methods: {
+        goBack() {
+            this.$dispatch('go-back');
+        },
+
+        toLetter(number) {
+            return numberToLetter(number);
+        },
+
+        toggleWaypointVisibility() {
+            this.setWaypointsVisible(!this.waypointsVisible);
+        },
+
+        deleteWaypoint(index) {
+            this.mission.waypoints.splice(index, 1);
+        },
+
+        clearWaypoints() {
+            this.mission.waypoints = [];
+
+            this.setWaypointsVisible(true);
+        },
+
+        uploadMission() {
+            this.$dispatch('client::upload_mission', this.missions[this.currentMissionIndex]);
+        },
+
+        overflowMenuOptionSelected(option) {
+            if (option.id === 'edit') {
+                this.$dispatch('app::show-edit-mission-modal');
+            }
+        }
+    },
+
     events: {
         'map:click'(e) {
             if (!this.mapEditing) {
@@ -173,40 +207,18 @@ export default {
                     this.$el.querySelector('#waypoint-' + (index + 1)), this.$els.pageContent, 56
                 );
             });
-        }
-    },
-
-    methods: {
-        goBack() {
-            this.$dispatch('go-back');
         },
 
-        toLetter(number) {
-            return numberToLetter(number);
+        'server.upload_mission:success'(){
+            this.$dispatch('app::create-snackbar', 'Mission uploaded');
         },
 
-        toggleWaypointVisibility() {
-            this.setWaypointsVisible(!this.waypointsVisible);
+        'server.upload_mission:failure'(){
+            this.$dispatch('app::create-snackbar', 'Failed to upload mission');
         },
 
-        deleteWaypoint(index) {
-            this.mission.waypoints.splice(index, 1);
-        },
-
-        clearWaypoints() {
-            this.mission.waypoints = [];
-
-            this.setWaypointsVisible(true);
-        },
-
-        uploadMission() {
-            this.$dispatch('client::upload_mission', this.missions[this.currentMissionIndex]);
-        },
-
-        overflowMenuOptionSelected(option) {
-            if (option.id === 'edit') {
-                this.$dispatch('app::show-edit-mission-modal');
-            }
+        'server.upload_mission:timeout'(){
+            this.$dispatch('app::create-snackbar', 'Failed to upload mission due to timeout');
         }
     },
 

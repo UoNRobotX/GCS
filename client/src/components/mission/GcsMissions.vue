@@ -107,7 +107,7 @@ export default {
                     break;
                 }
                 case 'load': {
-                    this.$dispatch('client::load_missions');
+                    this.$dispatch('client::load_missions', 'GcsMissions');
                     break;
                 }
                 case 'import': {
@@ -204,6 +204,47 @@ export default {
 
         'delete-waypoint'(index){
             this.currentMission.waypoints.splice(index, 1);
+        },
+
+        'server.save_missions:success'(){
+            this.$dispatch('app::create-snackbar', 'Missions saved');
+        },
+
+        'server.save_missions:failure'(){
+            this.$dispatch('app::create-snackbar', 'Failed to save missions');
+        },
+
+        'server.save_missions:timeout'(){
+            this.$dispatch('app::create-snackbar', 'Failed to save missions due to timeout');
+        },
+
+        'server.load_missions:success'(initiator){
+            if (initiator === 'GcsMissions'){
+                this.$dispatch('app::create-snackbar', 'Missions loaded');
+            }
+            return true;
+        },
+
+        'server.load_missions:failure'(){
+            if (initiator === 'GcsMissions'){
+                this.$dispatch('app::create-snackbar', 'Failed to load missions');
+            }
+            return true;
+        },
+
+        'server.load_missions:timeout'(){
+            if (initiator === 'GcsMissions'){
+                this.$dispatch('app::create-snackbar', 'Failed to load missions due to timeout');
+            }
+            return true;
+        },
+
+        'server.download_mission:failure'(){
+            this.$dispatch('app::create-snackbar', 'Failed to download mission');
+        },
+
+        'server.download_mission:timeout'(){
+            this.$dispatch('app::create-snackbar', 'Failed to download mission due to timeout');
         }
     },
 

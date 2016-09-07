@@ -24,6 +24,23 @@ export default {
         return {
             socket: null,
             waitTimers: {
+                //each property contains a timer for an in-progress request
+                get_parameters:   null,
+                set_parameters:   null,
+                save_missions:    null,
+                load_missions:    null,
+                upload_mission:   null,
+                download_mission: null,
+                arm:              null,
+                disarm:           null,
+                start_mission:    null,
+                stop_mission:     null,
+                resume_mission:   null,
+                kill:             null,
+                unkill:           null
+            },
+            initiators: {
+                //each property contains a string optionally specified by whoever initiated a request
                 get_parameters:   null,
                 set_parameters:   null,
                 save_missions:    null,
@@ -48,9 +65,21 @@ export default {
         this.socket.on('connect', () => {
             console.log('connected to server');
             //get parameters once at startup
-            this.sendGetParameters();
+            this.sendGetParameters('init');
+            this.$once('server.get_parameters:failure', function(initiator){
+                if (initiator === 'init'){
+                    this.$dispatch('app::create-snackbar', 'Failed to load parameters');
+                }
+                return true;
+            });
             //load missions once at startup
-            this.sendLoadMissions();
+            this.sendLoadMissions('init');
+            this.$once('server.get_parameters:timeout', function(initiator){
+                if (initiator === 'init'){
+                    this.$dispatch('app::create-snackbar', 'Failed to load parameters due to timeout');
+                }
+                return true;
+            });
         });
         this.socket.on('disconnect', () => {
             console.log('disconnected from server');
@@ -66,7 +95,7 @@ export default {
                 this.waitTimers.get_parameters = null;
                 this.setParameters(data);
                 console.log('Parameters loaded.');
-                this.$dispatch('server.get_parameters:success');
+                this.$dispatch('server.get_parameters:success', this.initiators.get_parameters);
             }
         });
         this.socket.on('load_missions', (data) => {
@@ -75,7 +104,7 @@ export default {
                 this.waitTimers.load_missions = null;
                 this.setMissions(data);
                 console.log('Missions loaded.');
-                this.$dispatch('server.load_missions:success');
+                this.$dispatch('server.load_missions:success', this.initiators.load_missions);
             }
         });
         this.socket.on('download_mission', (data) => {
@@ -84,7 +113,7 @@ export default {
                 this.waitTimers.download_mission = null;
                 this.missions.push(data);
                 console.log('Mission downloaded.');
-                this.$dispatch('server.download_mission:success');
+                this.$dispatch('server.download_mission:success', this.initiators.download_mission);
             }
         });
         this.socket.on('success', (msgType) => {
@@ -104,7 +133,7 @@ export default {
                     case 'kill':           {console.log('Kill switch activated.');   break;}
                     case 'unkill':         {console.log('Kill switch deactivated.'); break;}
                 }
-                this.$dispatch('server.' + msgType + ':success');
+                this.$dispatch('server.' + msgType + ':success', this.initiators[msgType]);
             }
         });
         this.socket.on('failure', (data) => {
@@ -128,7 +157,7 @@ export default {
                     case 'kill':             {console.log('Unable to activate kill switch: '   + errorMsg); break;}
                     case 'unkill':           {console.log('Unable to deactivate kill switch: ' + errorMsg); break;}
                 }
-                this.$dispatch('server.' + msgType + ':failure');
+                this.$dispatch('server.' + msgType + ':failure', this.initiators[msgType]);
             }
         });
         this.socket.on('attention', (data) => {
@@ -137,201 +166,214 @@ export default {
     },
 
     methods: {
-        sendGetParameters(){
+        sendGetParameters(initiator){
             if (this.waitTimers.get_parameters == null){
+                this.initiators.get_parameters = initiator;
                 this.socket.emit('get_parameters');
                 this.waitTimers.get_parameters = setTimeout(() => {
                     this.waitTimers.get_parameters = null;
                     console.log('Unable to get parameters: timeout reached.');
-                    this.$dispatch('server.get_parameters:timeout');
+                    this.$dispatch('server.get_parameters:timeout', initiator);
                 }, this.TIMEOUT);
             }
         },
 
-        sendSetParameters(parameterSettings){
+        sendSetParameters(parameterSettings, initiator){
             if (this.waitTimers.set_parameters == null){
+                this.initiators.set_parameters = initiator;
                 this.socket.emit('set_parameters', parameterSettings);
                 this.waitTimers.set_parameters = setTimeout(() => {
                     this.waitTimers.set_parameters = null;
                     console.log('Unable to set parameters: timeout reached.');
-                    this.$dispatch('server.set_parameters:timeout');
+                    this.$dispatch('server.set_parameters:timeout', initiator);
                 }, this.TIMEOUT);
             }
         },
 
-        sendSaveMissions(missions){
+        sendSaveMissions(missions, initiator){
             if (this.waitTimers.save_missions == null){
+                this.initiators.save_missions = initiator;
                 this.socket.emit('save_missions', missions);
                 this.waitTimers.save_missions = setTimeout(() => {
                     this.waitTimers.save_missions = null;
                     console.log('Unable to save missions: timeout reached.');
-                    this.$dispatch('server.save_missions:timeout');
+                    this.$dispatch('server.save_missions:timeout', initiator);
                 }, this.TIMEOUT);
             }
         },
 
-        sendLoadMissions(){
+        sendLoadMissions(initiator){
             if (this.waitTimers.load_missions == null){
+                this.initiators.load_missions = initiator;
                 this.socket.emit('load_missions');
                 this.waitTimers.load_missions = setTimeout(() => {
                     this.waitTimers.load_missions = null;
                     console.log('Unable to load missions: timeout reached.');
-                    this.$dispatch('server.load_missions:timeout');
+                    this.$dispatch('server.load_missions:timeout', initiator);
                 }, this.TIMEOUT);
             }
         },
 
-        sendUploadMission(mission){
+        sendUploadMission(mission, initiator){
             if (this.waitTimers.upload_mission == null){
+                this.initiators.upload_mission = initiator;
                 this.socket.emit('upload_mission', mission);
                 this.waitTimers.upload_mission = setTimeout(() => {
                     this.waitTimers.upload_mission = null;
                     console.log('Unable to upload mission: timeout reached.');
-                    this.$dispatch('server.upload_mission:timeout');
+                    this.$dispatch('server.upload_mission:timeout', initiator);
                 }, this.TIMEOUT);
             }
         },
 
-        sendDownloadMission(){
+        sendDownloadMission(initiator){
             if (this.waitTimers.download_mission == null){
+                this.initiators.download_mission = initiator;
                 this.socket.emit('download_mission');
                 this.waitTimers.download_mission = setTimeout(() => {
                     this.waitTimers.download_mission = null;
                     console.log('Unable to download mission: timeout reached.');
-                    this.$dispatch('server.download_mission:timeout');
+                    this.$dispatch('server.download_mission:timeout', initiator);
                 }, this.TIMEOUT);
             }
         },
 
-        sendArm(){
+        sendArm(initiator){
             if (this.waitTimers.arm == null){
+                this.initiators.arm = initiator;
                 this.socket.emit('arm');
                 this.waitTimers.arm = setTimeout(() => {
                     this.waitTimers.arm = null;
                     console.log('Unable to arm vehicle: timeout reached.');
-                    this.$dispatch('server.arm:timeout');
+                    this.$dispatch('server.arm:timeout', initiator);
                 }, this.TIMEOUT);
             }
         },
 
-        sendDisarm(){
+        sendDisarm(initiator){
             if (this.waitTimers.disarm == null){
+                this.initiators.disarm = initiator;
                 this.socket.emit('disarm');
                 this.waitTimers.disarm = setTimeout(() => {
                     this.waitTimers.disarm = null;
                     console.log('Unable to disarm vehicle: timeout reached.');
-                    this.$dispatch('server.disarm:timeout');
+                    this.$dispatch('server.disarm:timeout', initiator);
                 }, this.TIMEOUT);
             }
         },
 
-        sendStartMission(){
+        sendStartMission(initiator){
             if (this.waitTimers.start_mission == null){
+                this.initiators.start_mission = initiator;
                 this.socket.emit('start_mission');
                 this.waitTimers.start_mission = setTimeout(() => {
                     this.waitTimers.start_mission = null;
                     console.log('Unable to start mission: timeout reached.');
-                    this.$dispatch('server.start_mission:timeout');
+                    this.$dispatch('server.start_mission:timeout', initiator);
                 }, this.TIMEOUT);
             }
         },
 
-        sendStopMission(){
+        sendStopMission(initiator){
             if (this.waitTimers.stop_mission == null){
+                this.initiators.stop_mission = initiator;
                 this.socket.emit('stop_mission');
                 this.waitTimers.stop_mission = setTimeout(() => {
                     this.waitTimers.stop_mission = null;
                     console.log('Unable to stop mission: timeout reached.');
-                    this.$dispatch('server.stop_mission:timeout');
+                    this.$dispatch('server.stop_mission:timeout', initiator);
                 }, this.TIMEOUT);
             }
         },
 
-        sendResumeMission(){
+        sendResumeMission(initiator){
             if (this.waitTimers.resume_mission == null){
+                this.initiators.resume_mission = initiator;
                 this.socket.emit('resume_mission');
                 this.waitTimers.resume_mission = setTimeout(() => {
                     this.waitTimers.resume_mission = null;
                     console.log('Unable to resume mission: timeout reached.');
-                    this.$dispatch('server.resume_mission:timeout');
+                    this.$dispatch('server.resume_mission:timeout', initiator);
                 }, this.TIMEOUT);
             }
         },
 
-        sendKill(){
+        sendKill(initiator){
             if (this.waitTimers.kill == null){
+                this.initiators.kill = initiator;
                 this.socket.emit('kill');
                 this.waitTimers.kill = setTimeout(() => {
                     this.waitTimers.kill = null;
                     console.log('Unable to activate kill switch: timeout reached.');
-                    this.$dispatch('server.kill:timeout');
+                    this.$dispatch('server.kill:timeout', initiator);
                 }, this.TIMEOUT);
             }
         },
 
-        sendUnkill(){
+        sendUnkill(initiator){
             if (this.waitTimers.unkill == null){
+                this.initiators.unkill = initiator;
                 this.socket.emit('unkill');
                 this.waitTimers.unkill = setTimeout(() => {
                     this.waitTimers.unkill = null;
                     console.log('Unable to deactivate kill switch: timeout reached.');
-                    this.$dispatch('server.unkill:timeout');
+                    this.$dispatch('server.unkill:timeout', initiator);
                 }, this.TIMEOUT);
             }
         }
     },
 
     events: {
-        'client::get_parameters'() {
-            this.sendGetParameters();
+        'client::get_parameters'(initiator) {
+            this.sendGetParameters(initiator);
         },
 
-        'client::set_parameters'(parameterSettings) {
-            this.sendSetParameters(parameterSettings);
+        'client::set_parameters'(parameterSettings, initiator) {
+            this.sendSetParameters(parameterSettings, initiator);
         },
 
-        'client::save_missions'(missions) {
-            this.sendSaveMissions(missions);
+        'client::save_missions'(missions, initiator) {
+            this.sendSaveMissions(missions, initiator);
         },
 
-        'client::load_missions'() {
-            this.sendLoadMissions();
+        'client::load_missions'(initiator) {
+            this.sendLoadMissions(initiator);
         },
 
-        'client::upload_mission'(mission) {
-            this.sendUploadMission(mission);
+        'client::upload_mission'(mission, initiator) {
+            this.sendUploadMission(mission, initiator);
         },
 
-        'client::download_mission'() {
-            this.sendDownloadMission();
+        'client::download_mission'(initiator) {
+            this.sendDownloadMission(initiator);
         },
 
-        'client::arm'() {
-            this.sendArm();
+        'client::arm'(initiator) {
+            this.sendArm(initiator);
         },
 
-        'client::disarm'() {
-            this.sendDisarm();
+        'client::disarm'(initiator) {
+            this.sendDisarm(initiator);
         },
 
-        'client::start_mission'() {
-            this.sendStartMission();
+        'client::start_mission'(initiator) {
+            this.sendStartMission(initiator);
         },
 
-        'client::stop_mission'() {
-            this.sendStopMission();
+        'client::stop_mission'(initiator) {
+            this.sendStopMission(initiator);
         },
 
-        'client::resume_mission'() {
-            this.sendResumeMission();
+        'client::resume_mission'(initiator) {
+            this.sendResumeMission(initiator);
         },
 
-        'client::kill'() {
-            this.sendKill();
+        'client::kill'(initiator) {
+            this.sendKill(initiator);
         },
 
-        'client::unkill'() {
-            this.sendUnkill();
+        'client::unkill'(initiator) {
+            this.sendUnkill(initiator);
         }
     }
 };
