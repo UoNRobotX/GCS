@@ -62,31 +62,31 @@ export default {
                 return 'N';
             }
 
-            if (degree < 67.5 || degree >= 22.5) {
+            if (degree < 67.5 && degree >= 22.5) {
                 return 'NE';
             }
 
-            if (degree < 112.5 || degree >= 67.5) {
+            if (degree < 112.5 && degree >= 67.5) {
                 return 'E';
             }
 
-            if (degree < 157.5 || degree >= 112.5) {
+            if (degree < 157.5 && degree >= 112.5) {
                 return 'SE';
             }
 
-            if (degree < 202.5 || degree >= 157.5) {
+            if (degree < 202.5 && degree >= 157.5) {
                 return 'S';
             }
 
-            if (degree < 247.5 || degree >= 202.5) {
+            if (degree < 247.5 && degree >= 202.5) {
                 return 'SW';
             }
 
-            if (degree < 292.5 || degree >= 247.5) {
+            if (degree < 292.5 && degree >= 247.5) {
                 return 'W';
             }
 
-            if (degree < 337.5 || degree >= 292.5) {
+            if (degree < 337.5 && degree >= 292.5) {
                 return 'NW';
             }
 
