@@ -72,11 +72,23 @@ export default {
                 }
                 return true;
             });
-            //load missions once at startup
-            this.sendLoadMissions('init');
             this.$once('server.get_parameters:timeout', function(initiator){
                 if (initiator === 'init'){
                     this.$dispatch('app::create-snackbar', 'Failed to load parameters due to timeout');
+                }
+                return true;
+            });
+            //load missions once at startup
+            this.sendLoadMissions('init');
+            this.$once('server.load_missions:failure', function(initiator){
+                if (initiator === 'init'){
+                    this.$dispatch('app::create-snackbar', 'Failed to load missions');
+                }
+                return true;
+            });
+            this.$once('server.load_missions:timeout', function(initiator){
+                if (initiator === 'init'){
+                    this.$dispatch('app::create-snackbar', 'Failed to load missions due to timeout');
                 }
                 return true;
             });

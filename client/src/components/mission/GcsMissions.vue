@@ -225,14 +225,14 @@ export default {
             return true;
         },
 
-        'server.load_missions:failure'(){
+        'server.load_missions:failure'(initiator){
             if (initiator === 'GcsMissions'){
                 this.$dispatch('app::create-snackbar', 'Failed to load missions');
             }
             return true;
         },
 
-        'server.load_missions:timeout'(){
+        'server.load_missions:timeout'(initiator){
             if (initiator === 'GcsMissions'){
                 this.$dispatch('app::create-snackbar', 'Failed to load missions due to timeout');
             }
