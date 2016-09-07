@@ -42,7 +42,7 @@ export default {
 
         speed() {
             let spd = Math.round(this.wamv.speed*100)/100; //2 decimal places
-            return spd + ' KMPH';
+            return spd + ' K';
         },
 
         battery() {
@@ -111,7 +111,7 @@ export default {
     .indicator {
         color: alpha(white, 0.8);
         display: inline-block;
-        margin-right: 18px;
+        margin-right: 8px;
 
         &:last-child {
             border-right: none;
@@ -121,6 +121,19 @@ export default {
 
         .heading .ui-icon {
             transition: transform 0.2s ease;
+        }
+
+        &.battery,
+        &.signal {
+            width: 80px;
+        }
+
+        &.heading {
+            width: 96px;
+        }
+
+        &.speed {
+            width: 88px;
         }
     }
 
