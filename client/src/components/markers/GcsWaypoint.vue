@@ -29,8 +29,8 @@
 
             <div class="row">
                 <ui-select
-                    class="column one-half" label="Type" name="type" :value.sync="type"
-                    :options="[{ text: 'Go To Point', value: 'goto_point' }]" :default="type"
+                    class="column one-half" label="Type" name="type" :value.sync="waypointType"
+                    :options="[{ text: 'Go To Point', value: 'go_to_point' }]" :default="waypointType"
                 ></ui-select>
             </div>
         </div>
@@ -49,14 +49,16 @@ export default {
             coerce: String
         },
         title: {
-            type: String,
-            coerce(value) {
-                return value ? String(value) : '';
-            }
+            type: String
         },
-        type: {
-            type: String,
-            default: 'normal'
+        waypointType: {
+            type: String
+        },
+        lat: {
+            type: Number
+        },
+        lng: {
+            type: Number
         }
     },
 

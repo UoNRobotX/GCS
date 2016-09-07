@@ -40,8 +40,8 @@
             <div v-else>
                 <gcs-waypoint
                     v-for="(index, waypoint) in mission.waypoints" :index="index" :id="'waypoint-' + index"
-                    :label="toLetter(index + 1)" :title="waypoint.title" :type="waypoint.type"
-                    :lat="waypoint.position.lat" :lng="waypoint.position.lng"
+                    :label="toLetter(index + 1)" :title.sync="waypoint.title" :waypoint-type="waypoint.type"
+                    :lat.sync="waypoint.position.lat" :lng.sync="waypoint.position.lng"
                     :rotation="waypoint.rotation" :scale="10"
                     :draggable="mapEditing" :visible="waypointsVisible"
                     @delete="deleteWaypoint(index)"
@@ -149,8 +149,8 @@ export default {
             let lng = Number( parseFloat(e.latLng.lng()).toFixed(7) );
 
             let newWaypoint = {
-                title: null,
-                type: 'normal',
+                title: '',
+                type: 'go_to_point',
                 visible: true,
                 position: {
                     lat,
@@ -190,8 +190,8 @@ export default {
             }
             //insert new waypoint
             let newWaypoint = {
-                title: null,
-                type: 'normal',
+                title: '',
+                type: 'go_to_point',
                 visible: true,
                 position: {
                     lat,

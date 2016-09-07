@@ -74,8 +74,7 @@ var vehicle = new Vehicle();
  *             The data is an array of objects, each of the same form as with 'upload_mission'
  *     - For 'upload_mission', the data specifies a mission, and has this form:
  *         {
- *             title:       title1, //a string, or null
- *             description: desc1,  //a string, or null
+ *             title:       title1, //a string
  *             waypoints: [
  *                 {
  *                     title:   title1,   //a string, or null
