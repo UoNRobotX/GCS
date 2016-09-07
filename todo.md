@@ -1,18 +1,16 @@
 # Todo list
 
 ## Stuff that needs doing
-* Adjust positions of parameter save and reset buttons.
-* Validate parameter input.
-* Make parameter reset only request changed parameters.
-* Decide what to call the unkill/revive/resurrect/etc button.
-* Use a more visible method of showing messages, instead of logging to console.
-* Make server use ECMAScript 2015.
-* Implement 'edit mission'.
+* Fix errors that occur when refreshing while wamv is moving.
+* Use snackbars to notify user.
 * Add settings (google maps key, vehicle connection, ).
-* Resolve TODO lines.
-* Try using written code instead of geolib.
+* Allow specification of a GPS origin.
 * Add a way to specify areas for waypoints.
 * Add manual mode.
+* Make parameter reset only request changed parameters.
+* Make server use ECMAScript 2015.
+* Resolve TODO lines.
+* Try using written code instead of geolib.
 * Allow for multiple clients.
 * Improve error handling.
 * Test on multiple platforms.
@@ -22,8 +20,5 @@
 
 ## Stuff that may need doing
 * Allow reordering waypoints.
-* Add vehicle message log.
-* Add ground station marker.
 * Allow specifying hold times for waypoints.
 * Allow for changing a mission while it is being completed.
-* Allow specification of a GPS origin?

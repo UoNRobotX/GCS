@@ -102,7 +102,7 @@ export default {
     },
 
     events: {
-        'server::set_parameters:success'(){
+        'server.set_parameters:success'(){
             this.changedParams = Object.create(null);
         }
     }
