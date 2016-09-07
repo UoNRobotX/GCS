@@ -27,7 +27,7 @@
 
                 <ui-icon-button
                     type="clear" icon="more_vert" has-dropdown-menu dropdown-position="bottom right"
-                    :menu-options="overflowMenu"
+                    :menu-options="overflowMenu" @menu-option-selected="overflowMenuOptionSelected"
                 ></ui-icon-button>
             </div>
         </ui-toolbar>
@@ -201,6 +201,12 @@ export default {
 
         uploadMission() {
             this.$dispatch('client::upload_mission', this.missions[this.currentMissionIndex]);
+        },
+
+        overflowMenuOptionSelected(option) {
+            if (option.id === 'edit') {
+                this.$dispatch('app::show-edit-mission-modal');
+            }
         }
     },
 

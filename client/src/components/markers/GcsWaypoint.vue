@@ -30,7 +30,7 @@
             <div class="row">
                 <ui-select
                     class="column one-half" label="Type" name="type" :value.sync="type"
-                    :options="[{ text: 'Normal', value: 'normal' }]" :default="type"
+                    :options="[{ text: 'Go To Point', value: 'goto_point' }]" :default="type"
                 ></ui-select>
             </div>
         </div>

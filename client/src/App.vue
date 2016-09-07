@@ -20,6 +20,8 @@
         <gcs-indicators></gcs-indicators>
 
         <ui-snackbar-container position="center"></ui-snackbar-container>
+
+        <gcs-edit-mission-modal :show.sync="showEditMissionModal"></gcs-edit-mission-modal>
     </div>
     <socket-io-manager></socket-io-manager>
 </template>
@@ -30,15 +32,22 @@ import ParamsView from 'views/ParamsView.vue';
 import SettingsView from 'views/SettingsView.vue';
 import GcsIndicators from 'components/GcsIndicators.vue';
 import SocketIoManager from 'components/SocketIoManager.vue';
+import GcsEditMissionModal from 'components/mission/GcsEditMissionModal.vue';
 
 export default {
     data() {
-        return {};
+        return {
+            showEditMissionModal: false
+        };
     },
 
     events: {
         'app::create-snackbar'(message, snackbar) {
             this.createSnackbar(message, snackbar);
+        },
+
+        'app::show-edit-mission-modal'() {
+            this.showEditMissionModal = true;
         },
 
         'map::pan-up'() {
@@ -149,7 +158,6 @@ export default {
         'server::get_parameters:timeout'(){
             this.$broadcast('server::get_parameters:timeout');
         },
-        */
 
         'server::set_parameters:success'(){
             this.$broadcast('server::set_parameters:success');
@@ -313,7 +321,8 @@ export default {
         ParamsView,
         SettingsView,
         GcsIndicators,
-        SocketIoManager
+        SocketIoManager,
+        GcsEditMissionModal
     }
 };
 </script>

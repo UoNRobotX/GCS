@@ -79,6 +79,10 @@ const mutations = {
         state.currentMissionIndex = index;
     },
 
+    SET_CURRENT_MISSION_TITLE(state, title) {
+        state.missions[state.currentMissionIndex].title = title;
+    },
+
     SET_PARAMETERS(state, parameters) {
         state.parameters = parameters;
     }
