@@ -1,6 +1,12 @@
 <template>
     <div class="gcs-waypoint" :class="{ 'highlighted': (dragging || highlighted) }">
-        <div class="number" v-text="index + 1"></div>
+        <div class="number">
+            <div v-text="index + 1"></div>
+            <ui-icon-button
+                type="clear" icon="delete" tooltip="Delete" @click="deleteWaypoint"
+                class='delete-button'
+            ></ui-icon-button>
+        </div>
 
         <div class="content">
             <div class="row">
@@ -26,11 +32,6 @@
                     class="column one-half" label="Type" name="type" :value.sync="type"
                     :options="[{ text: 'Normal', value: 'normal' }]" :default="type"
                 ></ui-select>
-
-                <ui-icon-button
-                    type="clear" icon="delete" tooltip="Delete" @click="deleteWaypoint"
-                    class='delete-button'
-                ></ui-icon-button>
             </div>
         </div>
     </div>
@@ -155,6 +156,9 @@ export default {
         line-height: 1;
         font-weight: bold;
         min-width: 24px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
     }
 
     .content {
@@ -163,6 +167,14 @@ export default {
 
     .delete-button {
         color: $dark-secondary;
+        height: 32px;
+        width: 32px;
+        margin-top: 16px;
+
+        .ui-icon {
+            font-size: 20px;
+        }
+
         &:hover {
             color: $dark-primary;
         }
