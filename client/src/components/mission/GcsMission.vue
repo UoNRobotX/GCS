@@ -37,9 +37,9 @@
                 class="no-waypoints" v-if="!mission.waypoints.length"
             >No waypoints for this mission. Click the map to add a waypoint.</p>
 
-            <component v-else>
+            <div v-else>
                 <gcs-waypoint
-                    v-for="(index, waypoint) in mission.waypoints" :index="index"
+                    v-for="(index, waypoint) in mission.waypoints" :index="index" :id="'waypoint-' + index"
                     :label="toLetter(index + 1)" :title="waypoint.title" :type="waypoint.type"
                     :lat="waypoint.position.lat" :lng="waypoint.position.lng"
                     :rotation="waypoint.rotation" :scale="10"
@@ -53,7 +53,7 @@
                     :end="mission.waypoints[(index+1) % mission.waypoints.length].position;"
                     :visible="waypointsVisible"
                 ></gcs-waypoint-link>
-            </component>
+            </div>
         </div>
     </div>
 </template>
@@ -166,6 +166,13 @@ export default {
             };
             this.mission.waypoints.splice(index+1, 0, newWaypoint);
             // TODO: scroll to new waypoint?
+
+            // Scroll to the newly inserted waypoint
+            this.$nextTick(() => {
+                element.scrollIntoView(
+                    this.$el.querySelector('#waypoint-' + (index + 1)), this.$els.pageContent, 56
+                );
+            });
         }
     },
 

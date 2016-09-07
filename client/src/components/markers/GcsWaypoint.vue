@@ -147,7 +147,7 @@ export default {
     }
 
     &.highlighted {
-        background-color: rgba(33, 150, 243, 0.15);
+        background-color: #FFF9C4;
     }
 
     .number {
