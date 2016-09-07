@@ -1,15 +1,13 @@
 # Todo list
 
 ## Stuff that needs doing
-* Fix errors that occur when refreshing while wamv is moving.
-* Use snackbars to notify user.
+* Fix error that occurs when refreshing while wamv is moving.
 * Add settings (google maps key, vehicle connection, ).
 * Allow specification of a GPS origin.
 * Add a way to specify areas for waypoints.
 * Add manual mode.
 * Make parameter reset only request changed parameters.
 * Make server use ECMAScript 2015.
-* Resolve TODO lines.
 * Try using written code instead of geolib.
 * Allow for multiple clients.
 * Improve error handling.
@@ -17,6 +15,7 @@
 * Add judges display.
 * Add functionality for specifying RobotX tasks/courses.
 * Make stuff look better.
+* Resolve TODO lines.
 
 ## Stuff that may need doing
 * Allow reordering waypoints.

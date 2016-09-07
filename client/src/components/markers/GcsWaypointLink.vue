@@ -115,7 +115,7 @@ export default {
 
     events: {
         'waypointLink:drag_start'(index, lat, lng){
-            if (this.index == index){
+            if (this.index === index){
                 this.start = {lat: lat, lng: lng};
             } else {
                 return true;
@@ -123,7 +123,7 @@ export default {
         },
 
         'waypointLink:drag_end'(index, lat, lng){
-            if (this.index == index){
+            if (this.index === index){
                 this.end = {lat: lat, lng: lng};
             } else {
                 return true;

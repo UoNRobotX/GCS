@@ -125,7 +125,7 @@ export default {
 
         &.battery,
         &.signal {
-            width: 80px;
+            width: 88px;
         }
 
         &.heading {

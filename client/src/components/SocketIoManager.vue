@@ -167,7 +167,7 @@ export default {
 
     methods: {
         sendGetParameters(initiator){
-            if (this.waitTimers.get_parameters == null){
+            if (this.waitTimers.get_parameters === null){
                 this.initiators.get_parameters = initiator;
                 this.socket.emit('get_parameters');
                 this.waitTimers.get_parameters = setTimeout(() => {
@@ -179,7 +179,7 @@ export default {
         },
 
         sendSetParameters(parameterSettings, initiator){
-            if (this.waitTimers.set_parameters == null){
+            if (this.waitTimers.set_parameters === null){
                 this.initiators.set_parameters = initiator;
                 this.socket.emit('set_parameters', parameterSettings);
                 this.waitTimers.set_parameters = setTimeout(() => {
@@ -191,7 +191,7 @@ export default {
         },
 
         sendSaveMissions(missions, initiator){
-            if (this.waitTimers.save_missions == null){
+            if (this.waitTimers.save_missions === null){
                 this.initiators.save_missions = initiator;
                 this.socket.emit('save_missions', missions);
                 this.waitTimers.save_missions = setTimeout(() => {
@@ -203,7 +203,7 @@ export default {
         },
 
         sendLoadMissions(initiator){
-            if (this.waitTimers.load_missions == null){
+            if (this.waitTimers.load_missions === null){
                 this.initiators.load_missions = initiator;
                 this.socket.emit('load_missions');
                 this.waitTimers.load_missions = setTimeout(() => {
@@ -215,7 +215,7 @@ export default {
         },
 
         sendUploadMission(mission, initiator){
-            if (this.waitTimers.upload_mission == null){
+            if (this.waitTimers.upload_mission === null){
                 this.initiators.upload_mission = initiator;
                 this.socket.emit('upload_mission', mission);
                 this.waitTimers.upload_mission = setTimeout(() => {
@@ -227,7 +227,7 @@ export default {
         },
 
         sendDownloadMission(initiator){
-            if (this.waitTimers.download_mission == null){
+            if (this.waitTimers.download_mission === null){
                 this.initiators.download_mission = initiator;
                 this.socket.emit('download_mission');
                 this.waitTimers.download_mission = setTimeout(() => {
@@ -239,7 +239,7 @@ export default {
         },
 
         sendArm(initiator){
-            if (this.waitTimers.arm == null){
+            if (this.waitTimers.arm === null){
                 this.initiators.arm = initiator;
                 this.socket.emit('arm');
                 this.waitTimers.arm = setTimeout(() => {
@@ -251,7 +251,7 @@ export default {
         },
 
         sendDisarm(initiator){
-            if (this.waitTimers.disarm == null){
+            if (this.waitTimers.disarm === null){
                 this.initiators.disarm = initiator;
                 this.socket.emit('disarm');
                 this.waitTimers.disarm = setTimeout(() => {
@@ -263,7 +263,7 @@ export default {
         },
 
         sendStartMission(initiator){
-            if (this.waitTimers.start_mission == null){
+            if (this.waitTimers.start_mission === null){
                 this.initiators.start_mission = initiator;
                 this.socket.emit('start_mission');
                 this.waitTimers.start_mission = setTimeout(() => {
@@ -275,7 +275,7 @@ export default {
         },
 
         sendStopMission(initiator){
-            if (this.waitTimers.stop_mission == null){
+            if (this.waitTimers.stop_mission === null){
                 this.initiators.stop_mission = initiator;
                 this.socket.emit('stop_mission');
                 this.waitTimers.stop_mission = setTimeout(() => {
@@ -287,7 +287,7 @@ export default {
         },
 
         sendResumeMission(initiator){
-            if (this.waitTimers.resume_mission == null){
+            if (this.waitTimers.resume_mission === null){
                 this.initiators.resume_mission = initiator;
                 this.socket.emit('resume_mission');
                 this.waitTimers.resume_mission = setTimeout(() => {
@@ -299,7 +299,7 @@ export default {
         },
 
         sendKill(initiator){
-            if (this.waitTimers.kill == null){
+            if (this.waitTimers.kill === null){
                 this.initiators.kill = initiator;
                 this.socket.emit('kill');
                 this.waitTimers.kill = setTimeout(() => {
@@ -311,7 +311,7 @@ export default {
         },
 
         sendUnkill(initiator){
-            if (this.waitTimers.unkill == null){
+            if (this.waitTimers.unkill === null){
                 this.initiators.unkill = initiator;
                 this.socket.emit('unkill');
                 this.waitTimers.unkill = setTimeout(() => {

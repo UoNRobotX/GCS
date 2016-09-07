@@ -1,6 +1,6 @@
 <template>
     <div class="gcs-commands">
-        <ui-button v-if="wamv.mode == 'paused'" @click="startMission">Restart</ui-button>
+        <ui-button v-if="wamv.mode === 'paused'" @click="startMission">Restart</ui-button>
 
         <ui-button
             @click="toggleMission" :text="startButtonText" :disabled="wamv.mode === 'killed'"
@@ -13,7 +13,7 @@
         <div class="armed-toggle" v-if="wamv.loaded">
             <ui-switch
                 :value.sync="isArmed" :label="isArmed ? 'Armed' : 'Disarmed'" label-left
-                :disabled="wamv.mode == 'auto'"
+                :disabled="wamv.mode === 'auto'"
             ></ui-switch>
         </div>
     </div>

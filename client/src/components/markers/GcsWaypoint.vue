@@ -26,6 +26,7 @@
                     type="number" :step="0.00001"
                 ></ui-textbox>
             </div>
+            <!-- TODO: updating lat/lng with buttons doesn't update waypoint links -->
 
             <div class="row">
                 <ui-select
