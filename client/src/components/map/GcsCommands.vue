@@ -7,7 +7,7 @@
         ></ui-button>
 
         <ui-button
-            color="danger" :text="wamv.mode === 'killed' ? 'Revive' : 'Kill'" @click="toggleKill"
+            color="danger" :text="wamv.mode === 'killed' ? 'Unkill' : 'Kill'" @click="toggleKill"
         ></ui-button>
 
         <div class="armed-toggle" v-if="wamv.loaded">
