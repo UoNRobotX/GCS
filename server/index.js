@@ -64,6 +64,7 @@ var vehicle = new Vehicle();
  *             'type1' is 'double', 'vector3', or 'mat3'.
  *             'value1' is a string containing a number, or 3 numbers, or 9 numbers
  *                 eg: '100', '1,2,3', '1,2,3;4,5,6;7,8,9'
+ *         section/subsection/parameter names may not contain '|' characters
  *     - For 'set_parameters', the data is an array of objects specifying parameters to set:
  *         [{title: 'section1|subsection1|title1', value: value1}, ...]
  *     - For 'save_missions', the data specifies a list of missions

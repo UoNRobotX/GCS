@@ -26,9 +26,11 @@
                         <div class="param" v-for="param in section.params">
                             <ui-textbox
                                 :label="param.title" :name="param.title" :value.sync="param.value"
-                                @changed="paramChanged(currentSection.title, section.title, param.title, param.value)"
+                                :valid.sync="param.valid"
+                                @changed="paramChanged(currentSection.title, section.title, param.title, param.value, param.valid)"
                                 :validation-rules="getValidationRule(param.type)"
                             ></ui-textbox>
+                            <!-- TODO: decide if using 'param.valid' is appropriate -->
                         </div>
                     </ui-collapsible>
                 </div>
@@ -74,16 +76,21 @@ export default {
             return Array.isArray(x); //Vue doesn't like it if I use this directly
         },
 
-        paramChanged(section, subsection, param, value){
-            // TODO: ensure section-subsection-param string doesn't contain unexpected characters
-            this.changedParams[section + '|' + subsection + '|' + param] = value;
+        paramChanged(section, subsection, param, value, valid){
+            this.changedParams[section + '|' + subsection + '|' + param] = {
+                value: value,
+                valid: valid
+            };
         },
 
         saveParams(){
             var data = [];
             for (var name in this.changedParams){
-                //console.log(name + ': ' + this.changedParams[name]);
-                data.push({title: name, value: this.changedParams[name]});
+                if (this.changedParams[name].valid == false){
+                    this.$dispatch('app::create-snackbar', 'A parameter value is invalid');
+                    return;
+                }
+                data.push({title: name, value: this.changedParams[name].value});
             }
             this.$dispatch('client::set_parameters', data, 'paramsView');
         },
