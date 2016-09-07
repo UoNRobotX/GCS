@@ -172,8 +172,9 @@ export default {
                 this.$dispatch('server.' + msgType + ':failure', this.initiators[msgType]);
             }
         });
-        this.socket.on('attention', (data) => {
-            console.log('Attention: ' + data);
+        this.socket.on('attention', (msg) => {
+            //console.log('Attention: ' + msg);
+            this.$dispatch('app::create-snackbar', msg);
         });
     },
 

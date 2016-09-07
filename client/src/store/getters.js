@@ -22,10 +22,6 @@ export function getWamv(state) {
     return state.wamv;
 }
 
-export function getConfig(state) {
-    return state.config;
-}
-
 export function getSettings(state) {
     return state.settings;
 }

@@ -7,7 +7,7 @@ import copy from 'util/copy-object';
 import loadGoogleMapsAPI from 'load-google-maps-api';
 
 import { setMap, setMapEl, setMapLoaded } from 'store/actions';
-import { getWamv, getSettings, getConfig, getMap, getMapEl, getMapLoaded, getMapEditing } from 'store/getters';
+import { getWamv, getSettings, getMap, getMapEl, getMapLoaded, getMapEditing } from 'store/getters';
 
 export default {
     vuex: {
@@ -17,7 +17,6 @@ export default {
             mapLoaded: getMapLoaded,
             mapEditing: getMapEditing,
             wamv: getWamv,
-            config: getConfig,
             settings: getSettings
         },
 
@@ -39,13 +38,32 @@ export default {
     },
 
     ready() {
+        
         this.setMapEl(document.getElementById('map'));
 
-        loadGoogleMapsAPI(this.config.googleMaps)
-            .then(this.initializeMap)
-            .catch((error) => {
-                console.log('Unable to load Google Maps API', error);
-            });
+        let key = null;
+        SearchKey:
+        for (let section of this.settings){
+            if (section.title === 'map'){
+                for (let setting of section.settings){
+                    if (setting.title === 'key'){
+                        key = setting.value;
+                        break SearchKey;
+                    }
+                }
+            }
+        }
+        
+        if (key === null){
+            console.log('Unable to find Google Maps key');
+        } else {
+            loadGoogleMapsAPI({key: key, v: 3})
+                .then(this.initializeMap)
+                .catch((error) => {
+                    console.log('Unable to load Google Maps API', error);
+                });
+        }
+        
     },
 
     events: {
@@ -86,16 +104,39 @@ export default {
 
     methods: {
         initializeMap() {
-            let mapConfig = copy(this.config.map);
-
-            mapConfig.mapTypeId = google.maps.MapTypeId[this.settings.defaultMapType];
-
-            let map = new google.maps.Map(this.mapEl, mapConfig);
-
-            this.setupEvents(map);
-
-            this.setMap(map);
-            this.setMapLoaded(true);
+            let lat = null, lng = null, zoom = null;
+            for (let section of this.settings){
+                if (section.title === 'map'){
+                    for (let setting of section.settings){
+                        if (setting.title === 'lat'){
+                            lat = setting.value;
+                        } else if (setting.title === 'lng'){
+                            lng = setting.value;
+                        } else if (setting.title === 'zoom'){
+                            zoom = setting.value;
+                        }
+                    }
+                }
+            }
+            
+            if (lat === null || lng === null || zoom === null){
+                console.log('Could not find lng/lng/zoom setting');
+            } else {
+                let map = new google.maps.Map(this.mapEl, {
+                    center: {
+                        lat: parseFloat(lat),
+                        lng: parseFloat(lng)
+                    },
+                    zoom: parseFloat(zoom),
+                    mapTypeId: google.maps.MapTypeId.SATELLITE,
+                    disableDefaultUI: true,
+                    disableDoubleClickZoom: true,
+                    tilt: 0
+                });
+                this.setupEvents(map);
+                this.setMap(map);
+                this.setMapLoaded(true);
+            }
         },
 
         setupEvents(map) {

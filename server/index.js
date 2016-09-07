@@ -24,6 +24,8 @@ var vehicle = new Vehicle();
  *      - 'status'           -> sent to client, contains vehicle position, heading, etc
  *      - 'get_parameters'   -> sent to server/client, requests/contains vehicle parameters
  *      - 'set_parameters'   -> sent to server, requests that vehicle parameters be set
+ *      - 'get_settings'     -> sent to server/client, requests/contains settings
+ *      - 'set_settings'     -> sent to server, requests that settings be set
  *      - 'save_missions'    -> sent to server, contains missions to be saved on the server
  *      - 'load_missions'    -> sent to server/client, requests/contains missions saved on the server
  *      - 'upload_mission'   -> sent to server, contains a mission to send to the vehicle
@@ -67,6 +69,12 @@ var vehicle = new Vehicle();
  *         section/subsection/parameter names may not contain '|' characters
  *     - For 'set_parameters', the data is an array of objects specifying parameters to set:
  *         [{title: 'section1|subsection1|title1', value: value1}, ...]
+ *     - For 'get_settings':
+ *         If sent from the client, no data is sent.
+ *         If sent from the server, the data specifies settings:
+ *             [{section: section1, settings: [{name: name1, value: value1}, ...]}, ...]
+ *     - For 'set_settings', the data is an array of objects specifying settings to set:
+ *         [{title: section1, title: title1, value: value1}, ...]
  *     - For 'save_missions', the data specifies a list of missions
  *         The data is an array of objects, each of the same form as with 'upload_mission'
  *     - For 'load_missions':

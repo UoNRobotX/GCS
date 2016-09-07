@@ -1,6 +1,5 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
-import config from 'app/config';
 
 // TODO: get settings from server and add to state
 
@@ -21,8 +20,34 @@ const initialState = {
         mode:     'idle',
         signal:   100
     },
-    config: config,
-    settings: config.settings,
+    settings: [
+        {
+            title: 'map',
+            settings: [
+                {
+                    title: 'key',
+                    value: 'AIzaSyABnCcekyPecGnsA1Rj_NdWjmUafJ1yVqA'
+                }, {
+                    title: 'lat',
+                    value: '21.308731'
+                }, {
+                    title: 'lng',
+                    value: '-157.888815'
+                }, {
+                    title: 'zoom',
+                    value: '19'
+                }
+            ]
+        }, {
+            title: 'Test section',
+            settings: [
+                {
+                    title: 'Test setting',
+                    value: 'Test value'
+                }
+            ]
+        }
+    ],
     settingsLoaded: false,
     missions: [],
     currentMissionIndex: -1,
