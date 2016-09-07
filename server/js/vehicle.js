@@ -29,7 +29,7 @@ module.exports = function(){
             }, {
                 title: 'Rib',
                 type: 'mat3',
-                value: '0,0,0;0,0,0;0,0,0' // [0, 0, 0, 0, 0, 0, 0, 0, 0]
+                value: '0,0,0,0,0,0,0,0,0' // [0, 0, 0, 0, 0, 0, 0, 0, 0]
             }, {
                 title: 'rIBb',
                 type: 'vec3',
@@ -58,7 +58,7 @@ module.exports = function(){
             params: [{
                 title: 'Test parameter 3',
                 type: 'mat3',
-                value: '1,2,3;4,5,6;7,8,9'
+                value: '1,2,3,4,5,6,7,8,9'
             }]
         }]
     }];

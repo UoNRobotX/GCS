@@ -3,8 +3,10 @@
         <div class="page">
             <h1 class="page-header">
                 <span class="title">Params</span>
-                <ui-button class="pull-right" color="primary" @click="saveParams">Save</ui-button>
-                <ui-button class="pull-right" color="primary" @click="resetParams">Reset</ui-button>
+                <div class="action-buttons">
+                    <ui-button color="primary" @click="saveParams">Save</ui-button>
+                    <ui-button @click="resetParams">Reset</ui-button>
+                </div>
             </h1>
 
             <div class="page-content">
@@ -25,6 +27,7 @@
                             <ui-textbox
                                 :label="param.title" :name="param.title" :value.sync="param.value"
                                 @changed="paramChanged(currentSection.title, section.title, param.title, param.value)"
+                                :validation-rules="getValidationRule(param.type)"
                             ></ui-textbox>
                         </div>
                     </ui-collapsible>
@@ -47,7 +50,12 @@ export default {
     data() {
         return {
             currentSectionIndex: 0,
-            changedParams: Object.create(null) //an empty map
+            changedParams: Object.create(null), //an empty map
+            validationRules: {
+                vec3: ['regex:/^(-?\\d*\\.?\\d+,){2}(-?\\d*\\.?\\d+)$/'],
+                double: ['regex:/^(-?\\d*\\.?\\d+)$/'],
+                mat3: ['regex:/^(-?\\d*\\.?\\d+,){8}(-?\\d*\\.?\\d+)$/']
+            }
         };
     },
 
@@ -82,6 +90,14 @@ export default {
 
         resetParams(){
             this.$dispatch('client::get_parameters');
+        },
+
+        getValidationRule(type) {
+            if (type) {
+                return this.validationRules[type];
+            }
+
+            return null;
         }
     },
 
@@ -104,7 +120,7 @@ export default {
         padding-right: 16px;
         align-items: center;
 
-        .ui-button {
+        .action-buttons {
             margin-left: auto;
         }
     }
@@ -135,17 +151,12 @@ export default {
         padding: 8px;
         padding-left: 24px;
         text-decoration: none;
-        font-size: 18px;
         color: $dark-primary;
 
         &.selected {
             background-color: #EEE;
             color: $primary;
         }
-    }
-
-    .pull-right {
-        float: right;
     }
 }
 </style>
