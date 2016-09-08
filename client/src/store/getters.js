@@ -26,6 +26,10 @@ export function getSettings(state) {
     return state.settings;
 }
 
+export function getSettingsLoaded(state) {
+    return state.settingsLoaded;
+}
+
 export function getMissions(state) {
     return state.missions;
 }

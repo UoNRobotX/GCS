@@ -84,8 +84,8 @@ export default {
         },
 
         saveParams(){
-            var data = [];
-            for (var name in this.changedParams){
+            let data = [];
+            for (let name in this.changedParams){
                 if (this.changedParams[name].valid === false){
                     this.$dispatch('app::create-snackbar', 'A parameter value is invalid');
                     return;

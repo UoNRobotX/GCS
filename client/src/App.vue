@@ -102,6 +102,14 @@ export default {
             this.$broadcast('client::set_parameters', parameterSettings, initiator);
         },
 
+        'client::get_settings'(initiator) {
+            this.$broadcast('client::get_settings', initiator);
+        },
+
+        'client::set_settings'(settings, initiator) {
+            this.$broadcast('client::set_settings', settings, initiator);
+        },
+
         'client::save_missions'(missions, initiator) {
             this.$broadcast('client::save_missions', missions, initiator);
         },
@@ -168,6 +176,30 @@ export default {
 
         'server.set_parameters:timeout'(initiator){
             this.$broadcast('server.set_parameters:timeout', initiator);
+        },
+
+        'server.get_settings:success'(initiator){
+            this.$broadcast('server.get_settings:success', initiator);
+        },
+
+        'server.get_settings:failure'(initiator){
+            this.$broadcast('server.get_settings:failure', initiator);
+        },
+
+        'server.get_settings:timeout'(initiator){
+            this.$broadcast('server.get_settings:timeout', initiator);
+        },
+
+        'server.set_settings:success'(initiator){
+            this.$broadcast('server.set_settings:success', initiator);
+        },
+
+        'server.set_settings:failure'(initiator){
+            this.$broadcast('server.set_settings:failure', initiator);
+        },
+
+        'server.set_settings:timeout'(initiator){
+            this.$broadcast('server.set_settings:timeout', initiator);
         },
 
         'server.save_missions:success'(initiator){

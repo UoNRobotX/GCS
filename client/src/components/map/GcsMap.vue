@@ -7,7 +7,7 @@ import copy from 'util/copy-object';
 import loadGoogleMapsAPI from 'load-google-maps-api';
 
 import { setMap, setMapEl, setMapLoaded } from 'store/actions';
-import { getWamv, getSettings, getMap, getMapEl, getMapLoaded, getMapEditing } from 'store/getters';
+import { getWamv, getSettings, getSettingsLoaded, getMap, getMapEl, getMapLoaded, getMapEditing } from 'store/getters';
 
 export default {
     vuex: {
@@ -17,7 +17,8 @@ export default {
             mapLoaded: getMapLoaded,
             mapEditing: getMapEditing,
             wamv: getWamv,
-            settings: getSettings
+            settings: getSettings,
+            settingsLoaded: getSettingsLoaded
         },
 
         actions: {
@@ -34,36 +35,34 @@ export default {
             } else {
                 this.map.setOptions({ draggableCursor: 'move' });
             }
-        }
-    },
-
-    ready() {
+        },
         
-        this.setMapEl(document.getElementById('map'));
+        settingsLoaded(){
+            this.setMapEl(document.getElementById('map'));
 
-        let key = null;
-        SearchKey:
-        for (let section of this.settings){
-            if (section.title === 'map'){
-                for (let setting of section.settings){
-                    if (setting.title === 'key'){
-                        key = setting.value;
-                        break SearchKey;
+            let key = null;
+            SearchKey:
+            for (let section of this.settings){
+                if (section.title === 'Map'){
+                    for (let setting of section.settings){
+                        if (setting.title === 'key'){
+                            key = setting.value;
+                            break SearchKey;
+                        }
                     }
                 }
             }
+
+            if (key === null){
+                console.log('Unable to find Google Maps key');
+            } else {
+                loadGoogleMapsAPI({key: key, v: 3})
+                    .then(this.initializeMap)
+                    .catch((error) => {
+                        console.log('Unable to load Google Maps API', error);
+                    });
+            }
         }
-        
-        if (key === null){
-            console.log('Unable to find Google Maps key');
-        } else {
-            loadGoogleMapsAPI({key: key, v: 3})
-                .then(this.initializeMap)
-                .catch((error) => {
-                    console.log('Unable to load Google Maps API', error);
-                });
-        }
-        
     },
 
     events: {
@@ -106,7 +105,7 @@ export default {
         initializeMap() {
             let lat = null, lng = null, zoom = null;
             for (let section of this.settings){
-                if (section.title === 'map'){
+                if (section.title === 'Map'){
                     for (let setting of section.settings){
                         if (setting.title === 'lat'){
                             lat = setting.value;
@@ -118,7 +117,7 @@ export default {
                     }
                 }
             }
-            
+
             if (lat === null || lng === null || zoom === null){
                 console.log('Could not find lng/lng/zoom setting');
             } else {

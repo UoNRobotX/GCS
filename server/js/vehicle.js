@@ -62,6 +62,32 @@ module.exports = function(){
             }]
         }]
     }];
+    this.settings = [{
+        title: 'Map',
+        settings: [
+            {
+                title: 'key',
+                value: 'AIzaSyABnCcekyPecGnsA1Rj_NdWjmUafJ1yVqA'
+            }, {
+                title: 'lat',
+                value: '21.308731'
+            }, {
+                title: 'lng',
+                value: '-157.888815'
+            }, {
+                title: 'zoom',
+                value: '19'
+            }
+        ]
+    }, {
+        title: 'Test section',
+        settings: [
+            {
+                title: 'Test setting',
+                value: 'Test value'
+            }
+        ]
+    }];
     //update fake WAM-V (returns null, or a string if something important has happened)
     this.update = function(){
         var msg = ''; //used for return value
@@ -131,7 +157,7 @@ module.exports = function(){
     this.getParameters = function(){
         return this.parameters;
     };
-    //set parameter (returns null on success, or an error message)
+    //set parameters (returns null on success, or an error message)
     this.setParameters = function(paramSettings){
         var params = []; //will contain the parameters to be set
         //verify settings
@@ -170,6 +196,38 @@ module.exports = function(){
             params[i].value = paramSettings[i].value;
         }
     };
+    //return settings (returns a parameters object on success, or an error message)
+    this.getSettings = function(){
+        return this.settings;
+    }
+    //set settings (returns null on success, or an error message)
+    this.setSettings = function(newSettings){
+        var settingsToSet = []; //will contain the settings to be set
+        //verify settings
+        var c, i, j;
+        SettingSearch:
+        for (c = 0; c < newSettings.length; c++){
+            var newSetting = newSettings[c];
+            for (i = 0; i < this.settings.length; i++){
+                var section = this.settings[i];
+                if (section.title === newSetting.section){
+                    for (j = 0; j < section.settings.length; j++){
+                        var setting = section.settings[j];
+                        if (setting.title === newSetting.title){
+                            settingsToSet.push(setting);
+                            continue SettingSearch;
+                        }
+                    }
+                    return 'A setting was not found.';
+                }
+            }
+            return 'A setting was not found.';
+        }
+        //change settings
+        for (i = 0; i < newSettings.length; i++){
+            settingsToSet[i].value = newSettings[i].value;
+        }
+    }
     //set mission (returns null on success, or an error message)
     this.setMission = function(mission){
         if (mission.waypoints.length == 0){

@@ -6,7 +6,7 @@
 import socket_io_client from 'socket.io-client';
 
 import { getMissions } from 'store/getters';
-import { setWamv, setParameters, setMissions } from 'store/actions';
+import { setWamv, setParameters, setSettings, setMissions } from 'store/actions';
 
 export default {
     vuex: {
@@ -16,6 +16,7 @@ export default {
         actions: {
             setWamv,
             setParameters,
+            setSettings,
             setMissions
         }
     },
@@ -27,6 +28,8 @@ export default {
                 //each property contains a timer for an in-progress request
                 get_parameters:   null,
                 set_parameters:   null,
+                get_settings:     null,
+                set_settings:     null,
                 save_missions:    null,
                 load_missions:    null,
                 upload_mission:   null,
@@ -43,6 +46,8 @@ export default {
                 //each property contains a string optionally specified by whoever initiated a request
                 get_parameters:   null,
                 set_parameters:   null,
+                get_settings:     null,
+                set_settings:     null,
                 save_missions:    null,
                 load_missions:    null,
                 upload_mission:   null,
@@ -78,6 +83,20 @@ export default {
                 }
                 return true;
             });
+            //get settings once at startup
+            this.sendGetSettings('init');
+            this.$once('server.get_settings:failure', function(initiator){
+                if (initiator === 'init'){
+                    this.$dispatch('app::create-snackbar', 'Failed to load settings');
+                }
+                return true;
+            });
+            this.$once('server.get_settings:timeout', function(initiator){
+                if (initiator === 'init'){
+                    this.$dispatch('app::create-snackbar', 'Failed to load settings due to timeout');
+                }
+                return true;
+            });
             //load missions once at startup
             this.sendLoadMissions('init');
             this.$once('server.load_missions:failure', function(initiator){
@@ -110,6 +129,15 @@ export default {
                 this.$dispatch('server.get_parameters:success', this.initiators.get_parameters);
             }
         });
+        this.socket.on('get_settings', (data) => {
+            clearTimeout(this.waitTimers.get_settings);
+            if (this.waitTimers.get_settings != null){
+                this.waitTimers.get_settings = null;
+                this.setSettings(data);
+                console.log('Settings loaded.');
+                this.$dispatch('server.get_settings:success', this.initiators.get_settings);
+            }
+        });
         this.socket.on('load_missions', (data) => {
             clearTimeout(this.waitTimers.load_missions);
             if (this.waitTimers.load_missions != null){
@@ -135,6 +163,7 @@ export default {
                 this.waitTimers[msgType] = null;
                 switch (msgType){
                     case 'set_parameters': {console.log('Parameters set.');          break;}
+                    case 'set_settings':   {console.log('Settings set.');            break;}
                     case 'save_missions':  {console.log('Missions saved.');          break;}
                     case 'upload_mission': {console.log('Mission uploaded.');        break;}
                     case 'arm':            {console.log('Vehicle armed.');           break;}
@@ -157,6 +186,8 @@ export default {
                 switch (msgType){
                     case 'get_parameters':   {console.log('Unable to load parameters: '        + errorMsg); break;}
                     case 'set_parameters':   {console.log('Unable to set parameters: '         + errorMsg); break;}
+                    case 'get_settings':     {console.log('Unable to load settings: '          + errorMsg); break;}
+                    case 'set_settings':     {console.log('Unable to set settings: '           + errorMsg); break;}
                     case 'save_missions':    {console.log('Unable to save missions: '          + errorMsg); break;}
                     case 'load_missions':    {console.log('Unable to load missions: '          + errorMsg); break;}
                     case 'upload_mission':   {console.log('Unable to upload mission: '         + errorMsg); break;}
@@ -199,6 +230,30 @@ export default {
                     this.waitTimers.set_parameters = null;
                     console.log('Unable to set parameters: timeout reached.');
                     this.$dispatch('server.set_parameters:timeout', initiator);
+                }, this.TIMEOUT);
+            }
+        },
+
+        sendGetSettings(initiator){
+            if (this.waitTimers.get_settings === null){
+                this.initiators.get_settings = initiator;
+                this.socket.emit('get_settings');
+                this.waitTimers.get_settings = setTimeout(() => {
+                    this.waitTimers.get_settings = null;
+                    console.log('Unable to get settings: timeout reached.');
+                    this.$dispatch('server.get_settings:timeout', initiator);
+                }, this.TIMEOUT);
+            }
+        },
+
+        sendSetSettings(settings, initiator){
+            if (this.waitTimers.set_settings === null){
+                this.initiators.set_settings = initiator;
+                this.socket.emit('set_settings', settings);
+                this.waitTimers.set_settings = setTimeout(() => {
+                    this.waitTimers.set_settings = null;
+                    console.log('Unable to set settings: timeout reached.');
+                    this.$dispatch('server.set_settings:timeout', initiator);
                 }, this.TIMEOUT);
             }
         },
@@ -343,6 +398,14 @@ export default {
 
         'client::set_parameters'(parameterSettings, initiator) {
             this.sendSetParameters(parameterSettings, initiator);
+        },
+
+        'client::get_settings'(initiator) {
+            this.sendGetSettings(initiator);
+        },
+
+        'client::set_settings'(settings, initiator) {
+            this.sendSetSettings(settings, initiator);
         },
 
         'client::save_missions'(missions, initiator) {

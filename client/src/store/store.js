@@ -20,34 +20,7 @@ const initialState = {
         mode:     'idle',
         signal:   100
     },
-    settings: [
-        {
-            title: 'map',
-            settings: [
-                {
-                    title: 'key',
-                    value: 'AIzaSyABnCcekyPecGnsA1Rj_NdWjmUafJ1yVqA'
-                }, {
-                    title: 'lat',
-                    value: '21.308731'
-                }, {
-                    title: 'lng',
-                    value: '-157.888815'
-                }, {
-                    title: 'zoom',
-                    value: '19'
-                }
-            ]
-        }, {
-            title: 'Test section',
-            settings: [
-                {
-                    title: 'Test setting',
-                    value: 'Test value'
-                }
-            ]
-        }
-    ],
+    settings: [],
     settingsLoaded: false,
     missions: [],
     currentMissionIndex: -1,
@@ -87,12 +60,8 @@ const mutations = {
         state.wamv.mode = mode;
     },
 
-    INIT_SETTINGS(state, settings) {
-        state.settings = settings;
+    SET_SETTINGS(state, settings) {
         state.settingsLoaded = true;
-    },
-
-    UPDATE_SETTINGS(state, settings) {
         state.settings = settings;
     },
 

@@ -50,6 +50,13 @@ export function setWamvMode({ dispatch, state }, mode) {
 }
 
 /**
+ * Set the settings
+ */
+export function setSettings({ dispatch, state }, settings) {
+    dispatch('SET_SETTINGS', settings);
+}
+
+/**
  * Set the missions
  */
 export function setMissions({ dispatch, state }, missions) {

@@ -74,7 +74,7 @@ var vehicle = new Vehicle();
  *         If sent from the server, the data specifies settings:
  *             [{section: section1, settings: [{name: name1, value: value1}, ...]}, ...]
  *     - For 'set_settings', the data is an array of objects specifying settings to set:
- *         [{title: section1, title: title1, value: value1}, ...]
+ *         [{section: section1, title: title1, value: value1}, ...]
  *     - For 'save_missions', the data specifies a list of missions
  *         The data is an array of objects, each of the same form as with 'upload_mission'
  *     - For 'load_missions':
@@ -161,6 +161,26 @@ function isParameterList(data){
     return true;
 }
 
+//used to check if sent data corresponds to list of parameter settings
+function isSettingList(data){
+    if (!Array.isArray(data)){
+        return false;
+    }
+    for (var i = 0; i < data.length; i++){
+        var setting = data[i];
+        if (typeof setting != 'object' ||
+            !setting.hasOwnProperty('section') ||
+            typeof setting.section != 'string' ||
+            !setting.hasOwnProperty('title') ||
+            typeof setting.title != 'string' ||
+            !setting.hasOwnProperty('value') ||
+            typeof setting.value != 'string'){
+            return false;
+        }
+    }
+    return true;
+}
+
 var missions = []; //mission list stored on server
 var missionsFile = path.join(__dirname, 'data/missions.json');
 
@@ -237,13 +257,37 @@ io.on('connection', function(socket){
         if (!isParameterList(data)){
             socket.emit('failure', ['set_parameters', 'Message has invalid format.']);
         }
-        //set parameter
+        //set parameters
         var msg = vehicle.setParameters(data);
         if (msg != null){
             socket.emit('failure', ['set_parameters', msg]);
         } else {
             socket.emit('success', 'set_parameters');
             //console.log(JSON.stringify(vehicle.getParameters()))
+        }
+    });
+    socket.on('get_settings', function(){
+        console.log('got "get_settings" message');
+        var data = vehicle.getSettings();
+        if (typeof data == 'object'){
+            socket.emit('get_settings', data);
+        } else {
+            socket.emit('failure', ['get_settings', data]);
+        }
+    });
+    socket.on('set_settings', function(data){
+        console.log('got "set_settings" message');
+        //check data format
+        if (!isSettingList(data)){
+            socket.emit('failure', ['set_settings', 'Message has invalid format.']);
+        }
+        //set settings
+        var msg = vehicle.setSettings(data);
+        if (msg != null){
+            socket.emit('failure', ['set_settings', msg]);
+        } else {
+            socket.emit('success', 'set_settings');
+            //console.log(JSON.stringify(vehicle.getSettings()))
         }
     });
     socket.on('save_missions', function(data){
