@@ -200,7 +200,7 @@ export default {
                     case 'kill':             {console.log('Unable to activate kill switch: '   + errorMsg); break;}
                     case 'unkill':           {console.log('Unable to deactivate kill switch: ' + errorMsg); break;}
                 }
-                this.$dispatch('server.' + msgType + ':failure', this.initiators[msgType]);
+                this.$dispatch('server.' + msgType + ':failure', errorMsg, this.initiators[msgType]);
             }
         });
         this.socket.on('attention', (msg) => {

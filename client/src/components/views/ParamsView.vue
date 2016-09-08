@@ -123,7 +123,7 @@ export default {
     },
 
     events: {
-        'server.get_parameters:failure'(initiator){
+        'server.get_parameters:failure'(msg, initiator){
             if (initiator === 'paramsView'){
                 this.$dispatch('app::create-snackbar', 'Failed to reset parameters');
             }

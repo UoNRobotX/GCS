@@ -199,7 +199,6 @@ export default {
                 }
             };
             this.mission.waypoints.splice(index+1, 0, newWaypoint);
-            // TODO: scroll to new waypoint?
 
             // Scroll to the newly inserted waypoint
             this.$nextTick(() => {

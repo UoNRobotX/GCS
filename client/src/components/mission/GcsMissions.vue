@@ -225,7 +225,7 @@ export default {
             return true;
         },
 
-        'server.load_missions:failure'(initiator){
+        'server.load_missions:failure'(msg, initiator){
             if (initiator === 'GcsMissions'){
                 this.$dispatch('app::create-snackbar', 'Failed to load missions');
             }
