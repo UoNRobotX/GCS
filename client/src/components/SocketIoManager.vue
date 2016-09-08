@@ -70,7 +70,7 @@ export default {
         this.socket.on('connect', () => {
             console.log('connected to server');
             //get parameters once at startup
-            this.sendGetParameters('init');
+            this.sendMsg('get_parameters', null, 'init');
             this.$once('server.get_parameters:failure', function(initiator){
                 if (initiator === 'init'){
                     this.$dispatch('app::create-snackbar', 'Failed to load parameters');
@@ -78,7 +78,7 @@ export default {
                 return true;
             });
             //get settings once at startup
-            this.sendGetSettings('init');
+            this.sendMsg('get_settings', null, 'init');
             this.$once('server.get_settings:failure', function(initiator){
                 if (initiator === 'init'){
                     this.$dispatch('app::create-snackbar', 'Failed to load settings');
@@ -86,7 +86,7 @@ export default {
                 return true;
             });
             //load missions once at startup
-            this.sendLoadMissions('init');
+            this.sendMsg('load_missions', null, 'init');
             this.$once('server.load_missions:failure', function(initiator){
                 if (initiator === 'init'){
                     this.$dispatch('app::create-snackbar', 'Failed to load missions');
@@ -192,182 +192,14 @@ export default {
     },
 
     methods: {
-        sendGetParameters(initiator){
-            if (this.waitTimers.get_parameters === null){
-                this.initiators.get_parameters = initiator;
-                this.socket.emit('get_parameters');
-                this.waitTimers.get_parameters = setTimeout(() => {
-                    this.waitTimers.get_parameters = null;
-                    console.log('Unable to get parameters: Timeout reached.');
-                    this.$dispatch('server.get_parameters: failure', 'Timeout reached.', initiator);
-                }, this.TIMEOUT);
-            }
-        },
-
-        sendSetParameters(params, initiator){
-            if (this.waitTimers.set_parameters === null){
-                this.initiators.set_parameters = initiator;
-                this.socket.emit('set_parameters', params);
-                this.waitTimers.set_parameters = setTimeout(() => {
-                    this.waitTimers.set_parameters = null;
-                    console.log('Unable to set parameters: Timeout reached.');
-                    this.$dispatch('server.set_parameters:failure', 'Timeout reached.', initiator);
-                }, this.TIMEOUT);
-            }
-        },
-
-        sendGetSettings(initiator){
-            if (this.waitTimers.get_settings === null){
-                this.initiators.get_settings = initiator;
-                this.socket.emit('get_settings');
-                this.waitTimers.get_settings = setTimeout(() => {
-                    this.waitTimers.get_settings = null;
-                    console.log('Unable to get settings: Timeout reached.');
-                    this.$dispatch('server.get_settings:failure', 'Timeout reached.', initiator);
-                }, this.TIMEOUT);
-            }
-        },
-
-        sendSetSettings(settings, initiator){
-            if (this.waitTimers.set_settings === null){
-                this.initiators.set_settings = initiator;
-                this.socket.emit('set_settings', settings);
-                this.waitTimers.set_settings = setTimeout(() => {
-                    this.waitTimers.set_settings = null;
-                    console.log('Unable to set settings: Timeout reached.');
-                    this.$dispatch('server.set_settings:failure', 'Timeout reached', initiator);
-                }, this.TIMEOUT);
-            }
-        },
-
-        sendSaveMissions(missions, initiator){
-            if (this.waitTimers.save_missions === null){
-                this.initiators.save_missions = initiator;
-                this.socket.emit('save_missions', missions);
-                this.waitTimers.save_missions = setTimeout(() => {
-                    this.waitTimers.save_missions = null;
-                    console.log('Unable to save missions: Timeout reached.');
-                    this.$dispatch('server.save_missions:failure', 'Timeout reached.', initiator);
-                }, this.TIMEOUT);
-            }
-        },
-
-        sendLoadMissions(initiator){
-            if (this.waitTimers.load_missions === null){
-                this.initiators.load_missions = initiator;
-                this.socket.emit('load_missions');
-                this.waitTimers.load_missions = setTimeout(() => {
-                    this.waitTimers.load_missions = null;
-                    console.log('Unable to load missions: Timeout reached.');
-                    this.$dispatch('server.load_missions:failure', 'Timeout reached.', initiator);
-                }, this.TIMEOUT);
-            }
-        },
-
-        sendUploadMission(mission, initiator){
-            if (this.waitTimers.upload_mission === null){
-                this.initiators.upload_mission = initiator;
-                this.socket.emit('upload_mission', mission);
-                this.waitTimers.upload_mission = setTimeout(() => {
-                    this.waitTimers.upload_mission = null;
-                    console.log('Unable to upload mission: Timeout reached.');
-                    this.$dispatch('server.upload_mission:failure', 'Timeout reached.', initiator);
-                }, this.TIMEOUT);
-            }
-        },
-
-        sendDownloadMission(initiator){
-            if (this.waitTimers.download_mission === null){
-                this.initiators.download_mission = initiator;
-                this.socket.emit('download_mission');
-                this.waitTimers.download_mission = setTimeout(() => {
-                    this.waitTimers.download_mission = null;
-                    console.log('Unable to download mission: Timeout reached.');
-                    this.$dispatch('server.download_mission:failure', 'Timeout reached.', initiator);
-                }, this.TIMEOUT);
-            }
-        },
-
-        sendArm(initiator){
-            if (this.waitTimers.arm === null){
-                this.initiators.arm = initiator;
-                this.socket.emit('arm');
-                this.waitTimers.arm = setTimeout(() => {
-                    this.waitTimers.arm = null;
-                    console.log('Unable to arm vehicle: Timeout reached.');
-                    this.$dispatch('server.arm:failure', 'Timeout reached.', initiator);
-                }, this.TIMEOUT);
-            }
-        },
-
-        sendDisarm(initiator){
-            if (this.waitTimers.disarm === null){
-                this.initiators.disarm = initiator;
-                this.socket.emit('disarm');
-                this.waitTimers.disarm = setTimeout(() => {
-                    this.waitTimers.disarm = null;
-                    console.log('Unable to disarm vehicle: Timeout reached.');
-                    this.$dispatch('server.disarm:failure', 'Timeout reached.', initiator);
-                }, this.TIMEOUT);
-            }
-        },
-
-        sendStartMission(initiator){
-            if (this.waitTimers.start_mission === null){
-                this.initiators.start_mission = initiator;
-                this.socket.emit('start_mission');
-                this.waitTimers.start_mission = setTimeout(() => {
-                    this.waitTimers.start_mission = null;
-                    console.log('Unable to start mission: Timeout reached.');
-                    this.$dispatch('server.start_mission:failure', 'Timeout reached.', initiator);
-                }, this.TIMEOUT);
-            }
-        },
-
-        sendStopMission(initiator){
-            if (this.waitTimers.stop_mission === null){
-                this.initiators.stop_mission = initiator;
-                this.socket.emit('stop_mission');
-                this.waitTimers.stop_mission = setTimeout(() => {
-                    this.waitTimers.stop_mission = null;
-                    console.log('Unable to stop mission: Timeout reached.');
-                    this.$dispatch('server.stop_mission:failure', 'Timeout reached.', initiator);
-                }, this.TIMEOUT);
-            }
-        },
-
-        sendResumeMission(initiator){
-            if (this.waitTimers.resume_mission === null){
-                this.initiators.resume_mission = initiator;
-                this.socket.emit('resume_mission');
-                this.waitTimers.resume_mission = setTimeout(() => {
-                    this.waitTimers.resume_mission = null;
-                    console.log('Unable to resume mission: Timeout reached.');
-                    this.$dispatch('server.resume_mission:failure', 'Timeout reached.', initiator);
-                }, this.TIMEOUT);
-            }
-        },
-
-        sendKill(initiator){
-            if (this.waitTimers.kill === null){
-                this.initiators.kill = initiator;
-                this.socket.emit('kill');
-                this.waitTimers.kill = setTimeout(() => {
-                    this.waitTimers.kill = null;
-                    console.log('Unable to activate kill switch: Timeout reached.');
-                    this.$dispatch('server.kill:failure', 'Timeout reached.', initiator);
-                }, this.TIMEOUT);
-            }
-        },
-
-        sendUnkill(initiator){
-            if (this.waitTimers.unkill === null){
-                this.initiators.unkill = initiator;
-                this.socket.emit('unkill');
-                this.waitTimers.unkill = setTimeout(() => {
-                    this.waitTimers.unkill = null;
-                    console.log('Unable to deactivate kill switch: Timeout reached.');
-                    this.$dispatch('server.unkill:failure', 'Timeout reached.', initiator);
+        sendMsg(msgType, data, initiator){
+            if (this.waitTimers[msgType] === null){
+                this.initiators[msgType] = initiator;
+                this.socket.emit(msgType, data);
+                this.waitTimers[msgType] = setTimeout(() => {
+                    this.waitTimers[msgType] = null;
+                    console.log('Timeout reached for "' + msgType + '" message');
+                    this.$dispatch('server.' + msgType + ':failure', 'Timeout reached.', initiator);
                 }, this.TIMEOUT);
             }
         }
@@ -375,63 +207,63 @@ export default {
 
     events: {
         'client::get_parameters'(initiator) {
-            this.sendGetParameters(initiator);
+            this.sendMsg('get_parameters', null, initiator);
         },
 
         'client::set_parameters'(params, initiator) {
-            this.sendSetParameters(params, initiator);
+            this.sendMsg('set_parameters', params, initiator);
         },
 
         'client::get_settings'(initiator) {
-            this.sendGetSettings(initiator);
+            this.sendMsg('get_settings', null, initiator);
         },
 
         'client::set_settings'(settings, initiator) {
-            this.sendSetSettings(settings, initiator);
+            this.sendMsg('set_settings', settings, initiator);
         },
 
         'client::save_missions'(missions, initiator) {
-            this.sendSaveMissions(missions, initiator);
+            this.sendMsg('save_missions', missions, initiator);
         },
 
         'client::load_missions'(initiator) {
-            this.sendLoadMissions(initiator);
+            this.sendMsg('load_missions', null, initiator);
         },
 
         'client::upload_mission'(mission, initiator) {
-            this.sendUploadMission(mission, initiator);
+            this.sendMsg('upload_mission', mission, initiator);
         },
 
         'client::download_mission'(initiator) {
-            this.sendDownloadMission(initiator);
+            this.sendMsg('download_mission', null, initiator);
         },
 
         'client::arm'(initiator) {
-            this.sendArm(initiator);
+            this.sendMsg('arm', null, initiator);
         },
 
         'client::disarm'(initiator) {
-            this.sendDisarm(initiator);
+            this.sendMsg('disarm', null, initiator);
         },
 
         'client::start_mission'(initiator) {
-            this.sendStartMission(initiator);
+            this.sendMsg('start_mission', null, initiator);
         },
 
         'client::stop_mission'(initiator) {
-            this.sendStopMission(initiator);
+            this.sendMsg('stop_mission', null, initiator);
         },
 
         'client::resume_mission'(initiator) {
-            this.sendResumeMission(initiator);
+            this.sendMsg('resume_mission', null, initiator);
         },
 
         'client::kill'(initiator) {
-            this.sendKill(initiator);
+            this.sendMsg('kill', null, initiator);
         },
 
         'client::unkill'(initiator) {
-            this.sendUnkill(initiator);
+            this.sendMsg('unkill', null, initiator);
         }
     }
 };
