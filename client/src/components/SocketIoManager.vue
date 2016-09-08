@@ -24,42 +24,10 @@ export default {
     data() {
         return {
             socket: null,
-            waitTimers: {
-                //each property contains a timer for an in-progress request
-                get_parameters:   null,
-                set_parameters:   null,
-                get_settings:     null,
-                set_settings:     null,
-                save_missions:    null,
-                load_missions:    null,
-                upload_mission:   null,
-                download_mission: null,
-                arm:              null,
-                disarm:           null,
-                start_mission:    null,
-                stop_mission:     null,
-                resume_mission:   null,
-                kill:             null,
-                unkill:           null
-            },
-            initiators: {
-                //each property contains a string optionally specified by whoever initiated a request
-                get_parameters:   null,
-                set_parameters:   null,
-                get_settings:     null,
-                set_settings:     null,
-                save_missions:    null,
-                load_missions:    null,
-                upload_mission:   null,
-                download_mission: null,
-                arm:              null,
-                disarm:           null,
-                start_mission:    null,
-                stop_mission:     null,
-                resume_mission:   null,
-                kill:             null,
-                unkill:           null
-            },
+            msgId: 0, //used to assign IDs to sent messages
+            pending: {}, //contains data for each sent message for which a response is expected
+                //pending[id] = {type, timer, initiator}
+            MAX_MSG_ID: Math.pow(2,53), //this is probably unnecessary
             TIMEOUT: 1000
         };
     },
@@ -102,48 +70,53 @@ export default {
             data.loaded = true;
             this.setWamv(data);
         });
-        this.socket.on('get_parameters', (data) => {
-            clearTimeout(this.waitTimers.get_parameters);
-            if (this.waitTimers.get_parameters != null){
-                this.waitTimers.get_parameters = null;
+        this.socket.on('get_parameters', (data, id) => {
+            if (id in this.pending){
+                let msg = this.pending[id];
+                delete this.pending[id];
+                clearTimeout(msg.timer);
                 this.setParameters(data);
                 console.log('Parameters loaded.');
-                this.$dispatch('server.get_parameters:success', this.initiators.get_parameters);
+                this.$dispatch('server.get_parameters:success', msg.initiator);
             }
         });
-        this.socket.on('get_settings', (data) => {
-            clearTimeout(this.waitTimers.get_settings);
-            if (this.waitTimers.get_settings != null){
-                this.waitTimers.get_settings = null;
+        this.socket.on('get_settings', (data, id) => {
+            if (id in this.pending){
+                let msg = this.pending[id];
+                delete this.pending[id];
+                clearTimeout(msg.timer);
                 this.setSettings(data);
                 console.log('Settings loaded.');
-                this.$dispatch('server.get_settings:success', this.initiators.get_settings);
+                this.$dispatch('server.get_settings:success', msg.initiator);
             }
         });
-        this.socket.on('load_missions', (data) => {
-            clearTimeout(this.waitTimers.load_missions);
-            if (this.waitTimers.load_missions != null){
-                this.waitTimers.load_missions = null;
+        this.socket.on('load_missions', (data, id) => {
+            if (id in this.pending){
+                let msg = this.pending[id];
+                delete this.pending[id];
+                clearTimeout(msg.timer);
                 this.setMissions(data);
                 console.log('Missions loaded.');
-                this.$dispatch('server.load_missions:success', this.initiators.load_missions);
+                this.$dispatch('server.load_missions:success', msg.initiator);
             }
         });
-        this.socket.on('download_mission', (data) => {
-            clearTimeout(this.waitTimers.download_mission);
-            if (this.waitTimers.download_mission != null){
-                this.waitTimers.download_mission = null;
+        this.socket.on('download_mission', (data, id) => {
+            if (id in this.pending){
+                let msg = this.pending[id];
+                delete this.pending[id];
+                clearTimeout(msg.timer);
                 this.missions.push(data);
                 console.log('Mission downloaded.');
-                this.$dispatch('server.download_mission:success', this.initiators.download_mission);
+                this.$dispatch('server.download_mission:success', msg.initiator);
             }
         });
-        this.socket.on('success', (msgType) => {
+        this.socket.on('success', (data, id) => {
             console.log('received "success" message');
-            clearTimeout(this.waitTimers[msgType]);
-            if (this.waitTimers[msgType] != null){
-                this.waitTimers[msgType] = null;
-                switch (msgType){
+            if (id in this.pending){
+                let msg = this.pending[id];
+                delete this.pending[id];
+                clearTimeout(msg.timer);
+                switch (msg.type){
                     case 'set_parameters': {console.log('Parameters set.');          break;}
                     case 'set_settings':   {console.log('Settings set.');            break;}
                     case 'save_missions':  {console.log('Missions saved.');          break;}
@@ -156,16 +129,16 @@ export default {
                     case 'kill':           {console.log('Kill switch activated.');   break;}
                     case 'unkill':         {console.log('Kill switch deactivated.'); break;}
                 }
-                this.$dispatch('server.' + msgType + ':success', this.initiators[msgType]);
+                this.$dispatch('server.' + msg.type + ':success', msg.initiator);
             }
         });
-        this.socket.on('failure', (data) => {
+        this.socket.on('failure', (errorMsg, id) => {
             console.log('received "failure" message');
-            var msgType = data[0], errorMsg = data[1];
-            clearTimeout(this.waitTimers[msgType]);
-            if (this.waitTimers[msgType] != null){
-                this.waitTimers[msgType] = null;
-                switch (msgType){
+            if (id in this.pending){
+                let msg = this.pending[id];
+                delete this.pending[id];
+                clearTimeout(msg.timer);
+                switch (msg.type){
                     case 'get_parameters':   {console.log('Unable to load parameters: '        + errorMsg); break;}
                     case 'set_parameters':   {console.log('Unable to set parameters: '         + errorMsg); break;}
                     case 'get_settings':     {console.log('Unable to load settings: '          + errorMsg); break;}
@@ -182,7 +155,7 @@ export default {
                     case 'kill':             {console.log('Unable to activate kill switch: '   + errorMsg); break;}
                     case 'unkill':           {console.log('Unable to deactivate kill switch: ' + errorMsg); break;}
                 }
-                this.$dispatch('server.' + msgType + ':failure', errorMsg, this.initiators[msgType]);
+                this.$dispatch('server.' + msg.type + ':failure', errorMsg, msg.initiator);
             }
         });
         this.socket.on('attention', (msg) => {
@@ -193,15 +166,18 @@ export default {
 
     methods: {
         sendMsg(msgType, data, initiator){
-            if (this.waitTimers[msgType] === null){
-                this.initiators[msgType] = initiator;
-                this.socket.emit(msgType, data);
-                this.waitTimers[msgType] = setTimeout(() => {
-                    this.waitTimers[msgType] = null;
-                    console.log('Timeout reached for "' + msgType + '" message');
+            this.pending[this.msgId] = {
+                type: msgType,
+                initiator: initiator,
+                timer: setTimeout(() => {
+                    delete this.pending[this.msgId];
+                    console.log('Timeout reached for a "' + msgType + '" message');
                     this.$dispatch('server.' + msgType + ':failure', 'Timeout reached.', initiator);
-                }, this.TIMEOUT);
-            }
+                }, this.TIMEOUT)
+            };
+            this.socket.emit(msgType, data, this.msgId);
+            this.msgId++;
+            if (this.msgId == this.MAX_MSG_ID){this.msgId = 0;} //this is probably unnecessary
         }
     },
 

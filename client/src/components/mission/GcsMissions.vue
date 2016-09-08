@@ -167,9 +167,7 @@ export default {
                 var mission = data[i];
                 if (typeof mission != 'object' ||
                     !mission.hasOwnProperty('title') ||
-                    mission.title != null && typeof mission.title != 'string' ||
-                    !mission.hasOwnProperty('description') ||
-                    mission.description != null && typeof mission.description != 'string' ||
+                    typeof mission.title != 'string' ||
                     !mission.hasOwnProperty('waypoints') ||
                     !Array.isArray(mission.waypoints)){
                     return false;
@@ -178,7 +176,7 @@ export default {
                     var wp = mission.waypoints[j];
                     if (typeof wp != 'object' ||
                         !wp.hasOwnProperty('title') ||
-                        wp.title != null && typeof wp.title != 'string' ||
+                        typeof wp.title != 'string' ||
                         !wp.hasOwnProperty('type') ||
                         typeof wp.type != 'string' ||
                         !wp.hasOwnProperty('visible') ||

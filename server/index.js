@@ -66,7 +66,7 @@
  *             title:       title1, //a string
  *             waypoints: [
  *                 {
- *                     title:   title1,   //a string, or null
+ *                     title:   title1,   //a string
  *                     type:    type1,    //a string
  *                     visible: visible1, //a boolean
  *                     position: {
@@ -80,10 +80,7 @@
  *     - For 'download_mission':
  *         If sent from the client, no data is sent.
  *         If sent from the server, the data has the same form as with 'upload_mission'
- *     - For 'success', the data is a string that
- *         holds the type of the message that was handled successfully.
- *     - For 'failure', the data is an array of 2 strings.
- *         The strings specify the type of the message that failed, and an informative message.
+ *     - For 'failure', the data is an error message
  *     - For 'attention', the data is an informative message.
  *     - For other types, no data is sent.
  */
@@ -246,150 +243,150 @@ io.on('connection', function(socket){
         //console.log('sent status message to: ' + host);
     }, 50);
     //handle other messages
-    socket.on('get_parameters', function(){
+    socket.on('get_parameters', function(data, id){
         console.log('got "get_parameters" message');
-        var data = vehicle.getParameters();
-        if (typeof data == 'object'){
-            socket.emit('get_parameters', data);
+        var params = vehicle.getParameters();
+        if (typeof params == 'object'){
+            socket.emit('get_parameters', params, id);
         } else {
-            socket.emit('failure', ['get_parameters', data]);
+            socket.emit('failure', params, id);
         }
     });
-    socket.on('set_parameters', function(data){
+    socket.on('set_parameters', function(data, id){
         console.log('got "set_parameters" message');
         //check data format
         if (!isParameterList(data)){
-            socket.emit('failure', ['set_parameters', 'Message has invalid format.']);
+            socket.emit('failure', 'Message has invalid format.', id);
         }
         //set parameters
         var msg = vehicle.setParameters(data);
         if (msg != null){
-            socket.emit('failure', ['set_parameters', msg]);
+            socket.emit('failure', msg, id);
         } else {
-            socket.emit('success', 'set_parameters');
+            socket.emit('success', null, id);
             //console.log(JSON.stringify(vehicle.getParameters()))
         }
     });
-    socket.on('get_settings', function(){
+    socket.on('get_settings', function(data, id){
         console.log('got "get_settings" message');
-        var data = vehicle.getSettings();
-        if (typeof data == 'object'){
-            socket.emit('get_settings', data);
+        var settings = vehicle.getSettings();
+        if (typeof settings == 'object'){
+            socket.emit('get_settings', settings, id);
         } else {
-            socket.emit('failure', ['get_settings', data]);
+            socket.emit('failure', settings, id);
         }
     });
-    socket.on('set_settings', function(data){
+    socket.on('set_settings', function(data, id){
         console.log('got "set_settings" message');
         //check data format
         if (!isSettingList(data)){
-            socket.emit('failure', ['set_settings', 'Message has invalid format.']);
+            socket.emit('failure', 'Message has invalid format.', id);
         }
         //set settings
         var msg = vehicle.setSettings(data);
         if (msg != null){
-            socket.emit('failure', ['set_settings', msg]);
+            socket.emit('failure', msg, id);
         } else {
-            socket.emit('success', 'set_settings');
+            socket.emit('success', null, id);
             //console.log(JSON.stringify(vehicle.getSettings()))
         }
     });
-    socket.on('save_missions', function(data){
+    socket.on('save_missions', function(data, id){
         console.log('got "save_missions" message');
         if (!isMissionList(data)){
-            socket.emit('failure', ['save_missions', 'Invalid mission list data.']);
+            socket.emit('failure', 'Invalid mission list data.', id);
         } else {
             missions = data;
-            socket.emit('success', 'save_missions');
+            socket.emit('success', null, id);
         }
     });
-    socket.on('load_missions', function(){
+    socket.on('load_missions', function(data, id){
         console.log('got "load_missions" message');
-        socket.emit('load_missions', missions);
+        socket.emit('load_missions', missions, id);
     });
-    socket.on('upload_mission', function(data){
+    socket.on('upload_mission', function(data, id){
         console.log('got "upload_mission" message');
         if (!isMission(data)){
-            socket.emit('failure', ['upload_mission', 'Invalid mission data.']);
+            socket.emit('failure', 'Invalid mission data.', id);
         } else {
             var msg = vehicle.setMission(data);
             if (msg == null){
-                socket.emit('success', 'upload_mission');
+                socket.emit('success', null, id);
             } else {
-                socket.emit('failure', ['upload_mission', msg]);
+                socket.emit('failure', msg, id);
             }
         }
     });
-    socket.on('download_mission', function(){
+    socket.on('download_mission', function(data, id){
         console.log('got "download_mission" message');
-        var data = vehicle.getMission();
-        if (typeof data == 'object'){
-            socket.emit('download_mission', data);
+        var mission = vehicle.getMission();
+        if (typeof mission == 'object'){
+            socket.emit('download_mission', mission, id);
         } else {
-            socket.emit('failure', ['download_mission', data]);
+            socket.emit('failure', mission, id);
         }
     });
-    socket.on('arm', function(){
+    socket.on('arm', function(data, id){
         console.log('got "arm" message');
         var msg = vehicle.arm();
         if (msg == null){
-            socket.emit('success', 'arm');
+            socket.emit('success', null, id);
         } else {
-            socket.emit('failure', ['arm', msg]);
+            socket.emit('failure', msg, id);
         }
     });
-    socket.on('disarm', function(){
+    socket.on('disarm', function(data, id){
         console.log('got "disarm" message');
         var msg = vehicle.disarm();
         if (msg == null){
-            socket.emit('success', 'disarm');
+            socket.emit('success', null, id);
         } else {
-            socket.emit('failure', ['disarm', msg]);
+            socket.emit('failure', msg, id);
         }
     });
-    socket.on('start_mission', function(){
+    socket.on('start_mission', function(data, id){
         console.log('got "start_mission" message');
         var msg = vehicle.start(true);
         if (msg == null){
-            socket.emit('success', 'start_mission');
+            socket.emit('success', null, id);
         } else {
-            socket.emit('failure', ['start_mission', msg]);
+            socket.emit('failure', msg, id);
         }
     });
-    socket.on('stop_mission', function(){
+    socket.on('stop_mission', function(data, id){
         console.log('got "stop_mission" message');
         var msg = vehicle.stop();
         if (msg == null){
-            socket.emit('success', 'stop_mission');
+            socket.emit('success', null, id);
         } else {
-            socket.emit('failure', ['stop_mission', msg]);
+            socket.emit('failure', msg, id);
         }
     });
-    socket.on('resume_mission', function(){
+    socket.on('resume_mission', function(data, id){
         console.log('got "resume_mission" message');
         var msg = vehicle.start(false);
         if (msg == null){
-            socket.emit('success', 'resume_mission');
+            socket.emit('success', null, id);
         } else {
-            socket.emit('failure', ['resume_mission', msg]);
+            socket.emit('failure', msg, id);
         }
     });
-    socket.on('kill', function(){
+    socket.on('kill', function(data, id){
         console.log('got "kill" message');
         var msg = vehicle.kill();
         if (msg == null){
-            socket.emit('success', 'kill');
+            socket.emit('success', null, id);
         } else {
-            socket.emit('failure', ['kill', msg]);
+            socket.emit('failure', msg, id);
         }
     });
-    socket.on('unkill', function(){
+    socket.on('unkill', function(data, id){
         console.log('got "unkill" message');
         var msg = vehicle.unkill();
         if (msg == null){
-            socket.emit('success', 'unkill');
+            socket.emit('success', null, id);
         } else {
-            socket.emit('failure', ['unkill', msg]);
+            socket.emit('failure', msg, id);
         }
     });
 });
