@@ -69,16 +69,9 @@ export default {
     },
 
     events: {
-        'server.get_settings:failure'(initiator){
+        'server.get_settings:failure'(msg, initiator){
             if (initiator === 'settingsView'){
                 this.$dispatch('app::create-snackbar', 'Failed to reset settings');
-            }
-            return true;
-        },
-
-        'server.get_settings:timeout'(initiator){
-            if (initiator === 'settingsView'){
-                this.$dispatch('app::create-snackbar', 'Failed to reset settings due to timeout');
             }
             return true;
         },
@@ -90,10 +83,6 @@ export default {
 
         'server.set_settings:failure'(){
             this.$dispatch('app::create-snackbar', 'Failed to save settings');
-        },
-
-        'server.set_settings:timeout'(){
-            this.$dispatch('app::create-snackbar', 'Failed to save settings due to timeout');
         }
     }
 };

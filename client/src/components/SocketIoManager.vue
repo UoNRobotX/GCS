@@ -77,12 +77,6 @@ export default {
                 }
                 return true;
             });
-            this.$once('server.get_parameters:timeout', function(initiator){
-                if (initiator === 'init'){
-                    this.$dispatch('app::create-snackbar', 'Failed to load parameters due to timeout');
-                }
-                return true;
-            });
             //get settings once at startup
             this.sendGetSettings('init');
             this.$once('server.get_settings:failure', function(initiator){
@@ -91,23 +85,11 @@ export default {
                 }
                 return true;
             });
-            this.$once('server.get_settings:timeout', function(initiator){
-                if (initiator === 'init'){
-                    this.$dispatch('app::create-snackbar', 'Failed to load settings due to timeout');
-                }
-                return true;
-            });
             //load missions once at startup
             this.sendLoadMissions('init');
             this.$once('server.load_missions:failure', function(initiator){
                 if (initiator === 'init'){
                     this.$dispatch('app::create-snackbar', 'Failed to load missions');
-                }
-                return true;
-            });
-            this.$once('server.load_missions:timeout', function(initiator){
-                if (initiator === 'init'){
-                    this.$dispatch('app::create-snackbar', 'Failed to load missions due to timeout');
                 }
                 return true;
             });
@@ -216,8 +198,8 @@ export default {
                 this.socket.emit('get_parameters');
                 this.waitTimers.get_parameters = setTimeout(() => {
                     this.waitTimers.get_parameters = null;
-                    console.log('Unable to get parameters: timeout reached.');
-                    this.$dispatch('server.get_parameters:timeout', initiator);
+                    console.log('Unable to get parameters: Timeout reached.');
+                    this.$dispatch('server.get_parameters: failure', 'Timeout reached.', initiator);
                 }, this.TIMEOUT);
             }
         },
@@ -228,8 +210,8 @@ export default {
                 this.socket.emit('set_parameters', params);
                 this.waitTimers.set_parameters = setTimeout(() => {
                     this.waitTimers.set_parameters = null;
-                    console.log('Unable to set parameters: timeout reached.');
-                    this.$dispatch('server.set_parameters:timeout', initiator);
+                    console.log('Unable to set parameters: Timeout reached.');
+                    this.$dispatch('server.set_parameters:failure', 'Timeout reached.', initiator);
                 }, this.TIMEOUT);
             }
         },
@@ -240,8 +222,8 @@ export default {
                 this.socket.emit('get_settings');
                 this.waitTimers.get_settings = setTimeout(() => {
                     this.waitTimers.get_settings = null;
-                    console.log('Unable to get settings: timeout reached.');
-                    this.$dispatch('server.get_settings:timeout', initiator);
+                    console.log('Unable to get settings: Timeout reached.');
+                    this.$dispatch('server.get_settings:failure', 'Timeout reached.', initiator);
                 }, this.TIMEOUT);
             }
         },
@@ -252,8 +234,8 @@ export default {
                 this.socket.emit('set_settings', settings);
                 this.waitTimers.set_settings = setTimeout(() => {
                     this.waitTimers.set_settings = null;
-                    console.log('Unable to set settings: timeout reached.');
-                    this.$dispatch('server.set_settings:timeout', initiator);
+                    console.log('Unable to set settings: Timeout reached.');
+                    this.$dispatch('server.set_settings:failure', 'Timeout reached', initiator);
                 }, this.TIMEOUT);
             }
         },
@@ -264,8 +246,8 @@ export default {
                 this.socket.emit('save_missions', missions);
                 this.waitTimers.save_missions = setTimeout(() => {
                     this.waitTimers.save_missions = null;
-                    console.log('Unable to save missions: timeout reached.');
-                    this.$dispatch('server.save_missions:timeout', initiator);
+                    console.log('Unable to save missions: Timeout reached.');
+                    this.$dispatch('server.save_missions:failure', 'Timeout reached.', initiator);
                 }, this.TIMEOUT);
             }
         },
@@ -276,8 +258,8 @@ export default {
                 this.socket.emit('load_missions');
                 this.waitTimers.load_missions = setTimeout(() => {
                     this.waitTimers.load_missions = null;
-                    console.log('Unable to load missions: timeout reached.');
-                    this.$dispatch('server.load_missions:timeout', initiator);
+                    console.log('Unable to load missions: Timeout reached.');
+                    this.$dispatch('server.load_missions:failure', 'Timeout reached.', initiator);
                 }, this.TIMEOUT);
             }
         },
@@ -288,8 +270,8 @@ export default {
                 this.socket.emit('upload_mission', mission);
                 this.waitTimers.upload_mission = setTimeout(() => {
                     this.waitTimers.upload_mission = null;
-                    console.log('Unable to upload mission: timeout reached.');
-                    this.$dispatch('server.upload_mission:timeout', initiator);
+                    console.log('Unable to upload mission: Timeout reached.');
+                    this.$dispatch('server.upload_mission:failure', 'Timeout reached.', initiator);
                 }, this.TIMEOUT);
             }
         },
@@ -300,8 +282,8 @@ export default {
                 this.socket.emit('download_mission');
                 this.waitTimers.download_mission = setTimeout(() => {
                     this.waitTimers.download_mission = null;
-                    console.log('Unable to download mission: timeout reached.');
-                    this.$dispatch('server.download_mission:timeout', initiator);
+                    console.log('Unable to download mission: Timeout reached.');
+                    this.$dispatch('server.download_mission:failure', 'Timeout reached.', initiator);
                 }, this.TIMEOUT);
             }
         },
@@ -312,8 +294,8 @@ export default {
                 this.socket.emit('arm');
                 this.waitTimers.arm = setTimeout(() => {
                     this.waitTimers.arm = null;
-                    console.log('Unable to arm vehicle: timeout reached.');
-                    this.$dispatch('server.arm:timeout', initiator);
+                    console.log('Unable to arm vehicle: Timeout reached.');
+                    this.$dispatch('server.arm:failure', 'Timeout reached.', initiator);
                 }, this.TIMEOUT);
             }
         },
@@ -324,8 +306,8 @@ export default {
                 this.socket.emit('disarm');
                 this.waitTimers.disarm = setTimeout(() => {
                     this.waitTimers.disarm = null;
-                    console.log('Unable to disarm vehicle: timeout reached.');
-                    this.$dispatch('server.disarm:timeout', initiator);
+                    console.log('Unable to disarm vehicle: Timeout reached.');
+                    this.$dispatch('server.disarm:failure', 'Timeout reached.', initiator);
                 }, this.TIMEOUT);
             }
         },
@@ -336,8 +318,8 @@ export default {
                 this.socket.emit('start_mission');
                 this.waitTimers.start_mission = setTimeout(() => {
                     this.waitTimers.start_mission = null;
-                    console.log('Unable to start mission: timeout reached.');
-                    this.$dispatch('server.start_mission:timeout', initiator);
+                    console.log('Unable to start mission: Timeout reached.');
+                    this.$dispatch('server.start_mission:failure', 'Timeout reached.', initiator);
                 }, this.TIMEOUT);
             }
         },
@@ -348,8 +330,8 @@ export default {
                 this.socket.emit('stop_mission');
                 this.waitTimers.stop_mission = setTimeout(() => {
                     this.waitTimers.stop_mission = null;
-                    console.log('Unable to stop mission: timeout reached.');
-                    this.$dispatch('server.stop_mission:timeout', initiator);
+                    console.log('Unable to stop mission: Timeout reached.');
+                    this.$dispatch('server.stop_mission:failure', 'Timeout reached.', initiator);
                 }, this.TIMEOUT);
             }
         },
@@ -360,8 +342,8 @@ export default {
                 this.socket.emit('resume_mission');
                 this.waitTimers.resume_mission = setTimeout(() => {
                     this.waitTimers.resume_mission = null;
-                    console.log('Unable to resume mission: timeout reached.');
-                    this.$dispatch('server.resume_mission:timeout', initiator);
+                    console.log('Unable to resume mission: Timeout reached.');
+                    this.$dispatch('server.resume_mission:failure', 'Timeout reached.', initiator);
                 }, this.TIMEOUT);
             }
         },
@@ -372,8 +354,8 @@ export default {
                 this.socket.emit('kill');
                 this.waitTimers.kill = setTimeout(() => {
                     this.waitTimers.kill = null;
-                    console.log('Unable to activate kill switch: timeout reached.');
-                    this.$dispatch('server.kill:timeout', initiator);
+                    console.log('Unable to activate kill switch: Timeout reached.');
+                    this.$dispatch('server.kill:failure', 'Timeout reached.', initiator);
                 }, this.TIMEOUT);
             }
         },
@@ -384,8 +366,8 @@ export default {
                 this.socket.emit('unkill');
                 this.waitTimers.unkill = setTimeout(() => {
                     this.waitTimers.unkill = null;
-                    console.log('Unable to deactivate kill switch: timeout reached.');
-                    this.$dispatch('server.unkill:timeout', initiator);
+                    console.log('Unable to deactivate kill switch: Timeout reached.');
+                    this.$dispatch('server.unkill:failure', 'Timeout reached.', initiator);
                 }, this.TIMEOUT);
             }
         }

@@ -1,23 +1,3 @@
-var http = require('http');
-var koa = require('koa');
-var path = require('path');
-var openUrl = require('openurl');
-var serve = require('koa-static');
-var socket_io = require('socket.io');
-var fs = require('fs');
-var Vehicle = require('./js/vehicle.js');
-
-var app = koa();
-
-// Serve static files from the public directory
-app.use(serve(path.join(__dirname, 'public')));
-
-//create server
-var server = http.createServer(app.callback());
-
-//create fake WAM-V
-var vehicle = new Vehicle();
-
 /*
  *  Client-server message protocol: (This is just for testing. The real protocol will be different.)
  *  Each socket.io message will have one of these types:
@@ -108,6 +88,26 @@ var vehicle = new Vehicle();
  *     - For other types, no data is sent.
  */
 
+var http = require('http');
+var koa = require('koa');
+var path = require('path');
+var openUrl = require('openurl');
+var serve = require('koa-static');
+var socket_io = require('socket.io');
+var fs = require('fs');
+var Vehicle = require('./js/vehicle.js');
+
+var app = koa();
+
+// Serve static files from the public directory
+app.use(serve(path.join(__dirname, 'public')));
+
+//create server
+var server = http.createServer(app.callback());
+
+//create fake WAM-V
+var vehicle = new Vehicle();
+
 //used to check if sent data corresponds to a mission
 function isMission(data){
     if (typeof data != 'object' ||
@@ -165,7 +165,7 @@ function isParameterList(data){
     return true;
 }
 
-//used to check if sent data corresponds to list of parameter settings
+//used to check if sent data corresponds to list of settings
 function isSettingList(data){
     if (!Array.isArray(data)){
         return false;

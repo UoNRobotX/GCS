@@ -130,13 +130,6 @@ export default {
             return true;
         },
 
-        'server.get_parameters:timeout'(initiator){
-            if (initiator === 'paramsView'){
-                this.$dispatch('app::create-snackbar', 'Failed to reset parameters due to timeout');
-            }
-            return true;
-        },
-
         'server.set_parameters:success'(){
             this.changedParams = Object.create(null);
             this.$dispatch('app::create-snackbar', 'Parameters saved');
@@ -144,10 +137,6 @@ export default {
 
         'server.set_parameters:failure'(){
             this.$dispatch('app::create-snackbar', 'Failed to save parameters');
-        },
-
-        'server.set_parameters:timeout'(){
-            this.$dispatch('app::create-snackbar', 'Failed to save parameters due to timeout');
         }
     }
 };

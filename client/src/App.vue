@@ -162,20 +162,12 @@ export default {
             this.$broadcast('server.get_parameters:failure', msg, initiator);
         },
 
-        'server.get_parameters:timeout'(initiator){
-            this.$broadcast('server.get_parameters:timeout', initiator);
-        },
-
         'server.set_parameters:success'(initiator){
             this.$broadcast('server.set_parameters:success', initiator);
         },
 
         'server.set_parameters:failure'(msg, initiator){
             this.$broadcast('server.set_parameters:failure', msg, initiator);
-        },
-
-        'server.set_parameters:timeout'(initiator){
-            this.$broadcast('server.set_parameters:timeout', initiator);
         },
 
         'server.get_settings:success'(initiator){
@@ -186,20 +178,12 @@ export default {
             this.$broadcast('server.get_settings:failure', msg, initiator);
         },
 
-        'server.get_settings:timeout'(initiator){
-            this.$broadcast('server.get_settings:timeout', initiator);
-        },
-
         'server.set_settings:success'(initiator){
             this.$broadcast('server.set_settings:success', initiator);
         },
 
         'server.set_settings:failure'(msg, initiator){
             this.$broadcast('server.set_settings:failure', msg, initiator);
-        },
-
-        'server.set_settings:timeout'(initiator){
-            this.$broadcast('server.set_settings:timeout', initiator);
         },
 
         'server.save_missions:success'(initiator){
@@ -210,20 +194,12 @@ export default {
             this.$broadcast('server.save_missions:failure', msg, initiator);
         },
 
-        'server.save_missions:timeout'(initiator){
-            this.$broadcast('server.save_missions:timeout', initiator);
-        },
-
         'server.load_missions:success'(initiator){
             this.$broadcast('server.load_missions:success', initiator);
         },
 
         'server.load_missions:failure'(msg, initiator){
             this.$broadcast('server.load_missions:failure', msg, initiator);
-        },
-
-        'server.load_missions:timeout'(initiator){
-            this.$broadcast('server.load_missions:timeout', initiator);
         },
 
         'server.upload_mission:success'(initiator){
@@ -234,20 +210,12 @@ export default {
             this.$broadcast('server.upload_mission:failure', msg, initiator);
         },
 
-        'server.upload_mission:timeout'(initiator){
-            this.$broadcast('server.upload_mission:timeout', initiator);
-        },
-
         'server.download_mission:success'(initiator){
             this.$broadcast('server.download_mission:success', initiator);
         },
 
         'server.download_mission:failure'(msg, initiator){
             this.$broadcast('server.download_mission:failure', msg, initiator);
-        },
-
-        'server.download_mission:timeout'(initiator){
-            this.$broadcast('server.download_mission:timeout', initiator);
         },
 
         'server.arm:success'(initiator){
@@ -258,10 +226,6 @@ export default {
             this.$broadcast('server.arm:failure', msg, initiator);
         },
 
-        'server.arm:timeout'(initiator){
-            this.$broadcast('server.arm:timeout', initiator);
-        },
-
         'server.disarm:success'(initiator){
             this.$broadcast('server.disarm:success', initiator);
         },
@@ -270,10 +234,6 @@ export default {
             this.$broadcast('server.disarm:failure', msg, initiator);
         },
 
-        'server.disarm:timeout'(initiator){
-            this.$broadcast('server.disarm:timeout', initiator);
-        },
-
         'server.start_mission:success'(initiator){
             this.$broadcast('server.start_mission:success', initiator);
         },
@@ -282,20 +242,12 @@ export default {
             this.$broadcast('server.start_mission:failure', msg, initiator);
         },
 
-        'server.start_mission:timeout'(initiator){
-            this.$broadcast('server.start_mission:timeout', initiator);
-        },
-
         'server.start_mission:success'(initiator){
             this.$broadcast('server.start_mission:success', initiator);
         },
 
         'server.start_mission:failure'(msg, initiator){
             this.$broadcast('server.start_mission:failure', msg, initiator);
-        },
-
-        'server.start_mission:timeout'(initiator){
-            this.$broadcast('server.start_mission:timeout', initiator);
         },
 
         'server.resume_mission:success'(initiator){
@@ -306,10 +258,6 @@ export default {
             this.$broadcast('server.resume_mission:failure', msg, initiator);
         },
 
-        'server.resume_mission:timeout'(initiator){
-            this.$broadcast('server.resume_mission:timeout', initiator);
-        },
-
         'server.kill:success'(initiator){
             this.$broadcast('server.kill:success', initiator);
         },
@@ -318,21 +266,13 @@ export default {
             this.$broadcast('server.kill:failure', msg, initiator);
         },
 
-        'server.kill:timeout'(initiator){
-            this.$broadcast('server.kill:timeout', initiator);
-        },
-
         'server.unkill:success'(initiator){
             this.$broadcast('server.unkill:success', initiator);
         },
 
         'server.unkill:failure'(msg, initiator){
             this.$broadcast('server.unkill:failure', msg, initiator);
-        },
-
-        'server.unkill:timeout'(initiator){
-            this.$broadcast('server.unkill:timeout', initiator);
-        },
+        }
     },
 
     methods: {

@@ -91,24 +91,12 @@ export default {
             this.$dispatch('app::create-snackbar', 'Failed to start mission: ' + msg);
         },
 
-        'server.start_mission:timeout'(initiator){
-            this.$dispatch('app::create-snackbar', 'Failed to start mission (timed out)');
-        },
-
         'server.stop_mission:failure'(msg, initiator){
             this.$dispatch('app::create-snackbar', 'Failed to stop mission: ' + msg);
         },
 
-        'server.stop_mission:timeout'(initiator){
-            this.$dispatch('app::create-snackbar', 'Failed to stop mission (timed out)');
-        },
-
         'server.resume_mission:failure'(msg, initiator){
             this.$dispatch('app::create-snackbar', 'Failed to resume mission: ' + msg);
-        },
-
-        'server.resume_mission:timeout'(initiator){
-            this.$dispatch('app::create-snackbar', 'Failed to resume mission (timed out)');
         }
     }
 };

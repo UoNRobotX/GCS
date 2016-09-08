@@ -214,10 +214,6 @@ export default {
 
         'server.upload_mission:failure'(){
             this.$dispatch('app::create-snackbar', 'Failed to upload mission');
-        },
-
-        'server.upload_mission:timeout'(){
-            this.$dispatch('app::create-snackbar', 'Failed to upload mission due to timeout');
         }
     },
 

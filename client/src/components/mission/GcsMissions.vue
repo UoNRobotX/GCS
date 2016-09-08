@@ -214,10 +214,6 @@ export default {
             this.$dispatch('app::create-snackbar', 'Failed to save missions');
         },
 
-        'server.save_missions:timeout'(){
-            this.$dispatch('app::create-snackbar', 'Failed to save missions due to timeout');
-        },
-
         'server.load_missions:success'(initiator){
             if (initiator === 'GcsMissions'){
                 this.$dispatch('app::create-snackbar', 'Missions loaded');
@@ -232,19 +228,8 @@ export default {
             return true;
         },
 
-        'server.load_missions:timeout'(initiator){
-            if (initiator === 'GcsMissions'){
-                this.$dispatch('app::create-snackbar', 'Failed to load missions due to timeout');
-            }
-            return true;
-        },
-
         'server.download_mission:failure'(){
             this.$dispatch('app::create-snackbar', 'Failed to download mission');
-        },
-
-        'server.download_mission:timeout'(){
-            this.$dispatch('app::create-snackbar', 'Failed to download mission due to timeout');
         }
     },
 
