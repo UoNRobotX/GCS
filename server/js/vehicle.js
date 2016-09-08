@@ -158,42 +158,38 @@ module.exports = function(){
         return this.parameters;
     };
     //set parameters (returns null on success, or an error message)
-    this.setParameters = function(paramSettings){
-        var params = []; //will contain the parameters to be set
+    this.setParameters = function(newParams){
+        var paramsToSet = [];
         //verify settings
         var c, i, j, k;
         ParamSearch:
-        for (c = 0; c < paramSettings.length; c++){
-            var setting = paramSettings[c];
-            var titles = setting.title.split('|');
-            if (titles.length != 3){
-                return 'A parameter title was invalid.';
-            }
+        for (c = 0; c < newParams.length; c++){
+            var newParam = newParams[c];
             for (i = 0; i < this.parameters.length; i++){
                 var section = this.parameters[i];
-                if (section.title == titles[0]){
+                if (section.title === newParam.section){
                     for (j = 0; j < section.subSections.length; j++){
                         var subSection = section.subSections[j];
-                        if (subSection.title == titles[1]){
+                        if (subSection.title == newParam.subsection){
                             for (k = 0; k < subSection.params.length; k++){
                                 var param = subSection.params[k];
-                                if (param.title == titles[2]){
+                                if (param.title == newParam.title){
                                     // TODO: perform type and value checking
-                                    params.push(param);
+                                    paramsToSet.push(param);
                                     continue ParamSearch;
                                 }
                             }
                             return 'A parameter was not found.';
                         }
                     }
-                    return 'A parameter was not found.';
+                    return 'A parameter subsection was not found.';
                 }
             }
-            return 'A parameter was not found.';
+            return 'A parameter section was not found.';
         }
         //use settings
-        for (i = 0; i < paramSettings.length; i++){
-            params[i].value = paramSettings[i].value;
+        for (i = 0; i < newParams.length; i++){
+            paramsToSet[i].value = newParams[i].value;
         }
     };
     //return settings (returns a parameters object on success, or an error message)
@@ -221,7 +217,7 @@ module.exports = function(){
                     return 'A setting was not found.';
                 }
             }
-            return 'A setting was not found.';
+            return 'A setting section was not found.';
         }
         //change settings
         for (i = 0; i < newSettings.length; i++){

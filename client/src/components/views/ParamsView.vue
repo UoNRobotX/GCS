@@ -77,20 +77,34 @@ export default {
         },
 
         paramChanged(section, subsection, param, value, valid){
-            this.changedParams[section + '|' + subsection + '|' + param] = {
-                value: value,
-                valid: valid
-            };
+            if (section in this.changedParams){
+                if (subsection in this.changedParams[section]){
+                    this.changedParams[section][subsection][param] = {value: value, valid: valid};
+                } else {
+                    this.changedParams[section][subsection] = {[param]: {value: value, valid: valid}};
+                }
+            } else {
+                this.changedParams[section] = {[subsection]: {[param]: {value: value, valid: valid}}};
+            }
         },
 
         saveParams(){
             let data = [];
-            for (let name in this.changedParams){
-                if (this.changedParams[name].valid === false){
-                    this.$dispatch('app::create-snackbar', 'A parameter value is invalid');
-                    return;
+            for (let section in this.changedParams){
+                for (let subsection in this.changedParams[section]){
+                    for (let param in this.changedParams[section][subsection]){
+                        if (!this.changedParams[section][subsection][param].valid){
+                            this.$dispatch('app::create-snackbar', 'A parameter value is invalid');
+                            return;
+                        }
+                        data.push({
+                            section: section,
+                            subsection: subsection,
+                            title: param,
+                            value: this.changedParams[section][subsection][param].value
+                        });
+                    }
                 }
-                data.push({title: name, value: this.changedParams[name].value});
             }
             this.$dispatch('client::set_parameters', data, 'paramsView');
         },

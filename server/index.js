@@ -68,7 +68,7 @@ var vehicle = new Vehicle();
  *                 eg: '100', '1,2,3', '1,2,3;4,5,6;7,8,9'
  *         section/subsection/parameter names may not contain '|' characters
  *     - For 'set_parameters', the data is an array of objects specifying parameters to set:
- *         [{title: 'section1|subsection1|title1', value: value1}, ...]
+ *         [{section: section1, subsection: subsection1, title: title1, value: value1}, ...]
  *     - For 'get_settings':
  *         If sent from the client, no data is sent.
  *         If sent from the server, the data specifies settings:
@@ -151,6 +151,10 @@ function isParameterList(data){
     for (var i = 0; i < data.length; i++){
         var setting = data[i];
         if (typeof setting != 'object' ||
+            !setting.hasOwnProperty('section') ||
+            typeof setting.section != 'string' ||
+            !setting.hasOwnProperty('subsection') ||
+            typeof setting.subsection != 'string' ||
             !setting.hasOwnProperty('title') ||
             typeof setting.title != 'string' ||
             !setting.hasOwnProperty('value') ||

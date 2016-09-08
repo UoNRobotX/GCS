@@ -98,8 +98,8 @@ export default {
             this.$broadcast('client::get_parameters', initiator);
         },
 
-        'client::set_parameters'(parameterSettings, initiator) {
-            this.$broadcast('client::set_parameters', parameterSettings, initiator);
+        'client::set_parameters'(params, initiator) {
+            this.$broadcast('client::set_parameters', params, initiator);
         },
 
         'client::get_settings'(initiator) {

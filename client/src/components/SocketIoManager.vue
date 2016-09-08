@@ -222,10 +222,10 @@ export default {
             }
         },
 
-        sendSetParameters(parameterSettings, initiator){
+        sendSetParameters(params, initiator){
             if (this.waitTimers.set_parameters === null){
                 this.initiators.set_parameters = initiator;
-                this.socket.emit('set_parameters', parameterSettings);
+                this.socket.emit('set_parameters', params);
                 this.waitTimers.set_parameters = setTimeout(() => {
                     this.waitTimers.set_parameters = null;
                     console.log('Unable to set parameters: timeout reached.');
@@ -396,8 +396,8 @@ export default {
             this.sendGetParameters(initiator);
         },
 
-        'client::set_parameters'(parameterSettings, initiator) {
-            this.sendSetParameters(parameterSettings, initiator);
+        'client::set_parameters'(params, initiator) {
+            this.sendSetParameters(params, initiator);
         },
 
         'client::get_settings'(initiator) {
