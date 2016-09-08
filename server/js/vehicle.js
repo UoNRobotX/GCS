@@ -242,7 +242,7 @@ module.exports = function(){
     //get mission (returns an object on success, or an error message)
     this.getMission = function(){
         if (this.mission == null){
-            return 'No current mission';
+            return 'No uploaded mission.';
         }
         return this.mission;
     };
@@ -283,7 +283,7 @@ module.exports = function(){
             return 'Vehicle is not armed.';
         }
         if (this.mission == null){
-            return 'No current mission.';
+            return 'No uploaded mission.';
         }
         if (this.mode == 'paused' && fromBeginning){
             this.missionIndex = 0;

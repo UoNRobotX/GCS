@@ -242,12 +242,12 @@ export default {
             this.$broadcast('server.start_mission:failure', msg, initiator);
         },
 
-        'server.start_mission:success'(initiator){
-            this.$broadcast('server.start_mission:success', initiator);
+        'server.stop_mission:success'(initiator){
+            this.$broadcast('server.stop_mission:success', initiator);
         },
 
-        'server.start_mission:failure'(msg, initiator){
-            this.$broadcast('server.start_mission:failure', msg, initiator);
+        'server.stop_mission:failure'(msg, initiator){
+            this.$broadcast('server.stop_mission:failure', msg, initiator);
         },
 
         'server.resume_mission:success'(initiator){

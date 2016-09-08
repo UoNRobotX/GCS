@@ -1,13 +1,17 @@
 <template>
     <div class="gcs-commands">
-        <ui-button v-if="wamv.mode === 'paused'" @click="startMission">Restart</ui-button>
+        <ui-button v-if="wamv.mode === 'paused'"
+            @click="startMission" :disabled="waitToggleMission"
+        >Restart</ui-button>
 
         <ui-button
-            @click="toggleMission" :text="startButtonText" :disabled="wamv.mode === 'killed'"
+            @click="toggleMission" :text="startButtonText"
+            :disabled="wamv.mode === 'killed' || waitToggleMission"
         ></ui-button>
 
         <ui-button
-            color="danger" :text="wamv.mode === 'killed' ? 'Unkill' : 'Kill'" @click="toggleKill"
+            color="danger" :text="wamv.mode === 'killed' ? 'Unkill' : 'Kill'"
+            @click="toggleKill" :disabled="waitToggleKill"
         ></ui-button>
 
         <div class="armed-toggle" v-if="wamv.loaded">
@@ -27,6 +31,13 @@ export default {
         getters: {
             wamv: getWamv
         }
+    },
+    
+    data(){
+        return {
+            waitToggleMission: false,
+            waitToggleKill: false
+        };
     },
 
     computed: {
@@ -63,41 +74,71 @@ export default {
     methods: {
         toggleMission() {
             if (this.wamv.mode === 'idle') {
-                this.startMission();
+                this.$dispatch('client::start_mission');
             } else if (this.wamv.mode === 'paused') {
                 this.$dispatch('client::resume_mission');
             } else if (this.wamv.mode === 'auto') {
                 this.$dispatch('client::stop_mission');
             }
+            this.waitToggleMission = true;
         },
 
         startMission(){
             this.$dispatch('client::start_mission');
+            this.waitToggleMission = true;
         },
 
         toggleKill() {
-            if (this.wamv.mode !== 'killed') {
-                this.$dispatch('client::kill');
-            }
-
-            if (this.wamv.mode === 'killed') {
-                this.$dispatch('client::unkill');
-            }
+            this.$dispatch(this.wamv.mode === 'killed' ? 'client::unkill' : 'client::kill');
+            this.waitToggleKill = true;
         }
     },
 
     events: {
-        'server.start_mission:failure'(msg, initiator){
+        'server.start_mission:success'(){
+            this.waitToggleMission = false;
+        },
+
+        'server.start_mission:failure'(msg){
+            this.waitToggleMission = false;
             this.$dispatch('app::create-snackbar', 'Failed to start mission: ' + msg);
         },
 
-        'server.stop_mission:failure'(msg, initiator){
+        'server.stop_mission:success'(){
+            this.waitToggleMission = false;
+        },
+
+        'server.stop_mission:failure'(msg){
+            this.waitToggleMission = false;
             this.$dispatch('app::create-snackbar', 'Failed to stop mission: ' + msg);
         },
 
-        'server.resume_mission:failure'(msg, initiator){
+        'server.resume_mission:success'(){
+            this.waitToggleMission = false;
+        },
+
+        'server.resume_mission:failure'(msg){
+            this.waitToggleMission = false;
             this.$dispatch('app::create-snackbar', 'Failed to resume mission: ' + msg);
-        }
+        },
+
+        'server.kill:success'(){
+            this.waitToggleKill = false;
+        },
+
+        'server.kill:failure'(msg){
+            this.waitToggleKill = false;
+            this.$dispatch('app::create-snackbar', 'Failed to activate kill switch: ' + msg);
+        },
+
+        'server.unkill:success'(){
+            this.waitToggleKill = false;
+        },
+
+        'server.unkill:failure'(msg){
+            this.waitToggleKill = false;
+            this.$dispatch('app::create-snackbar', 'Failed to deactivate kill switch: ' + msg);
+        },
     }
 };
 </script>

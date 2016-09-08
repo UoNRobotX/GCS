@@ -9,7 +9,8 @@
                         ></ui-icon-button>
 
                         <ui-icon-button
-                            type="clear" icon="file_download" tooltip="Download mission" @click="downloadMission"
+                            type="clear" icon="file_download" tooltip="Download mission"
+                            @click="downloadMission" :disabled="waitDownloadMission"
                         ></ui-icon-button>
 
                         <ui-icon-button
@@ -73,7 +74,8 @@ export default {
                 { id: 'import', text: 'Import from file'                 },
                 { id: 'sep2',   text: '',                type: 'divider' },
                 { id: 'clear',  text: 'Clear all'                        }
-            ]
+            ],
+            waitDownloadMission: false
         };
     },
 
@@ -97,6 +99,7 @@ export default {
         },
 
         downloadMission() {
+            this.waitDownloadMission = true;
             this.$dispatch('client::download_mission');
         },
 
@@ -226,7 +229,12 @@ export default {
             return true;
         },
 
+        'server.download_mission:success'(){
+            this.waitDownloadMission = false;
+        },
+
         'server.download_mission:failure'(){
+            this.waitDownloadMission = false;
             this.$dispatch('app::create-snackbar', 'Failed to download mission');
         }
     },

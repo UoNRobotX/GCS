@@ -4,8 +4,12 @@
             <h1 class="page-header">
                 Settings
                 <div class="action-buttons">
-                    <ui-button color="primary" @click="saveSettings">Save</ui-button>
-                    <ui-button @click="resetSettings">Reset</ui-button>
+                    <ui-button color="primary"
+                        @click="saveSettings" :disabled="waitSaveSettings"
+                    >Save</ui-button>
+                    <ui-button
+                        @click="resetSettings" :disabled="waitResetSettings"
+                    >Reset</ui-button>
                 </div>
             </h1>
             <div class="page-content">
@@ -36,7 +40,9 @@ export default {
 
     data() {
         return {
-            changedSettings: Object.create(null) //an empty map
+            changedSettings: Object.create(null), //an empty map
+            waitSaveSettings: false,
+            waitResetSettings: false
         };
     },
 
@@ -60,28 +66,38 @@ export default {
                     });
                 }
             }
+            this.waitSaveSettings = true;
             this.$dispatch('client::set_settings', data, 'settingsView');
         },
 
         resetSettings(){
+            this.waitResetSettings = true;
             this.$dispatch('client::get_settings', 'settingsView');
         }
     },
 
     events: {
+        'server.get_settings:success'(msg, initiator){
+            this.waitResetSettings = false;
+            return true;
+        },
+
         'server.get_settings:failure'(msg, initiator){
             if (initiator === 'settingsView'){
                 this.$dispatch('app::create-snackbar', 'Failed to reset settings');
             }
+            this.waitResetSettings = false;
             return true;
         },
 
         'server.set_settings:success'(){
             this.changedSettings = Object.create(null);
+            this.waitSaveSettings = false;
             this.$dispatch('app::create-snackbar', 'Settings saved');
         },
 
         'server.set_settings:failure'(){
+            this.waitSaveSettings = false;
             this.$dispatch('app::create-snackbar', 'Failed to save settings');
         }
     }

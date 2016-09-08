@@ -11,7 +11,7 @@
             <div slot="actions">
                 <ui-icon-button
                     type="clear" icon="file_upload" tooltip="Upload mission" @click="uploadMission"
-                    :disabled="!waypointsVisible"
+                    :disabled="!waypointsVisible || waitUploadMission"
                 ></ui-icon-button>
 
                 <ui-icon-button
@@ -93,7 +93,8 @@ export default {
         return {
             overflowMenu: [
                 { id: 'edit', text: 'Edit mission' }
-            ]
+            ],
+            waitUploadMission: false
         };
     },
 
@@ -129,6 +130,7 @@ export default {
         },
 
         uploadMission() {
+            this.waitUploadMission = true;
             this.$dispatch('client::upload_mission', this.missions[this.currentMissionIndex]);
         },
 
@@ -209,10 +211,12 @@ export default {
         },
 
         'server.upload_mission:success'(){
+            this.waitUploadMission = false;
             this.$dispatch('app::create-snackbar', 'Mission uploaded');
         },
 
         'server.upload_mission:failure'(){
+            this.waitUploadMission = false;
             this.$dispatch('app::create-snackbar', 'Failed to upload mission');
         }
     },

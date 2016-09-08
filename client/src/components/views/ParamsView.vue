@@ -4,8 +4,12 @@
             <h1 class="page-header">
                 <span class="title">Params</span>
                 <div class="action-buttons">
-                    <ui-button color="primary" @click="saveParams">Save</ui-button>
-                    <ui-button @click="resetParams">Reset</ui-button>
+                    <ui-button color="primary"
+                        @click="saveParams" :disabled="waitSaveParams"
+                    >Save</ui-button>
+                    <ui-button
+                        @click="resetParams" :disabled="waitResetParams"
+                    >Reset</ui-button>
                 </div>
             </h1>
 
@@ -57,7 +61,9 @@ export default {
                 vec3: ['regex:/^(-?\\d*\\.?\\d+,){2}(-?\\d*\\.?\\d+)$/'],
                 double: ['regex:/^(-?\\d*\\.?\\d+)$/'],
                 mat3: ['regex:/^(-?\\d*\\.?\\d+,){8}(-?\\d*\\.?\\d+)$/']
-            }
+            },
+            waitSaveParams: false,
+            waitResetParams: false
         };
     },
 
@@ -106,10 +112,12 @@ export default {
                     }
                 }
             }
+            this.waitSaveParams = true;
             this.$dispatch('client::set_parameters', data, 'paramsView');
         },
 
         resetParams(){
+            this.waitResetParams = true;
             this.$dispatch('client::get_parameters', 'paramsView');
         },
 
@@ -123,19 +131,27 @@ export default {
     },
 
     events: {
+        'server.get_parameters:success'(msg, initiator){
+            this.waitResetParams = false;
+            return true;
+        },
+
         'server.get_parameters:failure'(msg, initiator){
             if (initiator === 'paramsView'){
                 this.$dispatch('app::create-snackbar', 'Failed to reset parameters');
             }
+            this.waitResetParams = false;
             return true;
         },
 
         'server.set_parameters:success'(){
             this.changedParams = Object.create(null);
+            this.waitSaveParams = false;
             this.$dispatch('app::create-snackbar', 'Parameters saved');
         },
 
         'server.set_parameters:failure'(){
+            this.waitSaveParams = false;
             this.$dispatch('app::create-snackbar', 'Failed to save parameters');
         }
     }
