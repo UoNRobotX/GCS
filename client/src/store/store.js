@@ -1,8 +1,6 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 
-// TODO: get settings from server and add to state
-
 Vue.use(Vuex);
 
 const initialState = {

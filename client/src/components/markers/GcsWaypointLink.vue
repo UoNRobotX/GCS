@@ -91,7 +91,7 @@ export default {
                 path: [this.start, this.end],
                 strokeColor: this.strokeColor.normal,
                 strokeOpacity: 1,
-                strokeWeight: 3,
+                strokeWeight: 5,
                 visible: this.visible,
                 map: this.map
             });
