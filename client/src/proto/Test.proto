@@ -1,7 +1,103 @@
+//This file defines messages for testing (the real ones will be different).
+
 syntax = "proto3";
 
-message Test {
-    string str = 1;
-    int32 n = 2;
+//sent regularly by the WAM-V to the server, which sends it to clients
+message Status {
+    enum Mode {
+        STOPPED = 0;
+        AUTO    = 1;
+        PAUSED  = 2;
+        KILLED  = 3;
+    }
+    float latitude  = 1;
+    float longitude = 2;
+    float heading   = 3;
+    float speed     = 4;
+    float battery   = 5;
+    bool armed      = 6;
+    Mode mode       = 7;
+    float signal    = 8;
 }
 
+//sent from the client to the server, which sends it to the WAM-V
+message Command {
+    enum Type {
+        ARM    = 0;
+        DISARM = 1;
+        START  = 2;
+        STOP   = 3;
+        RESUME = 4;
+        KILL   = 5;
+        UNKILL = 6;
+    }
+    Type type = 1;
+}
+
+//sent in response to a Command message
+message CommandResponse {
+    bool success = 1;
+    string msg   = 2; //if success == false, is an error message
+}
+
+//sent from the client to the server, and requests data
+message Get {
+    enum Type {
+        PARAMETERS = 0;
+        SETTINGS   = 1;
+        MISSION    = 2; //used to get the last uploaded mission
+        MISSIONS   = 3; //used to get the server's saved mission list
+    }
+    Type type = 1;
+}
+
+//sent from the server to the client, in response to a request for parameters
+//sent from the client to the server, specifying parameters to be set
+message Parameters {
+    message Parameter {
+        string section    = 1;
+        string subSection = 2;
+        string title      = 3;
+        string value      = 4;
+    }
+    repeated Parameter parameters = 1;
+}
+
+//sent from the server to the client, in response to a request for settings
+//sent from the client to the server, specifying settings to be set
+message Settings {
+    message Setting {
+        string section    = 1;
+        string title      = 2;
+        string value      = 3;
+    }
+    repeated Setting settings = 1;
+}
+
+//sent from the server to the client, in response to a request for the last uploaded mission
+//sent from the client to the server, specifying a mission to upload
+message Mission {
+    message Waypoint {
+        enum Type {
+            GO_TO_POINT = 0;
+        }
+        string title    = 1;
+        Type type       = 2;
+        float latitude  = 3;
+        float longitude = 4;
+    }
+    string title                = 1;
+    repeated Waypoint waypoints = 2;
+}
+
+//sent from the server to the client, in response to a request for the server's saved mission list
+//sent from the client to the server, specifying a mission list to save
+message Missions {
+    repeated Mission missions = 1;
+}
+
+//sent from the server to the client, intended to notify the user
+//example messages: Mission completed. Battery is at 0%. Parameters changed by another client.
+message Attention {
+    string msg = 1;
+}

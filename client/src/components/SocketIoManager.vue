@@ -74,11 +74,13 @@ export default {
                     return true;
                 });
 
+                /*
                 //protobufjs testing
                 let msg = new this.protoPkg.Test('testing', 123);
                 let buf = msg.toBuffer();
                 let msg2 = this.protoPkg.Test.decode(buf);
                 console.log('protobufjs test: "' + msg2.str + '", ' + msg2.n);
+                */
             });
             this.socket.on('disconnect', () => {
                 console.log('disconnected from server');
