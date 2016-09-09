@@ -4,6 +4,7 @@
 
 <script>
 import socket_io_client from 'socket.io-client';
+import protobuf from 'protobufjs';
 
 import { getMissions } from 'store/getters';
 import { setWamv, setParameters, setSettings, setMissions } from 'store/actions';
@@ -28,143 +29,158 @@ export default {
             pending: {}, //contains data for each sent message for which a response is expected
                 //pending[id] = {type, timer, initiator}
             MAX_MSG_ID: Math.pow(2,53), //this is probably unnecessary
-            TIMEOUT: 1000
+            TIMEOUT: 1000,
+            protoBuilder: null,
+            protoPkg: null
         };
     },
 
     ready() {
-        //initialise socket
-        this.socket = socket_io_client('localhost:3000');
-        this.socket.on('connect', () => {
-            console.log('connected to server');
-            //get parameters once at startup
-            this.sendMsg('get_parameters', null, 'init');
-            this.$once('server.get_parameters:failure', function(initiator){
-                if (initiator === 'init'){
-                    this.$dispatch('app::create-snackbar', 'Failed to load parameters');
-                }
-                return true;
-            });
-            //get settings once at startup
-            this.sendMsg('get_settings', null, 'init');
-            this.$once('server.get_settings:failure', function(initiator){
-                if (initiator === 'init'){
-                    this.$dispatch('app::create-snackbar', 'Failed to load settings');
-                }
-                return true;
-            });
-            //load missions once at startup
-            this.sendMsg('load_missions', null, 'init');
-            this.$once('server.load_missions:failure', function(initiator){
-                if (initiator === 'init'){
-                    this.$dispatch('app::create-snackbar', 'Failed to load missions');
-                }
-                return true;
-            });
-        });
-        this.socket.on('disconnect', () => {
-            console.log('disconnected from server');
-        });
-        this.socket.on('status', (data) => {
-            //console.log('received "status" message');
-            data.loaded = true;
-            this.setWamv(data);
-        });
-        this.socket.on('get_parameters', (data, id) => {
-            if (id in this.pending){
-                let msg = this.pending[id];
-                delete this.pending[id];
-                clearTimeout(msg.timer);
-                this.setParameters(data);
-                console.log('Parameters loaded.');
-                this.$dispatch('server.get_parameters:success', msg.initiator);
-            }
-        });
-        this.socket.on('get_settings', (data, id) => {
-            if (id in this.pending){
-                let msg = this.pending[id];
-                delete this.pending[id];
-                clearTimeout(msg.timer);
-                this.setSettings(data);
-                console.log('Settings loaded.');
-                this.$dispatch('server.get_settings:success', msg.initiator);
-            }
-        });
-        this.socket.on('load_missions', (data, id) => {
-            if (id in this.pending){
-                let msg = this.pending[id];
-                delete this.pending[id];
-                clearTimeout(msg.timer);
-                this.setMissions(data);
-                console.log('Missions loaded.');
-                this.$dispatch('server.load_missions:success', msg.initiator);
-            }
-        });
-        this.socket.on('download_mission', (data, id) => {
-            if (id in this.pending){
-                let msg = this.pending[id];
-                delete this.pending[id];
-                clearTimeout(msg.timer);
-                this.missions.push(data);
-                console.log('Mission downloaded.');
-                this.$dispatch('server.download_mission:success', msg.initiator);
-            }
-        });
-        this.socket.on('success', (data, id) => {
-            console.log('received "success" message');
-            if (id in this.pending){
-                let msg = this.pending[id];
-                delete this.pending[id];
-                clearTimeout(msg.timer);
-                switch (msg.type){
-                    case 'set_parameters': {console.log('Parameters set.');          break;}
-                    case 'set_settings':   {console.log('Settings set.');            break;}
-                    case 'save_missions':  {console.log('Missions saved.');          break;}
-                    case 'upload_mission': {console.log('Mission uploaded.');        break;}
-                    case 'arm':            {console.log('Vehicle armed.');           break;}
-                    case 'disarm':         {console.log('Vehicle disarmed.');        break;}
-                    case 'start_mission':  {console.log('Mission started.');         break;}
-                    case 'stop_mission':   {console.log('Mission stopped.');         break;}
-                    case 'resume_mission': {console.log('Mission resumed.');         break;}
-                    case 'kill':           {console.log('Kill switch activated.');   break;}
-                    case 'unkill':         {console.log('Kill switch deactivated.'); break;}
-                }
-                this.$dispatch('server.' + msg.type + ':success', msg.initiator);
-            }
-        });
-        this.socket.on('failure', (errorMsg, id) => {
-            console.log('received "failure" message');
-            if (id in this.pending){
-                let msg = this.pending[id];
-                delete this.pending[id];
-                clearTimeout(msg.timer);
-                switch (msg.type){
-                    case 'get_parameters':   {console.log('Unable to load parameters: '        + errorMsg); break;}
-                    case 'set_parameters':   {console.log('Unable to set parameters: '         + errorMsg); break;}
-                    case 'get_settings':     {console.log('Unable to load settings: '          + errorMsg); break;}
-                    case 'set_settings':     {console.log('Unable to set settings: '           + errorMsg); break;}
-                    case 'save_missions':    {console.log('Unable to save missions: '          + errorMsg); break;}
-                    case 'load_missions':    {console.log('Unable to load missions: '          + errorMsg); break;}
-                    case 'upload_mission':   {console.log('Unable to upload mission: '         + errorMsg); break;}
-                    case 'download_mission': {console.log('Unable to download mission: '       + errorMsg); break;}
-                    case 'arm':              {console.log('Unable to arm vehicle: '            + errorMsg); break;}
-                    case 'disarm':           {console.log('Unable to disarm vehicle: '         + errorMsg); break;}
-                    case 'start_mission':    {console.log('Unable to start mission: '          + errorMsg); break;}
-                    case 'stop_mission':     {console.log('Unable to stop mission: '           + errorMsg); break;}
-                    case 'resume_mission':   {console.log('Unable to resume mission: '         + errorMsg); break;}
-                    case 'kill':             {console.log('Unable to activate kill switch: '   + errorMsg); break;}
-                    case 'unkill':           {console.log('Unable to deactivate kill switch: ' + errorMsg); break;}
-                }
-                this.$dispatch('server.' + msg.type + ':failure', errorMsg, msg.initiator);
-            }
-        });
-        this.socket.on('attention', (msg) => {
-            //console.log('Attention: ' + msg);
-            this.$dispatch('app::create-snackbar', msg);
-        });
+        //initialise.proto builder
+        this.protoBuilder = protobuf.newBuilder();
+        protobuf.loadProtoFile('assets/proto/Test.proto', () => {
+            this.protoPkg = this.protoBuilder.build();
+            this.initSocket();
+        }, this.protoBuilder);
     },
 
     methods: {
+        initSocket(){
+            this.socket = socket_io_client('localhost:3000');
+            this.socket.on('connect', () => {
+                console.log('connected to server');
+                //get parameters once at startup
+                this.sendMsg('get_parameters', null, 'init');
+                this.$once('server.get_parameters:failure', function(initiator){
+                    if (initiator === 'init'){
+                        this.$dispatch('app::create-snackbar', 'Failed to load parameters');
+                    }
+                    return true;
+                });
+                //get settings once at startup
+                this.sendMsg('get_settings', null, 'init');
+                this.$once('server.get_settings:failure', function(initiator){
+                    if (initiator === 'init'){
+                        this.$dispatch('app::create-snackbar', 'Failed to load settings');
+                    }
+                    return true;
+                });
+                //load missions once at startup
+                this.sendMsg('load_missions', null, 'init');
+                this.$once('server.load_missions:failure', function(initiator){
+                    if (initiator === 'init'){
+                        this.$dispatch('app::create-snackbar', 'Failed to load missions');
+                    }
+                    return true;
+                });
+
+                //protobufjs testing
+                let msg = new this.protoPkg.Test('testing', 123);
+                let buf = msg.toBuffer();
+                let msg2 = this.protoPkg.Test.decode(buf);
+                console.log('protobufjs test: "' + msg2.str + '", ' + msg2.n);
+            });
+            this.socket.on('disconnect', () => {
+                console.log('disconnected from server');
+            });
+            this.socket.on('status', (data) => {
+                //console.log('received "status" message');
+                data.loaded = true;
+                this.setWamv(data);
+            });
+            this.socket.on('get_parameters', (data, id) => {
+                if (id in this.pending){
+                    let msg = this.pending[id];
+                    delete this.pending[id];
+                    clearTimeout(msg.timer);
+                    this.setParameters(data);
+                    console.log('Parameters loaded.');
+                    this.$dispatch('server.get_parameters:success', msg.initiator);
+                }
+            });
+            this.socket.on('get_settings', (data, id) => {
+                if (id in this.pending){
+                    let msg = this.pending[id];
+                    delete this.pending[id];
+                    clearTimeout(msg.timer);
+                    this.setSettings(data);
+                    console.log('Settings loaded.');
+                    this.$dispatch('server.get_settings:success', msg.initiator);
+                }
+            });
+            this.socket.on('load_missions', (data, id) => {
+                if (id in this.pending){
+                    let msg = this.pending[id];
+                    delete this.pending[id];
+                    clearTimeout(msg.timer);
+                    this.setMissions(data);
+                    console.log('Missions loaded.');
+                    this.$dispatch('server.load_missions:success', msg.initiator);
+                }
+            });
+            this.socket.on('download_mission', (data, id) => {
+                if (id in this.pending){
+                    let msg = this.pending[id];
+                    delete this.pending[id];
+                    clearTimeout(msg.timer);
+                    this.missions.push(data);
+                    console.log('Mission downloaded.');
+                    this.$dispatch('server.download_mission:success', msg.initiator);
+                }
+            });
+            this.socket.on('success', (data, id) => {
+                console.log('received "success" message');
+                if (id in this.pending){
+                    let msg = this.pending[id];
+                    delete this.pending[id];
+                    clearTimeout(msg.timer);
+                    switch (msg.type){
+                        case 'set_parameters': {console.log('Parameters set.');          break;}
+                        case 'set_settings':   {console.log('Settings set.');            break;}
+                        case 'save_missions':  {console.log('Missions saved.');          break;}
+                        case 'upload_mission': {console.log('Mission uploaded.');        break;}
+                        case 'arm':            {console.log('Vehicle armed.');           break;}
+                        case 'disarm':         {console.log('Vehicle disarmed.');        break;}
+                        case 'start_mission':  {console.log('Mission started.');         break;}
+                        case 'stop_mission':   {console.log('Mission stopped.');         break;}
+                        case 'resume_mission': {console.log('Mission resumed.');         break;}
+                        case 'kill':           {console.log('Kill switch activated.');   break;}
+                        case 'unkill':         {console.log('Kill switch deactivated.'); break;}
+                    }
+                    this.$dispatch('server.' + msg.type + ':success', msg.initiator);
+                }
+            });
+            this.socket.on('failure', (errorMsg, id) => {
+                console.log('received "failure" message');
+                if (id in this.pending){
+                    let msg = this.pending[id];
+                    delete this.pending[id];
+                    clearTimeout(msg.timer);
+                    switch (msg.type){
+                        case 'get_parameters':   {console.log('Unable to load parameters: '        + errorMsg); break;}
+                        case 'set_parameters':   {console.log('Unable to set parameters: '         + errorMsg); break;}
+                        case 'get_settings':     {console.log('Unable to load settings: '          + errorMsg); break;}
+                        case 'set_settings':     {console.log('Unable to set settings: '           + errorMsg); break;}
+                        case 'save_missions':    {console.log('Unable to save missions: '          + errorMsg); break;}
+                        case 'load_missions':    {console.log('Unable to load missions: '          + errorMsg); break;}
+                        case 'upload_mission':   {console.log('Unable to upload mission: '         + errorMsg); break;}
+                        case 'download_mission': {console.log('Unable to download mission: '       + errorMsg); break;}
+                        case 'arm':              {console.log('Unable to arm vehicle: '            + errorMsg); break;}
+                        case 'disarm':           {console.log('Unable to disarm vehicle: '         + errorMsg); break;}
+                        case 'start_mission':    {console.log('Unable to start mission: '          + errorMsg); break;}
+                        case 'stop_mission':     {console.log('Unable to stop mission: '           + errorMsg); break;}
+                        case 'resume_mission':   {console.log('Unable to resume mission: '         + errorMsg); break;}
+                        case 'kill':             {console.log('Unable to activate kill switch: '   + errorMsg); break;}
+                        case 'unkill':           {console.log('Unable to deactivate kill switch: ' + errorMsg); break;}
+                    }
+                    this.$dispatch('server.' + msg.type + ':failure', errorMsg, msg.initiator);
+                }
+            });
+            this.socket.on('attention', (msg) => {
+                //console.log('Attention: ' + msg);
+                this.$dispatch('app::create-snackbar', msg);
+            });
+        },
         sendMsg(msgType, data, initiator){
             this.pending[this.msgId] = {
                 type: msgType,

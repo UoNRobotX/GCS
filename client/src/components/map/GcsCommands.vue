@@ -32,7 +32,7 @@ export default {
             wamv: getWamv
         }
     },
-    
+
     data(){
         return {
             waitToggleMission: false,

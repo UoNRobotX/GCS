@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+message Parameters {
+    message Parameter {
+        string name = 1;
+        string value = 2;
+    }
+    repeated Parameter values = 1;
+}
