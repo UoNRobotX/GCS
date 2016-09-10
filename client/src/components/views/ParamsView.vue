@@ -31,7 +31,7 @@
                             <ui-textbox
                                 :label="param.title" :name="param.title" :value.sync="param.value"
                                 :valid.sync="param.valid"
-                                @changed="paramChanged(currentSection.title, section.title, param.title, param.value, param.valid)"
+                                @changed="paramChanged(currentSection.title, section.title, param.title, param.type, param.value, param.valid)"
                                 :validation-rules="getValidationRule(param.type)"
                             ></ui-textbox>
                             <!-- TODO: decide if using 'param.valid' is appropriate -->
@@ -82,15 +82,15 @@ export default {
             return Array.isArray(x); //Vue doesn't like it if I use this directly
         },
 
-        paramChanged(section, subsection, param, value, valid){
+        paramChanged(section, subsection, param, type, value, valid){
             if (section in this.changedParams){
                 if (subsection in this.changedParams[section]){
-                    this.changedParams[section][subsection][param] = {value: value, valid: valid};
+                    this.changedParams[section][subsection][param] = {type: type, value: value, valid: valid};
                 } else {
-                    this.changedParams[section][subsection] = {[param]: {value: value, valid: valid}};
+                    this.changedParams[section][subsection] = {[param]: {type: type, value: value, valid: valid}};
                 }
             } else {
-                this.changedParams[section] = {[subsection]: {[param]: {value: value, valid: valid}}};
+                this.changedParams[section] = {[subsection]: {[param]: {type: type, value: value, valid: valid}}};
             }
         },
 
@@ -107,6 +107,7 @@ export default {
                             section: section,
                             subsection: subsection,
                             title: param,
+                            type: this.changedParams[section][subsection][param].type,
                             value: this.changedParams[section][subsection][param].value
                         });
                     }

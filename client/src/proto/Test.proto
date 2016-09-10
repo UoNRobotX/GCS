@@ -10,14 +10,14 @@ message Status {
         PAUSED  = 2;
         KILLED  = 3;
     }
-    float latitude  = 1;
-    float longitude = 2;
-    float heading   = 3;
-    float speed     = 4;
-    float battery   = 5;
-    bool armed      = 6;
-    Mode mode       = 7;
-    float signal    = 8;
+    double latitude  = 1;
+    double longitude = 2;
+    double heading   = 3; //0-360
+    double speed     = 4; //kmph
+    double battery   = 5; //0-100
+    bool armed       = 6;
+    Mode mode        = 7;
+    double signal    = 8; //0-100
 }
 
 //sent from the client to the server, which sends it to the WAM-V
@@ -34,12 +34,6 @@ message Command {
     Type type = 1;
 }
 
-//sent in response to a Command message
-message CommandResponse {
-    bool success = 1;
-    string msg   = 2; //if success == false, is an error message
-}
-
 //sent from the client to the server, and requests data
 message Get {
     enum Type {
@@ -54,11 +48,17 @@ message Get {
 //sent from the server to the client, in response to a request for parameters
 //sent from the client to the server, specifying parameters to be set
 message Parameters {
+    enum Type {
+        DOUBLE = 0;
+        VEC3   = 1;
+        MAT3   = 2;
+    }
     message Parameter {
         string section    = 1;
         string subSection = 2;
         string title      = 3;
-        string value      = 4;
+        Type type         = 4;
+        string value      = 5;
     }
     repeated Parameter parameters = 1;
 }
@@ -67,9 +67,9 @@ message Parameters {
 //sent from the client to the server, specifying settings to be set
 message Settings {
     message Setting {
-        string section    = 1;
-        string title      = 2;
-        string value      = 3;
+        string section = 1;
+        string title   = 2;
+        string value   = 3;
     }
     repeated Setting settings = 1;
 }
@@ -81,10 +81,10 @@ message Mission {
         enum Type {
             GO_TO_POINT = 0;
         }
-        string title    = 1;
-        Type type       = 2;
-        float latitude  = 3;
-        float longitude = 4;
+        string title     = 1;
+        Type type        = 2;
+        double latitude  = 3;
+        double longitude = 4;
     }
     string title                = 1;
     repeated Waypoint waypoints = 2;
@@ -94,6 +94,16 @@ message Mission {
 //sent from the client to the server, specifying a mission list to save
 message Missions {
     repeated Mission missions = 1;
+}
+
+//sent from the server to the client, in response to Command/Parameters/Settings/Mission/Missions
+message Success {
+    string msg = 1; //currently unused
+}
+
+//sent from the server to the client, in response to a Command/Get/Parameters/Settings/Mission/Missions
+message Failure {
+    string msg = 1;
 }
 
 //sent from the server to the client, intended to notify the user

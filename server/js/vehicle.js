@@ -1,94 +1,47 @@
 var geolib = require('geolib');
+var protobuf = require('protobufjs');
 
 //constructor for fake WAM-V
 module.exports = function(){
     this.prevTime = Date.now(); //time of last update, in milliseconds since epoch
+    this.MODES = {STOPPED: 0, AUTO: 1, PAUSED: 2, KILLED: 3};
+    this.TYPES = {DOUBLE: 0, VEC3: 1, MAT3: 2};
     this.BATTERY_LIFETIME = 10; //battery lifetime in hours
     this.SPEED = 30; //max speed (unrealistically, the fake WAM-V will always be at this speed or 0)
-    this.position = {lat: 21.308731, lng: -157.888815},
+    this.position = {lat: 21.308731, lng: -157.888815};
     this.heading = 0;
     this.speed = 0; //speed in kmph
     this.battery = 100;
     this.armed = false;
-    this.mode = 'idle';
+    this.mode = this.MODES.STOPPED;
     this.signal = 100; //unrealistically, for the fake WAM-V, this is always 100
     this.mission = null; //the vehicle's current mission
+        //{title: t1, waypoints: [{title: t2, type: t3, position: {lat: lat1, lng: lng1}}, ...]}
     this.missionIndex = 0; //if completing a mission, the index of the next waypoint
-    this.parameters = [{
-        title: 'State Estimator',
-        subSections: [{
-            title: 'IMU',
-            params: [{
-                title: 'mag_scale',
-                type: 'double',
-                value: '0'
-            }, {
-                title: 'mag vector',
-                type: 'vec3',
-                value: '0,0,0' // [0, 0, 0]
-            }, {
-                title: 'Rib',
-                type: 'mat3',
-                value: '0,0,0,0,0,0,0,0,0' // [0, 0, 0, 0, 0, 0, 0, 0, 0]
-            }, {
-                title: 'rIBb',
-                type: 'vec3',
-                value: '0,0,0' // [0, 0, 0]
-            }, {
-                title: 'gbBNi',
-                type: 'vec3',
-                value: '0,0,0' // [0, 0, 0]
-            }]
-        }]
-    }, {
-        title: 'Test section',
-        subSections: [{
-            title: 'Test subsection 1',
-            params: [{
-                title: 'Test parameter 1',
-                type: 'double',
-                value: '-1.2'
-            }, {
-                title: 'Test parameter 2',
-                type: 'vec3',
-                value: '3,-0.2,100'
-            }]
-        }, {
-            title: 'Test subsection 2',
-            params: [{
-                title: 'Test parameter 3',
-                type: 'mat3',
-                value: '1,2,3,4,5,6,7,8,9'
-            }]
-        }]
-    }];
-    this.settings = [{
-        title: 'Map',
-        settings: [
-            {
-                title: 'key',
-                value: 'AIzaSyABnCcekyPecGnsA1Rj_NdWjmUafJ1yVqA'
-            }, {
-                title: 'lat',
-                value: '21.308731'
-            }, {
-                title: 'lng',
-                value: '-157.888815'
-            }, {
-                title: 'zoom',
-                value: '19'
-            }
-        ]
-    }, {
-        title: 'Test section',
-        settings: [
-            {
-                title: 'Test setting',
-                value: 'Test value'
-            }
-        ]
-    }];
-    //update fake WAM-V (returns null, or a string if something important has happened)
+    this.parameters = [
+        ['State Estimator', 'IMU',          'mag_scale',   this.TYPES.DOUBLE, '0'                ],
+        ['State Estimator', 'IMU',          'mag_vector',  this.TYPES.VEC3,   '0,0,0'            ],
+        ['State Estimator', 'IMU',          'Rib',         this.TYPES.MAT3,   '0,0,0,0,0,0,0,0,0'],
+        ['State Estimator', 'IMU',          'rIBb',        this.TYPES.VEC3,   '0,0,0'            ],
+        ['State Estimator', 'IMU',          'gbBNi',       this.TYPES.VEC3,   '0,0,0'            ],
+        ['Section 1',       'Subsection 1', 'Parameter 1', this.TYPES.DOUBLE, '-1.2'             ],
+        ['Section 1',       'Subsection 1', 'Parameter 2', this.TYPES.VEC3,   '3,-0.2,100'       ],
+        ['Section 1',       'Subsection 2', 'Parameter 3', this.TYPES.MAT3,   '1,2,3,4,5,6,7,8,9']
+    ];
+    this.settings = [
+        ['Map',       'key',       'AIzaSyABnCcekyPecGnsA1Rj_NdWjmUafJ1yVqA'],
+        ['Map',       'lat',       '21.308731'                              ],
+        ['Map',       'lng',       '-157.888815'                            ],
+        ['Map',       'zoom',      '19'                                     ],
+        ['Section 1', 'Setting 1', 'value 1'                                ]
+    ];
+    //load .proto messages
+    this.protoBuilder = protobuf.loadProtoFile('./public/assets/proto/Test.proto');
+    if (this.protoBuilder === null){
+        throw new Error ('Unable to load proto messages');
+    }
+    this.protoPkg = this.protoBuilder.build();
+    //update fake WAM-V, returning null or an Attention message
     this.update = function(){
         var msg = ''; //used for return value
         var time = Date.now();
@@ -99,7 +52,7 @@ module.exports = function(){
         if (this.battery <= maxBatDec){
             dt *= this.battery / maxBatDec; //obtain the time period while the battery was active
         }
-        if (this.mode == 'auto'){
+        if (this.mode === this.MODES.AUTO){
             var waypoints = this.mission.waypoints;
             var pos = {latitude: this.position.lat, longitude: this.position.lng};
             var travelDist = dt * this.SPEED*1000/3600; //maximum distance travelled, in meters
@@ -122,7 +75,7 @@ module.exports = function(){
             if (this.missionIndex == waypoints.length){
                 msg += 'Mission completed. ';
                 this.speed = 0;
-                this.mode = 'idle';
+                this.mode = this.MODES.STOPPED;
                 this.missionIndex = 0;
             }
         }
@@ -132,191 +85,233 @@ module.exports = function(){
             }
             this.battery = 0;
             this.speed = 0;
-            if (this.mode == 'auto'){
-                this.mode = 'paused';
+            if (this.mode == this.MODES.AUTO){
+                this.mode = this.MODES.PAUSED;
             }
         } else {
             this.battery -= maxBatDec;
         }
         //return a message or null
-        return msg == '' ? null : msg;
+        return msg === '' ? null : (new this.protoPkg.Attention(msg)).toBuffer();
     };
-    //returns a generated status message
+    //returns a Status message
     this.getStatusData = function(){
-        return {
-            position: this.position,
-            heading:  this.heading,
-            speed:    this.speed,
-            battery:  this.battery,
-            armed:    this.armed,
-            mode:     this.mode,
-            signal:   this.signal
-        };
+        var msg = new this.protoPkg.Status(
+            this.position.lat,
+            this.position.lng,
+            this.heading,
+            this.speed,
+            this.battery,
+            this.armed,
+            this.mode,
+            this.signal
+        );
+        return msg.toBuffer();
     };
-    //return parameters (returns a parameters object on success, or an error message)
+    //return a Parameters or Failure message
     this.getParameters = function(){
-        return this.parameters;
+        var msg = new this.protoPkg.Parameters();
+        for (var i = 0; i < this.parameters.length; i++){
+            var param = this.parameters[i];
+            msg.add('parameters', new this.protoPkg.Parameters.Parameter(
+                param[0], param[1], param[2], param[3], param[4]
+            ));
+        }
+        return ['Parameters', msg.toBuffer()];
     };
-    //set parameters (returns null on success, or an error message)
-    this.setParameters = function(newParams){
+    //set parameters, returning a Success or Failure message
+    this.setParameters = function(newParamsBuf){
+        //decode message
+        var newParams;
+        try {
+            newParams = this.protoPkg.Parameters.decode(newParamsBuf);
+        } catch (e){
+            console.log('Unable to decode Parameters message');
+            return ['Failure', (new this.protoPkg.Failure('Invalid message')).toBuffer()];
+        }
+        //verify new parameters
         var paramsToSet = [];
-        //verify settings
-        var c, i, j, k;
+        var i, j;
         ParamSearch:
-        for (c = 0; c < newParams.length; c++){
-            var newParam = newParams[c];
-            for (i = 0; i < this.parameters.length; i++){
-                var section = this.parameters[i];
-                if (section.title === newParam.section){
-                    for (j = 0; j < section.subSections.length; j++){
-                        var subSection = section.subSections[j];
-                        if (subSection.title == newParam.subsection){
-                            for (k = 0; k < subSection.params.length; k++){
-                                var param = subSection.params[k];
-                                if (param.title == newParam.title){
-                                    // TODO: perform type and value checking
-                                    paramsToSet.push(param);
-                                    continue ParamSearch;
-                                }
-                            }
-                            return 'A parameter was not found.';
-                        }
-                    }
-                    return 'A parameter subsection was not found.';
+        for (i = 0; i < newParams.parameters.length; i++){
+            var newParam = newParams.parameters[i];
+            for (j = 0; j < this.parameters.length; j++){
+                var param = this.parameters[j];
+                if (newParam.section === param[0] &&
+                    newParam.subSection === param[1] &&
+                    newParam.title === param[2]){
+                    // TODO: perform type and value checking
+                    paramsToSet.push(j);
+                    continue ParamSearch;
                 }
             }
-            return 'A parameter section was not found.';
+            return ['Failure', (new this.protoPkg.Failure('A parameter was not found')).toBuffer()];
         }
-        //use settings
-        for (i = 0; i < newParams.length; i++){
-            paramsToSet[i].value = newParams[i].value;
+        //set parameters
+        for (i = 0; i < newParams.parameters.length; i++){
+            this.parameters[paramsToSet[i]] = [
+                newParams.parameters[i].section,
+                newParams.parameters[i].subSection,
+                newParams.parameters[i].title,
+                newParams.parameters[i].type,
+                newParams.parameters[i].value
+            ];
         }
+        return ['Success', (new this.protoPkg.Success()).toBuffer()];
     };
-    //return settings (returns a parameters object on success, or an error message)
+    //return a Settings or Failure message
     this.getSettings = function(){
-        return this.settings;
+        var msg = new this.protoPkg.Settings();
+        for (var i = 0; i < this.settings.length; i++){
+            var setting = this.settings[i];
+            msg.add('settings', new this.protoPkg.Settings.Setting(
+                setting[0], setting[1], setting[2]
+            ));
+        }
+        return ['Settings', msg.toBuffer()];
     }
-    //set settings (returns null on success, or an error message)
-    this.setSettings = function(newSettings){
-        var settingsToSet = []; //will contain the settings to be set
-        //verify settings
-        var c, i, j;
+    //set settings, returning a Success or Failure message
+    this.setSettings = function(newSettingsBuf){
+        //decode message
+        var newSettings;
+        try {
+            newSettings = this.protoPkg.Settings.decode(newSettingsBuf);
+        } catch (e){
+            console.log('Unable to decode Settings message');
+            return ['Failure', (new this.protoPkg.Failure('Invalid message')).toBuffer()];
+        }
+        //verify new settings
+        var settingsToSet = [];
+        var i, j;
         SettingSearch:
-        for (c = 0; c < newSettings.length; c++){
-            var newSetting = newSettings[c];
-            for (i = 0; i < this.settings.length; i++){
-                var section = this.settings[i];
-                if (section.title === newSetting.section){
-                    for (j = 0; j < section.settings.length; j++){
-                        var setting = section.settings[j];
-                        if (setting.title === newSetting.title){
-                            settingsToSet.push(setting);
-                            continue SettingSearch;
-                        }
-                    }
-                    return 'A setting was not found.';
+        for (i = 0; i < newSettings.settings.length; i++){
+            var newSetting = newSettings.settings[i];
+            for (j = 0; j < this.settings.length; j++){
+                var setting = this.settings[j];
+                if (newSetting.section == setting[0] &&
+                    newSetting.title == setting[1]){
+                    // TODO: perform value checking
+                    settingsToSet.push(j);
+                    continue SettingSearch;
                 }
             }
-            return 'A setting section was not found.';
+            return ['Failure', (new this.protoPkg.Failure('A setting was not found')).toBuffer()];
         }
-        //change settings
-        for (i = 0; i < newSettings.length; i++){
-            settingsToSet[i].value = newSettings[i].value;
+        //set settings
+        for (i = 0; i < newSettings.settings.length; i++){
+            this.settings[settingsToSet[i]] = [
+                newSettings.settings[i].section,
+                newSettings.settings[i].title,
+                newSettings.settings[i].value
+            ];
         }
+        return ['Success', (new this.protoPkg.Success()).toBuffer()];
     }
-    //set mission (returns null on success, or an error message)
-    this.setMission = function(mission){
-        if (mission.waypoints.length == 0){
-            return 'Mission has no waypoints.';
+    //set mission, returning a Success or Failure message
+    this.setMission = function(newMissionBuf){
+        //decode message
+        var newMission;
+        try {
+            newMission = this.protoPkg.Mission.decode(newMissionBuf);
+        } catch (e){
+            console.log('Unable to decode Mission message');
+            return ['Failure', (new this.protoPkg.Failure('Invalid message')).toBuffer()];
         }
-        if (this.mode == 'auto'){
-            return 'Currently doing a mission.';
+        //set mission
+        if (newMission.waypoints.length == 0){
+            return ['Failure', (new this.protoPkg.Failure('Mission has no waypoints')).toBuffer()];
         }
-        if (this.mode == 'paused'){
-            this.mode = 'idle';
+        if (this.mode == this.MODES.AUTO){
+            return ['Failure', (new this.protoPkg.Failure('Currently doing a mission')).toBuffer()];
         }
-        this.mission = mission;
+        if (this.mode == this.MODES.PAUSED){
+            this.mode = this.MODES.STOPPED;
+        }
+        this.mission = {
+            title: newMission.title,
+            waypoints: newMission.waypoints.map(function(wp){
+                return {
+                    title: wp.title,
+                    type: wp.type,
+                    position: {lat: wp.latitude, lng: wp.longitude}
+                }
+            })
+        };
         this.missionIndex = 0;
-        return null;
+        return ['Success', (new this.protoPkg.Success()).toBuffer()];
     };
-    //get mission (returns an object on success, or an error message)
+    //returns a Mission or Failure message
     this.getMission = function(){
-        if (this.mission == null){
-            return 'No uploaded mission.';
+        if (this.mission === null){
+            return ['Failure', (new this.protoPkg.Failure('No uploaded mission')).toBuffer()];
         }
-        return this.mission;
+        var msg = new this.protoPkg.Mission();
+        msg.title = this.mission.title;
+        for (var i = 0; i < this.mission.waypoints.length; i++){
+            var wp = this.mission.waypoints[i];
+            msg.add('waypoints', new this.protoPkg.Mission.Waypoint(
+                wp.title, wp.type, wp.position.lat, wp.position.lng
+            ));
+        }
+        return ['Mission', msg.toBuffer()];
     };
-    //arm (returns null on success, or an error message)
-    this.arm = function(){
-        if (this.armed){
-            return 'Vehicle already armed.';
+    //arm or disarm, returning a Success or Failure message
+    this.arm = function(arm){
+        if (arm == this.armed){
+            return [
+                'Failure',
+                (new this.protoPkg.Failure(arm ? 'Already armed' : 'Already disarmed')).toBuffer()
+            ];
         }
-        if (this.mode == 'auto'){
-            return 'Currently doing a mission.';
+        if (this.mode == this.MODES.AUTO){
+            return ['Failure', (new this.protoPkg.Failure('Currently doing a mission')).toBuffer()];
         }
-        this.armed = true;
-        return null;
+        this.armed = arm;
+        return ['Success', (new this.protoPkg.Success()).toBuffer()];
     };
-    //disarm (returns null on success, or an error message)
-    this.disarm = function(){
-        if (!this.armed){
-            return 'Vehicle already disarmed.';
-        }
-        if (this.mode == 'auto'){
-            return 'Currently doing a mission.';
-        }
-        this.armed = false;
-        return null;
-    };
-    //start/resume (returns null on success, or an error message)
+    //start or resume, returning a Success or Failure message
     this.start = function(fromBeginning){
-        if (this.mode == 'auto'){
-            return 'Vehicle is already doing a mission.';
+        if (this.mode == this.MODES.AUTO){
+            return ['Failure', (new this.protoPkg.Failure('Currently doing a mission')).toBuffer()];
         }
-        if (this.mode == 'killed'){
-            return 'Kill switch is active.';
+        if (this.mode == this.MODES.KILLED){
+            return ['Failure', (new this.protoPkg.Failure('Kill switch is active')).toBuffer()];
         }
         if (this.battery == 0){
-            return 'Battery is at 0%.';
+            return ['Failure', (new this.protoPkg.Failure('Battery is at 0%')).toBuffer()];
         }
         if (!this.armed){
-            return 'Vehicle is not armed.';
+            return ['Failure', (new this.protoPkg.Failure('Not armed')).toBuffer()];
         }
         if (this.mission == null){
-            return 'No uploaded mission.';
+            return ['Failure', (new this.protoPkg.Failure('No uploaded mission')).toBuffer()];
         }
-        if (this.mode == 'paused' && fromBeginning){
+        if (this.mode == this.MODES.PAUSED && fromBeginning){
             this.missionIndex = 0;
         }
-        this.mode = 'auto';
+        this.mode = this.MODES.AUTO;
         this.speed = this.SPEED;
-        return null;
+        return ['Success', (new this.protoPkg.Success()).toBuffer()];
     };
-    //stop (returns null on success, or an error message)
+    //stop, returning a Success or Failure message
     this.stop = function(){
-        if (this.mode != 'auto'){
-            return 'Vehicle is not doing a mission.';
+        if (this.mode != this.MODES.AUTO){
+            return ['Failure', (new this.protoPkg.Failure('Not doing a mission')).toBuffer()];
         }
-        this.mode = 'paused';
+        this.mode = this.MODES.PAUSED;
         this.speed = 0;
-        return null;
+        return ['Success', (new this.protoPkg.Success()).toBuffer()];
     };
-    //activate kill switch (returns null on success, or an error message)
-    this.kill = function(){
-        if (this.mode == 'killed'){
-            return 'Kill switch is already active';
+    //activate or deactivate kill switch, returning a Success or Failure message
+    this.kill = function(kill){
+        if (kill === (this.mode == this.MODES.KILLED)){
+            return ['Failure', (new this.protoPkg.Failure(
+                'Kill switch already ' + (kill?'':'in') + 'active'
+            )).toBuffer()];
         }
-        this.mode = 'killed';
+        this.mode = kill ? this.MODES.KILLED : this.mode.STOPPED;
         this.speed = 0;
-        return null;
-    };
-    //de-activate kill switch (returns null on success, or an error message)
-    this.unkill = function(){
-        if (this.mode != 'killed'){
-            return 'Kill switch is not active';
-        }
-        this.mode = 'idle';
         this.missionIndex = 0;
-        return null;
+        return ['Success', (new this.protoPkg.Success()).toBuffer()];
     };
 };
