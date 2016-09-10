@@ -6,6 +6,14 @@ var Vehicle = require('./vehicle.js');
 module.exports = function(server){
     //create fake vehicle
     this.vehicle = new Vehicle();
+    //periodically update fake vehicle
+    this.attentionMsg = null;
+    updateTimer = setInterval(function(){
+        var msg = this.vehicle.update();
+        if (msg !== null){
+            this.attentionMsg = msg;
+        }
+    }.bind(this), 50);
     //load .proto messages
     this.protoBuilder = protobuf.loadProtoFile('./public/assets/proto/Test.proto');
     if (this.protoBuilder === null){
@@ -51,11 +59,11 @@ module.exports = function(server){
             clearInterval(updateTimer);
             console.log('disconnected from: ' + host);
         });
-        //periodically update fake vehicle // TODO: update independently of clients
+        //periodically check for attention messages from fake vehicle
         updateTimer = setInterval(function(){
-            var msg = this.vehicle.update();
-            if (msg !== null){
-                socket.emit('Attention', msg);
+            if (this.attentionMsg !== null){
+                socket.emit('Attention', this.attentionMsg);
+                this.attentionMsg = null;
             }
         }.bind(this), 50);
         //periodically send vehicle status information
