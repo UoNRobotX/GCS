@@ -131,7 +131,7 @@ export default {
 
         uploadMission() {
             this.waitUploadMission = true;
-            this.$dispatch('client::upload_mission', this.missions[this.currentMissionIndex]);
+            this.$dispatch('client::set_mission', this.missions[this.currentMissionIndex]);
         },
 
         overflowMenuOptionSelected(option) {
@@ -210,12 +210,12 @@ export default {
             });
         },
 
-        'server.upload_mission:success'(){
+        'server.set_mission:success'(){
             this.waitUploadMission = false;
             this.$dispatch('app::create-snackbar', 'Mission uploaded');
         },
 
-        'server.upload_mission:failure'(){
+        'server.set_mission:failure'(){
             this.waitUploadMission = false;
             this.$dispatch('app::create-snackbar', 'Failed to upload mission');
         }

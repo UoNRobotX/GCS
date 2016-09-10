@@ -18,11 +18,23 @@ const initialState = {
         mode:     'idle',
         signal:   100
     },
-    settings: [],
+    settings: [], //[{title: t1, settings: [{title: t2, value: v1}, ...]}, ...]
     settingsLoaded: false,
     missions: [],
+        //[{
+        //    title: t1,
+        //    waypoints: [
+        //        {title: t2, type: t3, visible: v1, position: {lat: lat1, lng: lng1}}, ...]
+        //}, ...]
     currentMissionIndex: -1,
     parameters: []
+        //[{
+        //    title: t1,
+        //    subSections: [{
+        //        title: t2,
+        //        params: [{title: t3, type: t4, value: v1}, ...]
+        //    }, ...]
+        //}, ...]
 };
 
 const mutations = {

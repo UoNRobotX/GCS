@@ -100,17 +100,17 @@ export default {
 
         downloadMission() {
             this.waitDownloadMission = true;
-            this.$dispatch('client::download_mission');
+            this.$dispatch('client::get_mission');
         },
 
         menuOptionSelected(option){
             switch (option.id){
                 case 'save': {
-                    this.$dispatch('client::save_missions', this.missions);
+                    this.$dispatch('client::set_missions', this.missions);
                     break;
                 }
                 case 'load': {
-                    this.$dispatch('client::load_missions', 'GcsMissions');
+                    this.$dispatch('client::get_missions', 'GcsMissions');
                     break;
                 }
                 case 'import': {
@@ -207,33 +207,33 @@ export default {
             this.currentMission.waypoints.splice(index, 1);
         },
 
-        'server.save_missions:success'(){
+        'server.set_missions:success'(){
             this.$dispatch('app::create-snackbar', 'Missions saved');
         },
 
-        'server.save_missions:failure'(){
+        'server.set_missions:failure'(){
             this.$dispatch('app::create-snackbar', 'Failed to save missions');
         },
 
-        'server.load_missions:success'(initiator){
+        'server.get_missions:success'(initiator){
             if (initiator === 'GcsMissions'){
                 this.$dispatch('app::create-snackbar', 'Missions loaded');
             }
             return true;
         },
 
-        'server.load_missions:failure'(msg, initiator){
+        'server.get_missions:failure'(msg, initiator){
             if (initiator === 'GcsMissions'){
                 this.$dispatch('app::create-snackbar', 'Failed to load missions');
             }
             return true;
         },
 
-        'server.download_mission:success'(){
+        'server.get_mission:success'(){
             this.waitDownloadMission = false;
         },
 
-        'server.download_mission:failure'(){
+        'server.get_mission:failure'(){
             this.waitDownloadMission = false;
             this.$dispatch('app::create-snackbar', 'Failed to download mission');
         }

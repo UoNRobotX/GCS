@@ -110,20 +110,20 @@ export default {
             this.$broadcast('client::set_settings', settings, initiator);
         },
 
-        'client::save_missions'(missions, initiator) {
-            this.$broadcast('client::save_missions', missions, initiator);
+        'client::set_missions'(missions, initiator) {
+            this.$broadcast('client::set_missions', missions, initiator);
         },
 
-        'client::load_missions'(initiator) {
-            this.$broadcast('client::load_missions', initiator);
+        'client::get_missions'(initiator) {
+            this.$broadcast('client::get_missions', initiator);
         },
 
-        'client::upload_mission'(mission, initiator) {
-            this.$broadcast('client::upload_mission', mission, initiator);
+        'client::set_mission'(mission, initiator) {
+            this.$broadcast('client::set_mission', mission, initiator);
         },
 
-        'client::download_mission'(initiator) {
-            this.$broadcast('client::download_mission', initiator);
+        'client::get_mission'(initiator) {
+            this.$broadcast('client::get_mission', initiator);
         },
 
         'client::arm'(initiator) {
@@ -186,36 +186,36 @@ export default {
             this.$broadcast('server.set_settings:failure', msg, initiator);
         },
 
-        'server.save_missions:success'(initiator){
-            this.$broadcast('server.save_missions:success', initiator);
+        'server.set_missions:success'(initiator){
+            this.$broadcast('server.set_missions:success', initiator);
         },
 
-        'server.save_missions:failure'(msg, initiator){
-            this.$broadcast('server.save_missions:failure', msg, initiator);
+        'server.set_missions:failure'(msg, initiator){
+            this.$broadcast('server.set_missions:failure', msg, initiator);
         },
 
-        'server.load_missions:success'(initiator){
-            this.$broadcast('server.load_missions:success', initiator);
+        'server.get_missions:success'(initiator){
+            this.$broadcast('server.get_missions:success', initiator);
         },
 
-        'server.load_missions:failure'(msg, initiator){
-            this.$broadcast('server.load_missions:failure', msg, initiator);
+        'server.get_missions:failure'(msg, initiator){
+            this.$broadcast('server.get_missions:failure', msg, initiator);
         },
 
-        'server.upload_mission:success'(initiator){
-            this.$broadcast('server.upload_mission:success', initiator);
+        'server.set_mission:success'(initiator){
+            this.$broadcast('server.set_mission:success', initiator);
         },
 
-        'server.upload_mission:failure'(msg, initiator){
-            this.$broadcast('server.upload_mission:failure', msg, initiator);
+        'server.set_mission:failure'(msg, initiator){
+            this.$broadcast('server.set_mission:failure', msg, initiator);
         },
 
-        'server.download_mission:success'(initiator){
-            this.$broadcast('server.download_mission:success', initiator);
+        'server.get_mission:success'(initiator){
+            this.$broadcast('server.get_mission:success', initiator);
         },
 
-        'server.download_mission:failure'(msg, initiator){
-            this.$broadcast('server.download_mission:failure', msg, initiator);
+        'server.get_mission:failure'(msg, initiator){
+            this.$broadcast('server.get_mission:failure', msg, initiator);
         },
 
         'server.arm:success'(initiator){

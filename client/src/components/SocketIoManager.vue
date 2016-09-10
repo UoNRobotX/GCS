@@ -3,6 +3,20 @@
 </template>
 
 <script>
+//this component manages communication with the server via a socket
+//it allows for other components to initiate a request to the server, and react to responses
+//these are the requests that can be initiated:
+    //status, get_parameters, set_parameters, get_settings, set_settings,
+    //set_missions, get_missions, set_mission, get_mission,
+    //arm, disarm, start_mission, stop_mission, resume_mission, kill, unkill,
+//a component initiates a request r1 by dispatching an event client::r1
+    //the event goes up to App.vue, then down to this component
+    //this components sends a corresponding message to the server
+    //when a response is received, or none is received after a certain timeout:
+        //this component dispatches a server.r1:success or server.r1:failure event
+        //the event goes up to App.vue, then broadcasted to components
+            //a component can use this to react to a response
+
 import socket_io_client from 'socket.io-client';
 import protobuf from 'protobufjs';
 
@@ -66,8 +80,8 @@ export default {
                     return true;
                 });
                 //load missions once at startup
-                this.sendMsg('load_missions', null, 'init');
-                this.$once('server.load_missions:failure', function(initiator){
+                this.sendMsg('get_missions', null, 'init');
+                this.$once('server.get_missions:failure', function(initiator){
                     if (initiator === 'init'){
                         this.$dispatch('app::create-snackbar', 'Failed to load missions');
                     }
@@ -253,7 +267,7 @@ export default {
                     }
                     this.setMissions(newMissions);
                     console.log('Missions loaded.');
-                    this.$dispatch('server.load_missions:success', msg.initiator);
+                    this.$dispatch('server.get_missions:success', msg.initiator);
                 }
             });
             this.socket.on('GetMissionResponse', (data, id) => {
@@ -286,7 +300,7 @@ export default {
                         })
                     });
                     console.log('Mission downloaded.');
-                    this.$dispatch('server.download_mission:success', msg.initiator);
+                    this.$dispatch('server.get_mission:success', msg.initiator);
                 }
             });
             this.socket.on('Success', (data, id) => {
@@ -298,8 +312,8 @@ export default {
                     switch (msg.type){
                         case 'set_parameters': {console.log('Parameters set.');          break;}
                         case 'set_settings':   {console.log('Settings set.');            break;}
-                        case 'save_missions':  {console.log('Missions saved.');          break;}
-                        case 'upload_mission': {console.log('Mission uploaded.');        break;}
+                        case 'set_missions':  {console.log('Missions saved.');          break;}
+                        case 'set_mission': {console.log('Mission uploaded.');        break;}
                         case 'arm':            {console.log('Vehicle armed.');           break;}
                         case 'disarm':         {console.log('Vehicle disarmed.');        break;}
                         case 'start_mission':  {console.log('Mission started.');         break;}
@@ -332,10 +346,10 @@ export default {
                         case 'set_parameters':   {console.log('Unable to set parameters: '         + errorMsg); break;}
                         case 'get_settings':     {console.log('Unable to load settings: '          + errorMsg); break;}
                         case 'set_settings':     {console.log('Unable to set settings: '           + errorMsg); break;}
-                        case 'save_missions':    {console.log('Unable to save missions: '          + errorMsg); break;}
-                        case 'load_missions':    {console.log('Unable to load missions: '          + errorMsg); break;}
-                        case 'upload_mission':   {console.log('Unable to upload mission: '         + errorMsg); break;}
-                        case 'download_mission': {console.log('Unable to download mission: '       + errorMsg); break;}
+                        case 'set_missions':    {console.log('Unable to save missions: '          + errorMsg); break;}
+                        case 'get_missions':    {console.log('Unable to load missions: '          + errorMsg); break;}
+                        case 'set_mission':   {console.log('Unable to upload mission: '         + errorMsg); break;}
+                        case 'get_mission': {console.log('Unable to download mission: '       + errorMsg); break;}
                         case 'arm':              {console.log('Unable to arm vehicle: '            + errorMsg); break;}
                         case 'disarm':           {console.log('Unable to disarm vehicle: '         + errorMsg); break;}
                         case 'start_mission':    {console.log('Unable to start mission: '          + errorMsg); break;}
@@ -377,6 +391,8 @@ export default {
                     break;
                 }
                 case 'set_parameters': {
+                    //'data' should have this form:
+                        //[{section: s1, subsection: s2, title: t1, value: v1}, ...]
                     let paramsMsg = new this.protoPkg.SetParameters();
                     for (let param of data){
                         paramsMsg.add('parameters', new this.protoPkg.Parameter(
@@ -395,6 +411,8 @@ export default {
                     break;
                 }
                 case 'set_settings': {
+                    //'data' should have this form:
+                        //[{section: s1, title: t1, value: v1}, ...]
                     let settingsMsg = new this.protoPkg.SetSettings();
                     for (let setting of data){
                         settingsMsg.add('settings', new this.protoPkg.Setting(
@@ -404,11 +422,31 @@ export default {
                     this.socket.emit('SetSettings', settingsMsg.toBuffer(), this.msgId);
                     break;
                 }
-                case 'load_missions': {
+                case 'get_mission': {
+                    this.socket.emit('GetMission', null, this.msgId);
+                    break;
+                }
+                case 'set_mission': {
+                    //see elements of 'missions' in store.js for expected 'data' format
+                    let missionMsg = new this.protoPkg.SetMission(new this.protoPkg.Mission());
+                    missionMsg.mission.title = data.title;
+                    for (let waypoint of data.waypoints){
+                        missionMsg.mission.add('waypoints', new this.protoPkg.Mission.Waypoint(
+                            waypoint.title,
+                            this.waypointType(waypoint.type),
+                            waypoint.position.lat,
+                            waypoint.position.lng
+                        ));
+                    }
+                    this.socket.emit('SetMission', missionMsg.toBuffer(), this.msgId);
+                    break;
+                }
+                case 'get_missions': {
                     this.socket.emit('GetMissions', null, this.msgId);
                     break;
                 }
-                case 'save_missions': {
+                case 'set_missions': {
+                    //see 'missions' in store.js for expected 'data' format
                     let missionsMsg = new this.protoPkg.SetMissions();
                     for (let mission of data){
                         let m = new this.protoPkg.Mission();
@@ -424,24 +462,6 @@ export default {
                         missionsMsg.add('missions', m);
                     }
                     this.socket.emit('SetMissions', missionsMsg.toBuffer(), this.msgId);
-                    break;
-                }
-                case 'download_mission': {
-                    this.socket.emit('GetMission', null, this.msgId);
-                    break;
-                }
-                case 'upload_mission': {
-                    let missionMsg = new this.protoPkg.SetMission(new this.protoPkg.Mission());
-                    missionMsg.mission.title = data.title;
-                    for (let waypoint of data.waypoints){
-                        missionMsg.mission.add('waypoints', new this.protoPkg.Mission.Waypoint(
-                            waypoint.title,
-                            this.waypointType(waypoint.type),
-                            waypoint.position.lat,
-                            waypoint.position.lng
-                        ));
-                    }
-                    this.socket.emit('SetMission', missionMsg.toBuffer(), this.msgId);
                     break;
                 }
                 case 'arm': {
@@ -544,20 +564,20 @@ export default {
             this.sendMsg('set_settings', settings, initiator);
         },
 
-        'client::save_missions'(missions, initiator) {
-            this.sendMsg('save_missions', missions, initiator);
+        'client::set_missions'(missions, initiator) {
+            this.sendMsg('set_missions', missions, initiator);
         },
 
-        'client::load_missions'(initiator) {
-            this.sendMsg('load_missions', null, initiator);
+        'client::get_missions'(initiator) {
+            this.sendMsg('get_missions', null, initiator);
         },
 
-        'client::upload_mission'(mission, initiator) {
-            this.sendMsg('upload_mission', mission, initiator);
+        'client::set_mission'(mission, initiator) {
+            this.sendMsg('set_mission', mission, initiator);
         },
 
-        'client::download_mission'(initiator) {
-            this.sendMsg('download_mission', null, initiator);
+        'client::get_mission'(initiator) {
+            this.sendMsg('get_mission', null, initiator);
         },
 
         'client::arm'(initiator) {
