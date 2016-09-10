@@ -2,6 +2,39 @@
 
 syntax = "proto3";
 
+message Parameter {
+    enum Type {
+        DOUBLE = 0;
+        VEC3   = 1;
+        MAT3   = 2;
+    }
+    string section    = 1;
+    string subSection = 2;
+    string title      = 3;
+    Type type         = 4;
+    string value      = 5;
+}
+
+message Setting {
+    string section = 1;
+    string title   = 2;
+    string value   = 3;
+}
+
+message Mission {
+    message Waypoint {
+        enum Type {
+            GO_TO_POINT = 0;
+        }
+        string title     = 1;
+        Type type        = 2;
+        double latitude  = 3;
+        double longitude = 4;
+    }
+    string title                = 1;
+    repeated Waypoint waypoints = 2;
+}
+
 //sent regularly by the WAM-V to the server, which sends it to clients
 message Status {
     enum Mode {
@@ -34,74 +67,62 @@ message Command {
     Type type = 1;
 }
 
-//sent from the client to the server, and requests data
-message Get {
-    enum Type {
-        PARAMETERS = 0;
-        SETTINGS   = 1;
-        MISSION    = 2; //used to get the last uploaded mission
-        MISSIONS   = 3; //used to get the server's saved mission list
-    }
-    Type type = 1;
-}
+//sent from the client to the server, and requests parameters
+message GetParameters {}
 
 //sent from the server to the client, in response to a request for parameters
-//sent from the client to the server, specifying parameters to be set
-message Parameters {
-    enum Type {
-        DOUBLE = 0;
-        VEC3   = 1;
-        MAT3   = 2;
-    }
-    message Parameter {
-        string section    = 1;
-        string subSection = 2;
-        string title      = 3;
-        Type type         = 4;
-        string value      = 5;
-    }
+message GetParametersResponse {
     repeated Parameter parameters = 1;
 }
 
+//sent from the client to the server, and requests settings
+message GetSettings {}
+
 //sent from the server to the client, in response to a request for settings
-//sent from the client to the server, specifying settings to be set
-message Settings {
-    message Setting {
-        string section = 1;
-        string title   = 2;
-        string value   = 3;
-    }
+message GetSettingsResponse {
     repeated Setting settings = 1;
 }
 
+//sent from the client to the server, and requests the last uploaded mission
+message GetMission {}
+
 //sent from the server to the client, in response to a request for the last uploaded mission
-//sent from the client to the server, specifying a mission to upload
-message Mission {
-    message Waypoint {
-        enum Type {
-            GO_TO_POINT = 0;
-        }
-        string title     = 1;
-        Type type        = 2;
-        double latitude  = 3;
-        double longitude = 4;
-    }
-    string title                = 1;
-    repeated Waypoint waypoints = 2;
+message GetMissionResponse {
+    Mission mission = 1;
 }
 
+//sent from the client to the server, and requests the server's saved mission list
+message GetMissions {}
+
 //sent from the server to the client, in response to a request for the server's saved mission list
-//sent from the client to the server, specifying a mission list to save
-message Missions {
+message GetMissionsResponse {
     repeated Mission missions = 1;
 }
 
-//sent from the server to the client, in response to Command/Parameters/Settings/Mission/Missions
-message Success {
-    string msg = 1; //currently unused
+//sent from the client to the server, specifying parameters to be set
+message SetParameters {
+    repeated Parameter parameters = 1;
 }
 
-//sent from the server to the client, in response to a Command/Get/Parameters/Settings/Mission/Missions
+//sent from the client to the server, specifying settings to be set
+message SetSettings {
+    repeated Setting settings = 1;
+}
+
+//sent from the client to the server, specifying a mission to upload
+message SetMission {
+    Mission mission = 1;
+}
+
+//sent from the client to the server, specifying a mission list to save
+message SetMissions {
+    repeated Mission missions = 1;
+}
+
+//sent from the server to the client, in response to a Command or Set* message
+message Success {}
+
+//sent from the server to the client, in response to a Command or Get* or Set* message
 message Failure {
     string msg = 1;
 }

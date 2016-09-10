@@ -98,13 +98,13 @@ export default {
                     signal:   msg.signal
                 });
             });
-            this.socket.on('Parameters', (data, id) => {
+            this.socket.on('GetParametersResponse', (data, id) => {
                 //decode message
                 var paramsMsg;
                 try {
-                    paramsMsg = this.protoPkg.Parameters.decode(data);
+                    paramsMsg = this.protoPkg.GetParametersResponse.decode(data);
                 } catch (e){
-                    console.log('Unable to decode Parameters message');
+                    console.log('Unable to decode GetParametersResponse message');
                     return;
                 }
                 //set parameters
@@ -171,13 +171,13 @@ export default {
                     this.$dispatch('server.get_parameters:success', msg.initiator);
                 }
             });
-            this.socket.on('Settings', (data, id) => {
+            this.socket.on('GetSettingsResponse', (data, id) => {
                 //decode message
                 var settingsMsg;
                 try {
-                    settingsMsg = this.protoPkg.Settings.decode(data);
+                    settingsMsg = this.protoPkg.GetSettingsResponse.decode(data);
                 } catch (e){
-                    console.log('Unable to decode Settings message');
+                    console.log('Unable to decode GetSettingsResponse message');
                     return;
                 }
                 //set settings
@@ -219,13 +219,13 @@ export default {
                     this.$dispatch('server.get_settings:success', msg.initiator);
                 }
             });
-            this.socket.on('Missions', (data, id) => {
+            this.socket.on('GetMissionsResponse', (data, id) => {
                 //decode message
                 var missionsMsg;
                 try {
-                    missionsMsg = this.protoPkg.Missions.decode(data);
+                    missionsMsg = this.protoPkg.GetMissionsResponse.decode(data);
                 } catch (e){
-                    console.log('Unable to decode Missions message');
+                    console.log('Unable to decode GetMissionsResponse message');
                     return;
                 }
                 //set missions
@@ -256,13 +256,13 @@ export default {
                     this.$dispatch('server.load_missions:success', msg.initiator);
                 }
             });
-            this.socket.on('Mission', (data, id) => {
+            this.socket.on('GetMissionResponse', (data, id) => {
                 //decode message
                 var missionMsg;
                 try {
-                    missionMsg = this.protoPkg.Mission.decode(data);
+                    missionMsg = this.protoPkg.GetMissionResponse.decode(data).mission;
                 } catch (e){
-                    console.log('Unable to decode Mission message');
+                    console.log('Unable to decode GetMissionResponse message');
                     return;
                 }
                 //add mission to mission list
@@ -290,15 +290,6 @@ export default {
                 }
             });
             this.socket.on('Success', (data, id) => {
-                //decode message
-                var successMsg;
-                try {
-                    successMsg = this.protoPkg.Success.decode(data);
-                } catch (e){
-                    console.log('Unable to decode Success message');
-                    return;
-                }
-                //
                 console.log('received "Success" message');
                 if (id in this.pending){
                     let msg = this.pending[id];
@@ -382,14 +373,13 @@ export default {
             };
             switch (msgType){
                 case 'get_parameters': {
-                    let getMsg = new this.protoPkg.Get(this.protoPkg.Get.Type.PARAMETERS);
-                    this.socket.emit('Get', getMsg.toBuffer(), this.msgId);
+                    this.socket.emit('GetParameters', null, this.msgId);
                     break;
                 }
                 case 'set_parameters': {
-                    let paramsMsg = new this.protoPkg.Parameters();
+                    let paramsMsg = new this.protoPkg.SetParameters();
                     for (let param of data){
-                        paramsMsg.add('parameters', new this.protoPkg.Parameters.Parameter(
+                        paramsMsg.add('parameters', new this.protoPkg.Parameter(
                             param.section,
                             param.subsection,
                             param.title,
@@ -397,31 +387,29 @@ export default {
                             param.value
                         ));
                     }
-                    this.socket.emit('Parameters', paramsMsg.toBuffer(), this.msgId);
+                    this.socket.emit('SetParameters', paramsMsg.toBuffer(), this.msgId);
                     break;
                 }
                 case 'get_settings': {
-                    let getMsg = new this.protoPkg.Get(this.protoPkg.Get.Type.SETTINGS);
-                    this.socket.emit('Get', getMsg.toBuffer(), this.msgId);
+                    this.socket.emit('GetSettings', null, this.msgId);
                     break;
                 }
                 case 'set_settings': {
-                    let settingsMsg = new this.protoPkg.Settings();
+                    let settingsMsg = new this.protoPkg.SetSettings();
                     for (let setting of data){
-                        settingsMsg.add('settings', new this.protoPkg.Settings.Setting(
+                        settingsMsg.add('settings', new this.protoPkg.Setting(
                             setting.section, setting.title, setting.value
                         ));
                     }
-                    this.socket.emit('Settings', settingsMsg.toBuffer(), this.msgId);
+                    this.socket.emit('SetSettings', settingsMsg.toBuffer(), this.msgId);
                     break;
                 }
                 case 'load_missions': {
-                    let getMsg = new this.protoPkg.Get(this.protoPkg.Get.Type.MISSIONS);
-                    this.socket.emit('Get', getMsg.toBuffer(), this.msgId);
+                    this.socket.emit('GetMissions', null, this.msgId);
                     break;
                 }
                 case 'save_missions': {
-                    let missionsMsg = new this.protoPkg.Missions();
+                    let missionsMsg = new this.protoPkg.SetMissions();
                     for (let mission of data){
                         let m = new this.protoPkg.Mission();
                         m.title = mission.title;
@@ -435,26 +423,25 @@ export default {
                         }
                         missionsMsg.add('missions', m);
                     }
-                    this.socket.emit('Missions', missionsMsg.toBuffer(), this.msgId);
+                    this.socket.emit('SetMissions', missionsMsg.toBuffer(), this.msgId);
                     break;
                 }
                 case 'download_mission': {
-                    let getMsg = new this.protoPkg.Get(this.protoPkg.Get.Type.MISSION);
-                    this.socket.emit('Get', getMsg.toBuffer(), this.msgId);
+                    this.socket.emit('GetMission', null, this.msgId);
                     break;
                 }
                 case 'upload_mission': {
-                    let missionMsg = new this.protoPkg.Mission();
-                    missionMsg.title = data.title;
+                    let missionMsg = new this.protoPkg.SetMission(new this.protoPkg.Mission());
+                    missionMsg.mission.title = data.title;
                     for (let waypoint of data.waypoints){
-                        missionMsg.add('waypoints', new this.protoPkg.Mission.Waypoint(
+                        missionMsg.mission.add('waypoints', new this.protoPkg.Mission.Waypoint(
                             waypoint.title,
                             this.waypointType(waypoint.type),
                             waypoint.position.lat,
                             waypoint.position.lng
                         ));
                     }
-                    this.socket.emit('Mission', missionMsg.toBuffer(), this.msgId);
+                    this.socket.emit('SetMission', missionMsg.toBuffer(), this.msgId);
                     break;
                 }
                 case 'arm': {
@@ -508,17 +495,17 @@ export default {
         },
         paramTypeString(type){
             switch (type){
-                case this.protoPkg.Parameters.Type.DOUBLE: return 'double';
-                case this.protoPkg.Parameters.Type.VEC3:   return 'vec3';
-                case this.protoPkg.Parameters.Type.MAT3:   return 'mat3';
+                case this.protoPkg.Parameter.Type.DOUBLE: return 'double';
+                case this.protoPkg.Parameter.Type.VEC3:   return 'vec3';
+                case this.protoPkg.Parameter.Type.MAT3:   return 'mat3';
                 default: throw new Error('Invalid parameter type');
             }
         },
         paramType(str){
             switch (str){
-                case 'double': return this.protoPkg.Parameters.Type.DOUBLE;
-                case 'vec3':   return this.protoPkg.Parameters.Type.VEC3;
-                case 'mat3':   return this.protoPkg.Parameters.Type.MAT3;
+                case 'double': return this.protoPkg.Parameter.Type.DOUBLE;
+                case 'vec3':   return this.protoPkg.Parameter.Type.VEC3;
+                case 'mat3':   return this.protoPkg.Parameter.Type.MAT3;
                 default: throw new Error('Invalid parameter type string');
             }
         },

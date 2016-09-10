@@ -108,25 +108,51 @@ module.exports = function(){
         );
         return msg.toBuffer();
     };
-    //return a Parameters or Failure message
+    //return a GetParametersResponse or Failure message
     this.getParameters = function(){
-        var msg = new this.protoPkg.Parameters();
+        var msg = new this.protoPkg.GetParametersResponse();
         for (var i = 0; i < this.parameters.length; i++){
             var param = this.parameters[i];
-            msg.add('parameters', new this.protoPkg.Parameters.Parameter(
+            msg.add('parameters', new this.protoPkg.Parameter(
                 param[0], param[1], param[2], param[3], param[4]
             ));
         }
-        return ['Parameters', msg.toBuffer()];
+        return ['GetParametersResponse', msg.toBuffer()];
+    };
+    //return a GetSettingsResponse or Failure message
+    this.getSettings = function(){
+        var msg = new this.protoPkg.GetSettingsResponse();
+        for (var i = 0; i < this.settings.length; i++){
+            var setting = this.settings[i];
+            msg.add('settings', new this.protoPkg.Setting(
+                setting[0], setting[1], setting[2]
+            ));
+        }
+        return ['GetSettingsResponse', msg.toBuffer()];
+    }
+    //returns a GetMissionResponse or Failure message
+    this.getMission = function(){
+        if (this.mission === null){
+            return ['Failure', (new this.protoPkg.Failure('No uploaded mission')).toBuffer()];
+        }
+        var msg = new this.protoPkg.GetMissionResponse(new this.protoPkg.Mission());
+        msg.mission.title = this.mission.title;
+        for (var i = 0; i < this.mission.waypoints.length; i++){
+            var wp = this.mission.waypoints[i];
+            msg.mission.add('waypoints', new this.protoPkg.Mission.Waypoint(
+                wp.title, wp.type, wp.position.lat, wp.position.lng
+            ));
+        }
+        return ['GetMissionResponse', msg.toBuffer()];
     };
     //set parameters, returning a Success or Failure message
-    this.setParameters = function(newParamsBuf){
+    this.setParameters = function(setParametersBuf){
         //decode message
         var newParams;
         try {
-            newParams = this.protoPkg.Parameters.decode(newParamsBuf);
+            newParams = this.protoPkg.SetParameters.decode(setParametersBuf);
         } catch (e){
-            console.log('Unable to decode Parameters message');
+            console.log('Unable to decode SetParameters message');
             return ['Failure', (new this.protoPkg.Failure('Invalid message')).toBuffer()];
         }
         //verify new parameters
@@ -157,27 +183,16 @@ module.exports = function(){
                 newParams.parameters[i].value
             ];
         }
-        return ['Success', (new this.protoPkg.Success()).toBuffer()];
+        return ['Success', null];
     };
-    //return a Settings or Failure message
-    this.getSettings = function(){
-        var msg = new this.protoPkg.Settings();
-        for (var i = 0; i < this.settings.length; i++){
-            var setting = this.settings[i];
-            msg.add('settings', new this.protoPkg.Settings.Setting(
-                setting[0], setting[1], setting[2]
-            ));
-        }
-        return ['Settings', msg.toBuffer()];
-    }
     //set settings, returning a Success or Failure message
     this.setSettings = function(newSettingsBuf){
         //decode message
         var newSettings;
         try {
-            newSettings = this.protoPkg.Settings.decode(newSettingsBuf);
+            newSettings = this.protoPkg.SetSettings.decode(newSettingsBuf);
         } catch (e){
-            console.log('Unable to decode Settings message');
+            console.log('Unable to decode SetSettings message');
             return ['Failure', (new this.protoPkg.Failure('Invalid message')).toBuffer()];
         }
         //verify new settings
@@ -205,16 +220,16 @@ module.exports = function(){
                 newSettings.settings[i].value
             ];
         }
-        return ['Success', (new this.protoPkg.Success()).toBuffer()];
+        return ['Success', null];
     }
     //set mission, returning a Success or Failure message
-    this.setMission = function(newMissionBuf){
+    this.setMission = function(setMissionBuf){
         //decode message
         var newMission;
         try {
-            newMission = this.protoPkg.Mission.decode(newMissionBuf);
+            newMission = (this.protoPkg.SetMission.decode(setMissionBuf)).mission;
         } catch (e){
-            console.log('Unable to decode Mission message');
+            console.log('Unable to decode SetMission message');
             return ['Failure', (new this.protoPkg.Failure('Invalid message')).toBuffer()];
         }
         //set mission
@@ -238,22 +253,7 @@ module.exports = function(){
             })
         };
         this.missionIndex = 0;
-        return ['Success', (new this.protoPkg.Success()).toBuffer()];
-    };
-    //returns a Mission or Failure message
-    this.getMission = function(){
-        if (this.mission === null){
-            return ['Failure', (new this.protoPkg.Failure('No uploaded mission')).toBuffer()];
-        }
-        var msg = new this.protoPkg.Mission();
-        msg.title = this.mission.title;
-        for (var i = 0; i < this.mission.waypoints.length; i++){
-            var wp = this.mission.waypoints[i];
-            msg.add('waypoints', new this.protoPkg.Mission.Waypoint(
-                wp.title, wp.type, wp.position.lat, wp.position.lng
-            ));
-        }
-        return ['Mission', msg.toBuffer()];
+        return ['Success', null];
     };
     //arm or disarm, returning a Success or Failure message
     this.arm = function(arm){
@@ -267,7 +267,7 @@ module.exports = function(){
             return ['Failure', (new this.protoPkg.Failure('Currently doing a mission')).toBuffer()];
         }
         this.armed = arm;
-        return ['Success', (new this.protoPkg.Success()).toBuffer()];
+        return ['Success', null];
     };
     //start or resume, returning a Success or Failure message
     this.start = function(fromBeginning){
@@ -291,7 +291,7 @@ module.exports = function(){
         }
         this.mode = this.MODES.AUTO;
         this.speed = this.SPEED;
-        return ['Success', (new this.protoPkg.Success()).toBuffer()];
+        return ['Success', null];
     };
     //stop, returning a Success or Failure message
     this.stop = function(){
@@ -300,7 +300,7 @@ module.exports = function(){
         }
         this.mode = this.MODES.PAUSED;
         this.speed = 0;
-        return ['Success', (new this.protoPkg.Success()).toBuffer()];
+        return ['Success', null];
     };
     //activate or deactivate kill switch, returning a Success or Failure message
     this.kill = function(kill){
@@ -312,6 +312,6 @@ module.exports = function(){
         this.mode = kill ? this.MODES.KILLED : this.mode.STOPPED;
         this.speed = 0;
         this.missionIndex = 0;
-        return ['Success', (new this.protoPkg.Success()).toBuffer()];
+        return ['Success', null];
     };
 };

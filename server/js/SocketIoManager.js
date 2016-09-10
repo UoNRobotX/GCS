@@ -100,7 +100,7 @@ module.exports = function(server){
     }
     this.protoPkg = this.protoBuilder.build();
     //missions list
-    this.missions = new this.protoPkg.Missions(); //mission list stored on server
+    this.missions = new this.protoPkg.SetMissions(); //mission list stored on server
     this.missionsFile = './data/missions.json';
     //load missions from file
     fs.readFile(this.missionsFile, function(err, data){
@@ -108,7 +108,7 @@ module.exports = function(server){
             console.log('Unable to read missions file. Using empty missions list.');
         } else {
             try {
-                this.missions = this.protoPkg.Missions.decode(data);
+                this.missions = this.protoPkg.SetMissions.decode(data);
             } catch (e){
                 console.log('Missions file is invalid. Using empty missions list.');
             }
@@ -152,71 +152,53 @@ module.exports = function(server){
             //console.log('sent status message to: ' + host);
         }.bind(this), 50);
         //handle other messages
-        socket.on('Get', function(data, id){
-            //decode message
-            var msg;
-            try {
-                msg = this.protoPkg.Get.decode(data);
-            } catch (e){
-                console.log('Unable to decode Get message');
-                socket.emit('Failure', (new this.protoPkg.Failure('Invalid message')).toBuffer(), id);
-                return;
-            }
-            //respond
-            switch (msg.type){
-                case this.protoPkg.Get.Type.PARAMETERS: {
-                    console.log('got a "Get" message requesting parameters');
-                    var msg = this.vehicle.getParameters();
-                    socket.emit(msg[0], msg[1], id);
-                    break;
-                }
-                case this.protoPkg.Get.Type.SETTINGS: {
-                    console.log('got a "Get" message requesting settings');
-                    var msg = this.vehicle.getSettings();
-                    socket.emit(msg[0], msg[1], id);
-                    break;
-                }
-                case this.protoPkg.Get.Type.MISSION: {
-                    console.log('got a "Get" message requesting the current mission');
-                    var msg = this.vehicle.getMission();
-                    socket.emit(msg[0], msg[1], id);
-                    break;
-                }
-                case this.protoPkg.Get.Type.MISSIONS: {
-                    console.log('got a "Get" message requesting the missions list');
-                    socket.emit('Missions', this.missions.toBuffer(), id);
-                    break;
-                }
-            }
+        socket.on('GetParameters', function(data, id){
+            console.log('got a "GetParameters" message');
+            var msg = this.vehicle.getParameters();
+            socket.emit(msg[0], msg[1], id);
         }.bind(this));
-        socket.on('Parameters', function(data, id){
-            console.log('Got "Parameters" message');
+        socket.on('GetSettings', function(data, id){
+            console.log('got a "GetSettings" message');
+            var msg = this.vehicle.getSettings();
+            socket.emit(msg[0], msg[1], id);
+        }.bind(this));
+        socket.on('GetMission', function(data, id){
+            console.log('got a "GetMission" message');
+            var msg = this.vehicle.getMission();
+            socket.emit(msg[0], msg[1], id);
+        }.bind(this));
+        socket.on('GetMissions', function(data, id){
+            console.log('got a "GetMissions" message');
+            socket.emit('GetMissionsResponse', this.missions.toBuffer(), id);
+        }.bind(this));
+        socket.on('SetParameters', function(data, id){
+            console.log('Got "SetParameters" message');
             var msg = this.vehicle.setParameters(data);
             socket.emit(msg[0], msg[1], id);
         }.bind(this));
-        socket.on('Settings', function(data, id){
-            console.log('got "Settings" message');
+        socket.on('SetSettings', function(data, id){
+            console.log('got "SetSettings" message');
             var msg = this.vehicle.setSettings(data);
             socket.emit(msg[0], msg[1], id);
         }.bind(this));
-        socket.on('Missions', function(data, id){
+        socket.on('SetMission', function(data, id){
+            console.log('got "SetMission" message');
+            var msg = this.vehicle.setMission(data);
+            socket.emit(msg[0], msg[1], id);
+        }.bind(this));
+        socket.on('SetMissions', function(data, id){
             //check message
             var missionsMsg;
             try {
-                missionsMsg = this.protoPkg.Missions.decode(data);
+                missionsMsg = this.protoPkg.SetMissions.decode(data);
             } catch (e){
-                console.log('Unable to decode Missions message');
+                console.log('Unable to decode SetMissions message');
                 socket.emit('Failure', (new this.protoPkg.Failure('Invalid message')).toBuffer(), id);
                 return;
             }
-            console.log('got "Missions" message');
+            console.log('got "SetMissions" message');
             this.missions = missionsMsg;
             socket.emit('Success', (new this.protoPkg.Success()).toBuffer(), id);
-        }.bind(this));
-        socket.on('Mission', function(data, id){
-            console.log('got "Mission" message');
-            var msg = this.vehicle.setMission(data);
-            socket.emit(msg[0], msg[1], id);
         }.bind(this));
         socket.on('Command', function(data, id){
             //decode message
