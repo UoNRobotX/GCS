@@ -20,9 +20,17 @@ module.exports = function(server){
         throw new Error ('Unable to load proto messages');
     }
     this.protoPkg = this.protoBuilder.build();
+    //settings
+    this.settings = [
+        ['Map',       'key',       'AIzaSyABnCcekyPecGnsA1Rj_NdWjmUafJ1yVqA'],
+        ['Map',       'lat',       '21.308731'                              ],
+        ['Map',       'lng',       '-157.888815'                            ],
+        ['Map',       'zoom',      '19'                                     ],
+        ['Section 1', 'Setting 1', 'value 1'                                ]
+    ];
     //missions list
     this.missions = new this.protoPkg.SetMissions(); //mission list stored on server
-    this.missionsFile = './data/missions.json';
+    this.missionsFile = './data/missions';
     //load missions from file
     fs.readFile(this.missionsFile, function(err, data){
         if (err){
@@ -36,11 +44,11 @@ module.exports = function(server){
         }
     }.bind(this));
     //save missions on shutdown
-    this.saveMissionsCalled = false;
+    this.savedOnShutdown = false;
     this.saveMissions = function(){
-        if (!this.saveMissionsCalled){
+        if (!this.savedOnShutdown){
             fs.writeFileSync(this.missionsFile, this.missions.toBuffer());
-            this.saveMissionsCalled = true;
+            this.savedOnShutdown = true;
         }
         process.exit();
     }.bind(this);
@@ -80,8 +88,14 @@ module.exports = function(server){
         }.bind(this));
         socket.on('GetSettings', function(data, id){
             console.log('got a "GetSettings" message');
-            var msg = this.vehicle.getSettings();
-            socket.emit(msg[0], msg[1], id);
+            var msg = new this.protoPkg.GetSettingsResponse();
+            for (var i = 0; i < this.settings.length; i++){
+                var setting = this.settings[i];
+                msg.add('settings', new this.protoPkg.Setting(
+                    setting[0], setting[1], setting[2]
+                ));
+            }
+            socket.emit('GetSettingsResponse', msg.toBuffer(), id);
         }.bind(this));
         socket.on('GetMission', function(data, id){
             console.log('got a "GetMission" message');
@@ -99,8 +113,44 @@ module.exports = function(server){
         }.bind(this));
         socket.on('SetSettings', function(data, id){
             console.log('got "SetSettings" message');
-            var msg = this.vehicle.setSettings(data);
-            socket.emit(msg[0], msg[1], id);
+            //decode message
+            var newSettings;
+            try {
+                newSettings = this.protoPkg.SetSettings.decode(data);
+            } catch (e){
+                console.log('Unable to decode SetSettings message');
+                var failureMsg = new this.protoPkg.Failure('Invalid message');
+                socket.emit('Failure', failureMsg.toBuffer(), id);
+                return;
+            }
+            //verify new settings
+            var settingsToSet = [];
+            var i, j;
+            SettingSearch:
+            for (i = 0; i < newSettings.settings.length; i++){
+                var newSetting = newSettings.settings[i];
+                for (j = 0; j < this.settings.length; j++){
+                    var setting = this.settings[j];
+                    if (newSetting.section == setting[0] &&
+                        newSetting.title == setting[1]){
+                        // TODO: perform value checking
+                        settingsToSet.push(j);
+                        continue SettingSearch;
+                    }
+                }
+                var failureMsg = new this.protoPkg.Failure('A setting was not found');
+                socket.emit('Failure', failureMsg.toBuffer(), id);
+                return;
+            }
+            //set settings
+            for (i = 0; i < newSettings.settings.length; i++){
+                this.settings[settingsToSet[i]] = [
+                    newSettings.settings[i].section,
+                    newSettings.settings[i].title,
+                    newSettings.settings[i].value
+                ];
+            }
+            socket.emit('Success', null, id);
         }.bind(this));
         socket.on('SetMission', function(data, id){
             console.log('got "SetMission" message');

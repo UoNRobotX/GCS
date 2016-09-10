@@ -28,13 +28,6 @@ module.exports = function(){
         ['Section 1',       'Subsection 1', 'Parameter 2', this.TYPES.VEC3,   '3,-0.2,100'       ],
         ['Section 1',       'Subsection 2', 'Parameter 3', this.TYPES.MAT3,   '1,2,3,4,5,6,7,8,9']
     ];
-    this.settings = [
-        ['Map',       'key',       'AIzaSyABnCcekyPecGnsA1Rj_NdWjmUafJ1yVqA'],
-        ['Map',       'lat',       '21.308731'                              ],
-        ['Map',       'lng',       '-157.888815'                            ],
-        ['Map',       'zoom',      '19'                                     ],
-        ['Section 1', 'Setting 1', 'value 1'                                ]
-    ];
     //load .proto messages
     this.protoBuilder = protobuf.loadProtoFile('./public/assets/proto/Test.proto');
     if (this.protoBuilder === null){
@@ -119,17 +112,6 @@ module.exports = function(){
         }
         return ['GetParametersResponse', msg.toBuffer()];
     };
-    //return a GetSettingsResponse or Failure message
-    this.getSettings = function(){
-        var msg = new this.protoPkg.GetSettingsResponse();
-        for (var i = 0; i < this.settings.length; i++){
-            var setting = this.settings[i];
-            msg.add('settings', new this.protoPkg.Setting(
-                setting[0], setting[1], setting[2]
-            ));
-        }
-        return ['GetSettingsResponse', msg.toBuffer()];
-    }
     //returns a GetMissionResponse or Failure message
     this.getMission = function(){
         if (this.mission === null){
@@ -185,43 +167,6 @@ module.exports = function(){
         }
         return ['Success', null];
     };
-    //set settings, returning a Success or Failure message
-    this.setSettings = function(newSettingsBuf){
-        //decode message
-        var newSettings;
-        try {
-            newSettings = this.protoPkg.SetSettings.decode(newSettingsBuf);
-        } catch (e){
-            console.log('Unable to decode SetSettings message');
-            return ['Failure', (new this.protoPkg.Failure('Invalid message')).toBuffer()];
-        }
-        //verify new settings
-        var settingsToSet = [];
-        var i, j;
-        SettingSearch:
-        for (i = 0; i < newSettings.settings.length; i++){
-            var newSetting = newSettings.settings[i];
-            for (j = 0; j < this.settings.length; j++){
-                var setting = this.settings[j];
-                if (newSetting.section == setting[0] &&
-                    newSetting.title == setting[1]){
-                    // TODO: perform value checking
-                    settingsToSet.push(j);
-                    continue SettingSearch;
-                }
-            }
-            return ['Failure', (new this.protoPkg.Failure('A setting was not found')).toBuffer()];
-        }
-        //set settings
-        for (i = 0; i < newSettings.settings.length; i++){
-            this.settings[settingsToSet[i]] = [
-                newSettings.settings[i].section,
-                newSettings.settings[i].title,
-                newSettings.settings[i].value
-            ];
-        }
-        return ['Success', null];
-    }
     //set mission, returning a Success or Failure message
     this.setMission = function(setMissionBuf){
         //decode message
