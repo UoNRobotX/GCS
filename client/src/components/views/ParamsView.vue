@@ -29,8 +29,8 @@
                     >
                         <div class="param" v-for="param in section.params">
                             <ui-textbox
-                                :label="param.title" :name="param.title" :value.sync="param.value"
-                                :valid.sync="param.valid"
+                                :label="param.title" :name="param.title"
+                                :value.sync="param.value" :valid.sync="param.valid"
                                 @changed="paramChanged(currentSection.title, section.title, param.title, param.type, param.value, param.valid)"
                                 :validation-rules="getValidationRule(param.type)"
                             ></ui-textbox>
@@ -56,7 +56,7 @@ export default {
     data() {
         return {
             currentSectionIndex: 0,
-            changedParams: Object.create(null), //an empty map
+            changedParams: {},
             validationRules: {
                 vec3: ['regex:/^(-?\\d*\\.?\\d+,){2}(-?\\d*\\.?\\d+)$/'],
                 double: ['regex:/^(-?\\d*\\.?\\d+)$/'],
@@ -82,33 +82,44 @@ export default {
             return Array.isArray(x); //Vue doesn't like it if I use this directly
         },
 
-        paramChanged(section, subsection, param, type, value, valid){
-            if (section in this.changedParams){
-                if (subsection in this.changedParams[section]){
-                    this.changedParams[section][subsection][param] = {type: type, value: value, valid: valid};
+        paramChanged(section, subsection, title, type, value, valid){
+            if (this.changedParams.hasOwnProperty(section)){
+                if (this.changedParams[section].hasOwnProperty(subsection)){
+                    this.changedParams[section][subsection][title] = {
+                        type: type, value: value, valid: valid
+                    };
                 } else {
-                    this.changedParams[section][subsection] = {[param]: {type: type, value: value, valid: valid}};
+                    this.changedParams[section][subsection] = {
+                        [title]: {type: type, value: value, valid: valid}
+                    };
                 }
             } else {
-                this.changedParams[section] = {[subsection]: {[param]: {type: type, value: value, valid: valid}}};
+                this.changedParams[section] = {
+                    [subsection]: {
+                        [title]: {type: type, value: value, valid: valid}
+                    }
+                };
             }
         },
 
         saveParams(){
             let data = [];
-            for (let section in this.changedParams){
-                for (let subsection in this.changedParams[section]){
-                    for (let param in this.changedParams[section][subsection]){
-                        if (!this.changedParams[section][subsection][param].valid){
+            for (let sectionName in this.changedParams){
+                let section = this.changedParams[sectionName];
+                for (let subsectionName in section){
+                    let subsection = section[subsectionName];
+                    for (let paramName in subsection){
+                        let param = subsection[paramName];
+                        if (!param.valid){
                             this.$dispatch('app::create-snackbar', 'A parameter value is invalid');
                             return;
                         }
                         data.push({
-                            section: section,
-                            subsection: subsection,
-                            title: param,
-                            type: this.changedParams[section][subsection][param].type,
-                            value: this.changedParams[section][subsection][param].value
+                            section:    sectionName,
+                            subsection: subsectionName,
+                            title:      paramName,
+                            type:       param.type,
+                            value:      param.value
                         });
                     }
                 }
@@ -146,7 +157,7 @@ export default {
         },
 
         'server.set_parameters:success'(){
-            this.changedParams = Object.create(null);
+            this.changedParams = {};
             this.waitSaveParams = false;
             this.$dispatch('app::create-snackbar', 'Parameters saved');
         },

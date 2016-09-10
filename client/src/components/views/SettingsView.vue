@@ -40,7 +40,7 @@ export default {
 
     data() {
         return {
-            changedSettings: Object.create(null), //an empty map
+            changedSettings: {},
             waitSaveSettings: false,
             waitResetSettings: false
         };
@@ -48,7 +48,7 @@ export default {
 
     methods: {
         settingChanged(section, param, value){
-            if (section in this.changedSettings){
+            if (this.changedSettings.hasOwnProperty(section)){
                 this.changedSettings[section][param] = value;
             } else {
                 this.changedSettings[section] = {[param]: value};
@@ -58,11 +58,11 @@ export default {
         saveSettings(){
             let data = [];
             for (let section in this.changedSettings){
-                for (let param in this.changedSettings[section]){
+                for (let setting in this.changedSettings[section]){
                     data.push({
                         section: section,
-                        title: param,
-                        value: this.changedSettings[section][param]
+                        title:   setting,
+                        value:   this.changedSettings[section][setting]
                     });
                 }
             }
@@ -91,7 +91,7 @@ export default {
         },
 
         'server.set_settings:success'(){
-            this.changedSettings = Object.create(null);
+            this.changedSettings = {};
             this.waitSaveSettings = false;
             this.$dispatch('app::create-snackbar', 'Settings saved');
         },
