@@ -5,9 +5,9 @@ var protobuf = require('protobufjs');
 var Vehicle = require('./vehicle.js');
 
 //these files are used for vehicle-server communication
+    // TODO: when the files are FIFOs, 'npm start' works once, but later attempts exit prematurely
 var inputFile  = path.join(__dirname, '../temp/toServer');
 var outputFile = path.join(__dirname, '../temp/toVehicle');
-    //for some reason, if the files are FIFOs, 'npm start' works once, but later attempts exit prematurely
 
 module.exports = function(server){
     this.msgId = 0; //used to assign IDs to messages sent to vehicle
@@ -36,6 +36,7 @@ module.exports = function(server){
         FAILURE:                 15,
         ATTENTION:               16
     };
+    this.magicNumber = new Buffer([0x17, 0xC0, 0x42]); //used in messages
     //settings
     this.settings = [
         ['Map',       'key',       'AIzaSyABnCcekyPecGnsA1Rj_NdWjmUafJ1yVqA'],
@@ -136,12 +137,14 @@ module.exports = function(server){
         if (this.pending === null && this.queued.length > 0){
             this.pending = this.queued.shift();
             //send message
-            var header = new Buffer(6);
-            header.writeUInt8(this.pending.msgType, 0);
-            header.writeUInt8(this.pending.msgId, 1);
-            header.writeUInt32LE(this.pending.data.length, 2);
+            var header = new Buffer(9);
+            this.magicNumber.copy(header);
+            header.writeUInt8(this.pending.msgType, 3);
+            header.writeUInt8(this.pending.msgId, 4);
+            header.writeUInt32LE(this.pending.data.length, 5);
             this.ostream.write(header);
             this.ostream.write(this.pending.data);
+            this.ostream.write(new Buffer([0, 0, 0, 0])); // TODO: use a CRC32
             this.pending.timer = setTimeout(function(){
                 this.pending.socket.emit(
                     'Failure',
@@ -182,14 +185,27 @@ module.exports = function(server){
     this.msgBuf = new Buffer(0);
     this.processInputData = function(buf){
         this.msgBuf = Buffer.concat([this.msgBuf, buf]);
-        if (this.msgBuf.length >= 6){
-            var msgSize = this.msgBuf.readUInt32LE(2);
-            if (this.msgBuf.length >= 6 + msgSize){
-                var type = this.msgBuf.readUInt8(0);
-                var msgId = this.msgBuf.readUInt8(1);
-                var data = this.msgBuf.slice(6, 6 + msgSize);
-                this.msgBuf = this.msgBuf.slice(6 + msgSize);
-                this.processMsg(type, data, msgId);
+        //find magic number prefix
+        var i = 0;
+        while (i+2 < this.msgBuf.length){
+            if (this.msgBuf[i] != this.magicNumber[0] ||
+                this.msgBuf[i+1] != this.magicNumber[1] ||
+                this.msgBuf[i+2] != this.magicNumber[2]){
+                i++;
+            } else {
+                break;
+            }
+        }
+        this.msgBuf = this.msgBuf.slice(i);
+        //check for a complete packet
+        if (this.msgBuf.length >= 9){
+            var msgSize = this.msgBuf.readUInt32LE(5);
+            if (this.msgBuf.length >= 9 + msgSize + 4){
+                var type = this.msgBuf.readUInt8(3);
+                var id = this.msgBuf.readUInt8(4);
+                var data = this.msgBuf.slice(9, 9 + msgSize);
+                this.msgBuf = this.msgBuf.slice(9 + msgSize + 4);
+                this.processMsg(type, data, id);
             }
         }
     }

@@ -49,6 +49,7 @@ module.exports = function(inputFile, outputFile){
         ['Section 1',       'Subsection 1', 'Parameter 2', this.PARAM_TYPES.VEC3,   '3,-0.2,100'       ],
         ['Section 1',       'Subsection 2', 'Parameter 3', this.PARAM_TYPES.MAT3,   '1,2,3,4,5,6,7,8,9']
     ];
+    this.magicNumber = new Buffer([0x17, 0xC0, 0x42]); //used in messages
     //load .proto messages
     this.protoBuilder = protobuf.loadProtoFile('./public/assets/proto/Test.proto');
     if (this.protoBuilder === null){
@@ -58,19 +59,6 @@ module.exports = function(inputFile, outputFile){
     //open output file
     this.ostream = fs.createWriteStream(outputFile, {flags: 'a'});
     this.ostream.on('error', function(){throw new Error('Vehicle: Error with writing output file');});
-    //used to send messsages to server
-    this.writeOutputData = function(type, buffer, id){
-        if (buffer.length > Math.pow(2,32)-1){
-            console.log('Vehicle: Message too large');
-            return;
-        }
-        var header = new Buffer(6);
-        header.writeUInt8(type, 0);
-        header.writeUInt8(id, 1);
-        header.writeUInt32LE(buffer.length, 2);
-        this.ostream.write(header);
-        this.ostream.write(buffer);
-    }
     //open input file
     if (fs.statSync(inputFile).isFIFO()){
         var istream = fs.createReadStream(inputFile);
@@ -100,18 +88,46 @@ module.exports = function(inputFile, outputFile){
     this.msgBuf = new Buffer(0);
     this.processInputData = function(buf){
         this.msgBuf = Buffer.concat([this.msgBuf, buf]);
-        if (this.msgBuf.length >= 6){
-            var msgSize = this.msgBuf.readUInt32LE(2);
-            if (this.msgBuf.length >= 6 + msgSize){
-                var type = this.msgBuf.readUInt8(0);
-                var id = this.msgBuf.readUInt8(1);
-                var data = this.msgBuf.slice(6, 6 + msgSize);
-                this.msgBuf = this.msgBuf.slice(6 + msgSize);
+        //find magic number prefix
+        var i = 0;
+        while (i+2 < this.msgBuf.length){
+            if (this.msgBuf[i] != this.magicNumber[0] ||
+                this.msgBuf[i+1] != this.magicNumber[1] ||
+                this.msgBuf[i+2] != this.magicNumber[2]){
+                i++;
+            } else {
+                break;
+            }
+        }
+        this.msgBuf = this.msgBuf.slice(i);
+        //check for a complete packet
+        if (this.msgBuf.length >= 9){
+            var msgSize = this.msgBuf.readUInt32LE(5);
+            if (this.msgBuf.length >= 9 + msgSize + 4){
+                var type = this.msgBuf.readUInt8(3);
+                var id = this.msgBuf.readUInt8(4);
+                var data = this.msgBuf.slice(9, 9 + msgSize);
+                this.msgBuf = this.msgBuf.slice(9 + msgSize + 4);
                 this.processMsg(type, data, id);
             }
         }
     };
-    //processes messages from server
+    //sends a messsage to the server
+    this.writeOutputData = function(type, buffer, id){
+        if (buffer.length > Math.pow(2,32)-1){
+            console.log('Vehicle: Message too large');
+            return;
+        }
+        var header = new Buffer(9); //magic number, type, message ID, size
+        this.magicNumber.copy(header);
+        header.writeUInt8(type, 3);
+        header.writeUInt8(  id, 4);
+        header.writeUInt32LE(buffer.length, 5);
+        this.ostream.write(header);
+        this.ostream.write(buffer);
+        this.ostream.write(new Buffer([0, 0, 0, 0])); // TODO: use a CRC32
+    }
+    //processes messages from the server
     this.processMsg = function(type, data, id){
         switch (type){
             case this.MSG_TYPES.COMMAND: {
