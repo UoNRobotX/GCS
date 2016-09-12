@@ -51,6 +51,7 @@
   },
   "dependencies": {
     "bluebird": "^3.4.0",
+    "controller.js": "github:josephuspaye/Controller.js",
     "deep-assign": "^2.0.0",
     "keen-ui": "^0.8.8",
     "load-google-maps-api": "0.0.2",

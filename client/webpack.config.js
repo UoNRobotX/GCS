@@ -22,6 +22,7 @@ var mainConfig = {
             mission: 'src/components/mission',
             views: 'src/components/views',
             map: 'src/components/map',
+            modules: 'src/modules',
             styles: 'src/styles',
             mixins: 'src/mixins',
             store: 'src/store',

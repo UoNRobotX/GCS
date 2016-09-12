@@ -23,6 +23,7 @@
 
         <gcs-edit-mission-modal :show.sync="showEditMissionModal"></gcs-edit-mission-modal>
     </div>
+
     <socket-io-manager></socket-io-manager>
 </template>
 
@@ -34,11 +35,17 @@ import GcsIndicators from 'components/GcsIndicators.vue';
 import SocketIoManager from 'components/SocketIoManager.vue';
 import GcsEditMissionModal from 'components/mission/GcsEditMissionModal.vue';
 
+import ControllerManager from 'modules/controller-manager.js';
+
 export default {
     data() {
         return {
             showEditMissionModal: false
         };
+    },
+
+    ready() {
+        new ControllerManager(this.controllerEvent);
     },
 
     events: {
@@ -276,6 +283,12 @@ export default {
     },
 
     methods: {
+        controllerEvent(event, data) {
+            console.info(event, data);
+
+            // TODO: do something with the event (e.g. send it to server)
+        },
+
         createSnackbar(message, snackbar) {
             snackbar = snackbar || {
                 message
