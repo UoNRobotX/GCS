@@ -1,6 +1,7 @@
 var geolib = require('geolib');
 var protobuf = require('protobufjs');
 var fs = require('fs');
+var crc32 = require('buffer-crc32');
 
 //constructor for fake WAM-V
 //'inputFile' and 'outputFile' are names of files used to communicate with the server
@@ -88,28 +89,38 @@ module.exports = function(inputFile, outputFile){
     this.msgBuf = new Buffer(0);
     this.processInputData = function(buf){
         this.msgBuf = Buffer.concat([this.msgBuf, buf]);
-        //find magic number prefix
-        var i = 0;
-        while (i+2 < this.msgBuf.length){
-            if (this.msgBuf[i] != this.magicNumber[0] ||
-                this.msgBuf[i+1] != this.magicNumber[1] ||
-                this.msgBuf[i+2] != this.magicNumber[2]){
-                i++;
-            } else {
-                break;
+        while (true){
+            //find magic number prefix
+            var i = 0;
+            while (i+2 < this.msgBuf.length){
+                if (this.msgBuf[i] != this.magicNumber[0] ||
+                    this.msgBuf[i+1] != this.magicNumber[1] ||
+                    this.msgBuf[i+2] != this.magicNumber[2]){
+                    i++;
+                } else {
+                    break;
+                }
             }
-        }
-        this.msgBuf = this.msgBuf.slice(i);
-        //check for a complete packet
-        if (this.msgBuf.length >= 9){
-            var msgSize = this.msgBuf.readUInt32LE(5);
-            if (this.msgBuf.length >= 9 + msgSize + 4){
-                var type = this.msgBuf.readUInt8(3);
-                var id = this.msgBuf.readUInt8(4);
-                var data = this.msgBuf.slice(9, 9 + msgSize);
-                this.msgBuf = this.msgBuf.slice(9 + msgSize + 4);
-                this.processMsg(type, data, id);
+            this.msgBuf = this.msgBuf.slice(i);
+            //check for a complete packet
+            if (this.msgBuf.length >= 9){
+                var msgSize = this.msgBuf.readUInt32LE(5);
+                if (this.msgBuf.length >= 9 + msgSize + 4){
+                    var type = this.msgBuf.readUInt8(3);
+                    var id = this.msgBuf.readUInt8(4);
+                    var data = this.msgBuf.slice(9, 9 + msgSize);
+                    var crc = this.msgBuf.slice(9 + msgSize, 9 + msgSize + 4);
+                    //remove packet
+                    this.msgBuf = this.msgBuf.slice(9 + msgSize + 4);
+                    //check CRC32
+                    if (crc32(data).compare(crc) != 0){
+                        continue;
+                    }
+                    //process packet
+                    this.processMsg(type, data, id);
+                }
             }
+            break;
         }
     };
     //sends a messsage to the server
@@ -125,7 +136,7 @@ module.exports = function(inputFile, outputFile){
         header.writeUInt32LE(buffer.length, 5);
         this.ostream.write(header);
         this.ostream.write(buffer);
-        this.ostream.write(new Buffer([0, 0, 0, 0])); // TODO: use a CRC32
+        this.ostream.write(crc32(buffer));
     }
     //processes messages from the server
     this.processMsg = function(type, data, id){

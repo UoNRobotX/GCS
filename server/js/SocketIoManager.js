@@ -3,6 +3,7 @@ var fs = require('fs');
 var path = require('path');
 var protobuf = require('protobufjs');
 var Vehicle = require('./vehicle.js');
+var crc32 = require('buffer-crc32');
 
 //these files are used for vehicle-server communication
     // TODO: when the files are FIFOs, 'npm start' works once, but later attempts exit prematurely
@@ -144,7 +145,7 @@ module.exports = function(server){
             header.writeUInt32LE(this.pending.data.length, 5);
             this.ostream.write(header);
             this.ostream.write(this.pending.data);
-            this.ostream.write(new Buffer([0, 0, 0, 0])); // TODO: use a CRC32
+            this.ostream.write(crc32(this.pending.data));
             this.pending.timer = setTimeout(function(){
                 this.pending.socket.emit(
                     'Failure',
@@ -185,28 +186,38 @@ module.exports = function(server){
     this.msgBuf = new Buffer(0);
     this.processInputData = function(buf){
         this.msgBuf = Buffer.concat([this.msgBuf, buf]);
-        //find magic number prefix
-        var i = 0;
-        while (i+2 < this.msgBuf.length){
-            if (this.msgBuf[i] != this.magicNumber[0] ||
-                this.msgBuf[i+1] != this.magicNumber[1] ||
-                this.msgBuf[i+2] != this.magicNumber[2]){
-                i++;
-            } else {
-                break;
+        while (true){
+            //find magic number prefix
+            var i = 0;
+            while (i+2 < this.msgBuf.length){
+                if (this.msgBuf[i] != this.magicNumber[0] ||
+                    this.msgBuf[i+1] != this.magicNumber[1] ||
+                    this.msgBuf[i+2] != this.magicNumber[2]){
+                    i++;
+                } else {
+                    break;
+                }
             }
-        }
-        this.msgBuf = this.msgBuf.slice(i);
-        //check for a complete packet
-        if (this.msgBuf.length >= 9){
-            var msgSize = this.msgBuf.readUInt32LE(5);
-            if (this.msgBuf.length >= 9 + msgSize + 4){
-                var type = this.msgBuf.readUInt8(3);
-                var id = this.msgBuf.readUInt8(4);
-                var data = this.msgBuf.slice(9, 9 + msgSize);
-                this.msgBuf = this.msgBuf.slice(9 + msgSize + 4);
-                this.processMsg(type, data, id);
+            this.msgBuf = this.msgBuf.slice(i);
+            //check for a complete packet
+            if (this.msgBuf.length >= 9){
+                var msgSize = this.msgBuf.readUInt32LE(5);
+                if (this.msgBuf.length >= 9 + msgSize + 4){
+                    var type = this.msgBuf.readUInt8(3);
+                    var id = this.msgBuf.readUInt8(4);
+                    var data = this.msgBuf.slice(9, 9 + msgSize);
+                    var crc = this.msgBuf.slice(9 + msgSize, 9 + msgSize + 4);
+                    //remove packet
+                    this.msgBuf = this.msgBuf.slice(9 + msgSize + 4);
+                    //check CRC32
+                    if (crc32(data).compare(crc) != 0){
+                        continue;
+                    }
+                    //process packet
+                    this.processMsg(type, data, id);
+                }
             }
+            break;
         }
     }
     //processes messages from vehicle
