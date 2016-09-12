@@ -56,11 +56,6 @@ module.exports = function(inputFile, outputFile){
     }
     this.protoPkg = this.protoBuilder.build();
     //open output file
-    var outputFd = fs.openSync(outputFile, 'a'); //create the file if non-existent
-    if (!fs.statSync(outputFile).isFIFO()){ //if the output file is not a FIFO, truncate it
-        fs.truncateSync(outputFd, 0);
-    }
-    fs.closeSync(outputFd);
     this.ostream = fs.createWriteStream(outputFile, {flags: 'a'});
     this.ostream.on('error', function(){throw new Error('Vehicle: Error with writing output file');});
     //used to send messsages to server

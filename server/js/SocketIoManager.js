@@ -79,14 +79,32 @@ module.exports = function(server){
     }.bind(this);
     process.on('exit', this.saveMissions);
     process.on('SIGINT', this.saveMissions);
+    //create input and output files if non-existent
+    var openAndTruncateInputFile = true;
+    try {
+        var inputStats = fs.statSync(inputFile);
+        if (inputStats.isFIFO()){
+            openAndTruncateInputFile = false;
+        }
+    } catch (e){}
+    if (openAndTruncateInputFile){
+        var inputFd = fs.openSync(inputFile, 'w');
+        fs.closeSync(inputFd);
+    }
+    var openAndTruncateOutputFile = true;
+    try {
+        var outputStats = fs.statSync(outputFile);
+        if (outputStats.isFIFO()){
+            openAndTruncateOutputFile = false;
+        }
+    } catch (e){}
+    if (openAndTruncateOutputFile){
+        var outputFd = fs.openSync(outputFile, 'w');
+        fs.closeSync(outputFd);
+    }
     //create fake vehicle
     this.vehicle = new Vehicle(outputFile, inputFile);
     //open output file
-    var outputFd = fs.openSync(outputFile, 'a'); //create the file if non-existent
-    if (!fs.statSync(outputFile).isFIFO()){ //if the output file is not a FIFO, truncate it
-        fs.truncateSync(outputFd, 0);
-    }
-    fs.closeSync(outputFd);
     this.ostream = fs.createWriteStream(outputFile, {flags: 'a'});
     this.ostream.on('error', function(){throw new Error('Error with writing output file');});
     //used to send messsages to vehicle
