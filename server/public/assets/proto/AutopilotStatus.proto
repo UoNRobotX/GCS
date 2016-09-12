@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+message AutopilotStatus {
+    bool armed = 1;
+    enum Mode {
+        MANUAL = 0;
+        AUTO = 1;
+    }
+}

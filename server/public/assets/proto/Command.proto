@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+message Command {
+    enum Value {
+        SEND_PARAMETERS = 0;
+        SEND_MISSION = 1;
+        ARM = 2;
+        START_MISSION = 3;
+        KILL = 4;
+    }
+    Value type = 1;
+}
