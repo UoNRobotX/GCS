@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+message VehicleState {
+    message Vec3f {
+        float x = 1;
+        float y = 2;
+        float z = 3;
+    }
+    message Vec4f {
+        float x = 1;
+        float y = 2;
+        float z = 3;
+        float t = 4;
+    }
+    Vec3f rBNn = 1;
+    Vec4f thetanb = 2;
+    Vec3f vBNb = 3;
+    Vec3f omeganb = 4;
+
+    Vec3f PrBNn = 5;
+    Vec4f Pthetanb = 6;
+    Vec3f PvBNb = 7;
+    Vec3f Pomeganb = 8;
+}

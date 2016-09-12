@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+message GPS {
+    sint32 latitude = 1;
+    sint32 longitude = 2;
+    sint32 altitude = 3;
+}
