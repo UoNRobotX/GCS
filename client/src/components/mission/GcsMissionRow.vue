@@ -95,6 +95,7 @@ export default {
         p {
             margin: 0;
             padding: 0;
+            line-height: 1.3;
             @extends $truncate-text;
         }
     }
