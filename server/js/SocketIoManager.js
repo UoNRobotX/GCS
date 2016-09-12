@@ -156,7 +156,7 @@ module.exports = function(server){
     //open input file
     if (fs.statSync(inputFile).isFIFO()){
         var istream = fs.createReadStream(inputFile);
-        istream.on('data', function(){return this.processInputData}.bind(this));
+        istream.on('data', function(chunk){this.processInputData(chunk)}.bind(this));
         istream.on('error', function(){throw new Error('Error with reading input file');});
     } else {
         fs.open(inputFile, 'r', function (err, fd){
