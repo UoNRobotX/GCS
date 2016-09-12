@@ -1,11 +1,32 @@
 var geolib = require('geolib');
 var protobuf = require('protobufjs');
+var fs = require('fs');
 
 //constructor for fake WAM-V
-module.exports = function(){
+//'inputFile' and 'outputFile' are names of files used to communicate with the server
+module.exports = function(inputFile, outputFile){
     this.prevTime = Date.now(); //time of last update, in milliseconds since epoch
+    this.MSG_TYPES = {
+        STATUS:                   0,
+        COMMAND:                  1,
+        GET_PARAMETERS:           2,
+        GET_PARAMETERS_RESPONSE:  3,
+        GET_SETTINGS:             4,
+        GET_SETTINGS_RESPONSE:    5,
+        GET_MISSION:              6,
+        GET_MISSION_RESPONSE:     7,
+        GET_MISSIONS:             8,
+        GET_MISSIONS_RESPONSE:    9,
+        SET_PARAMETERS:          10,
+        SET_SETTINGS:            11,
+        SET_MISSION:             12,
+        SET_MISSIONS:            13,
+        SUCCESS:                 14,
+        FAILURE:                 15,
+        ATTENTION:               16
+    };
     this.MODES = {STOPPED: 0, AUTO: 1, PAUSED: 2, KILLED: 3};
-    this.TYPES = {DOUBLE: 0, VEC3: 1, MAT3: 2};
+    this.PARAM_TYPES = {DOUBLE: 0, VEC3: 1, MAT3: 2};
     this.BATTERY_LIFETIME = 10; //battery lifetime in hours
     this.SPEED = 30; //max speed (unrealistically, the fake WAM-V will always be at this speed or 0)
     this.position = {lat: 21.308731, lng: -157.888815};
@@ -19,14 +40,14 @@ module.exports = function(){
         //{title: t1, waypoints: [{title: t2, type: t3, position: {lat: lat1, lng: lng1}}, ...]}
     this.missionIndex = 0; //if completing a mission, the index of the next waypoint
     this.parameters = [
-        ['State Estimator', 'IMU',          'mag_scale',   this.TYPES.DOUBLE, '0'                ],
-        ['State Estimator', 'IMU',          'mag_vector',  this.TYPES.VEC3,   '0,0,0'            ],
-        ['State Estimator', 'IMU',          'Rib',         this.TYPES.MAT3,   '0,0,0,0,0,0,0,0,0'],
-        ['State Estimator', 'IMU',          'rIBb',        this.TYPES.VEC3,   '0,0,0'            ],
-        ['State Estimator', 'IMU',          'gbBNi',       this.TYPES.VEC3,   '0,0,0'            ],
-        ['Section 1',       'Subsection 1', 'Parameter 1', this.TYPES.DOUBLE, '-1.2'             ],
-        ['Section 1',       'Subsection 1', 'Parameter 2', this.TYPES.VEC3,   '3,-0.2,100'       ],
-        ['Section 1',       'Subsection 2', 'Parameter 3', this.TYPES.MAT3,   '1,2,3,4,5,6,7,8,9']
+        ['State Estimator', 'IMU',          'mag_scale',   this.PARAM_TYPES.DOUBLE, '0'                ],
+        ['State Estimator', 'IMU',          'mag_vector',  this.PARAM_TYPES.VEC3,   '0,0,0'            ],
+        ['State Estimator', 'IMU',          'Rib',         this.PARAM_TYPES.MAT3,   '0,0,0,0,0,0,0,0,0'],
+        ['State Estimator', 'IMU',          'rIBb',        this.PARAM_TYPES.VEC3,   '0,0,0'            ],
+        ['State Estimator', 'IMU',          'gbBNi',       this.PARAM_TYPES.VEC3,   '0,0,0'            ],
+        ['Section 1',       'Subsection 1', 'Parameter 1', this.PARAM_TYPES.DOUBLE, '-1.2'             ],
+        ['Section 1',       'Subsection 1', 'Parameter 2', this.PARAM_TYPES.VEC3,   '3,-0.2,100'       ],
+        ['Section 1',       'Subsection 2', 'Parameter 3', this.PARAM_TYPES.MAT3,   '1,2,3,4,5,6,7,8,9']
     ];
     //load .proto messages
     this.protoBuilder = protobuf.loadProtoFile('./public/assets/proto/Test.proto');
@@ -34,9 +55,202 @@ module.exports = function(){
         throw new Error ('Unable to load proto messages');
     }
     this.protoPkg = this.protoBuilder.build();
-    //update fake WAM-V, returning null or an Attention message
-    this.update = function(){
-        var msg = ''; //used for return value
+    //open output file
+    var outputFd = fs.openSync(outputFile, 'a'); //create the file if non-existent
+    if (!fs.statSync(outputFile).isFIFO()){ //if the output file is not a FIFO, truncate it
+        fs.truncateSync(outputFd, 0);
+    }
+    fs.closeSync(outputFd);
+    this.ostream = fs.createWriteStream(outputFile, {flags: 'a'});
+    this.ostream.on('error', function(){throw new Error('Vehicle: Error with writing output file');});
+    //used to send messsages to server
+    this.writeOutputData = function(type, buffer, id){
+        if (buffer.length > Math.pow(2,32)-1){
+            console.log('Vehicle: Message too large');
+            return;
+        }
+        var header = new Buffer(6);
+        header.writeUInt8(type, 0);
+        header.writeUInt8(id, 1);
+        header.writeUInt32LE(buffer.length, 2);
+        this.ostream.write(header);
+        this.ostream.write(buffer);
+    }
+    //open input file
+    if (fs.statSync(inputFile).isFIFO()){
+        var istream = fs.createReadStream(inputFile);
+        istream.on('data', function(){return this.processInputData}.bind(this));
+        istream.on('error', function(){throw new Error('Vehicle: Error with reading input file');});
+    } else {
+        fs.open(inputFile, 'r', function (err, fd){
+            if (err){throw new Error('Vehicle: Error with opening input file');}
+            var bytesRead = 0;
+            var bufSize = 64;
+            var buffer = new Buffer(bufSize);
+            var readBytes = function(){
+                if (fs.statSync(inputFile).size > bytesRead){
+                    fs.read(fd, buffer, 0, bufSize, bytesRead, function (err, n, buffer){
+                        if (err){throw new Error('Vehicle: Error with reading input file');}
+                        this.processInputData(buffer.slice(0,n));
+                        bytesRead += n;
+                        readBytes();
+                    }.bind(this));
+                } else {
+                    setTimeout(readBytes, 100);
+                }
+            }.bind(this);
+            readBytes();
+        }.bind(this));
+    }
+    this.msgBuf = new Buffer(0);
+    this.processInputData = function(buf){
+        this.msgBuf = Buffer.concat([this.msgBuf, buf]);
+        if (this.msgBuf.length >= 6){
+            var msgSize = this.msgBuf.readUInt32LE(2);
+            if (this.msgBuf.length >= 6 + msgSize){
+                var type = this.msgBuf.readUInt8(0);
+                var id = this.msgBuf.readUInt8(1);
+                var data = this.msgBuf.slice(6, 6 + msgSize);
+                this.msgBuf = this.msgBuf.slice(6 + msgSize);
+                this.processMsg(type, data, id);
+            }
+        }
+    };
+    //processes messages from server
+    this.processMsg = function(type, data, id){
+        switch (type){
+            case this.MSG_TYPES.COMMAND: {
+                var msg = this.decodeMsg('Command', data);
+                if (msg === null){return;}
+                switch (msg.type){
+                    case this.protoPkg.Command.Type.ARM: {
+                        this.arm(true, id);
+                        break;
+                    }
+                    case this.protoPkg.Command.Type.DISARM: {
+                        this.arm(false, id);
+                        break;
+                    }
+                    case this.protoPkg.Command.Type.START: {
+                        this.start(true, id);
+                        break;
+                    }
+                    case this.protoPkg.Command.Type.STOP: {
+                        this.stop(id);
+                        break;
+                    }
+                    case this.protoPkg.Command.Type.RESUME: {
+                        this.start(false, id);
+                        break;
+                    }
+                    case this.protoPkg.Command.Type.KILL: {
+                        this.kill(true, id);
+                        break;
+                    }
+                    case this.protoPkg.Command.Type.UNKILL: {
+                        this.kill(false, id);
+                        break;
+                    }
+                }
+                break;
+            }
+            case this.MSG_TYPES.GET_PARAMETERS: {
+                var msg = new this.protoPkg.GetParametersResponse();
+                for (var i = 0; i < this.parameters.length; i++){
+                    var param = this.parameters[i];
+                    msg.add('parameters', new this.protoPkg.Parameter(
+                        param[0], param[1], param[2], param[3], param[4]
+                    ));
+                }
+                this.writeOutputData(this.MSG_TYPES.GET_PARAMETERS_RESPONSE, msg.toBuffer(), id);
+                break;
+            }
+            case this.MSG_TYPES.GET_MISSION: {
+                if (this.mission === null){
+                    this.sendFailureMsg('No uploaded mission', id);
+                    return;
+                }
+                var msg = new this.protoPkg.GetMissionResponse(new this.protoPkg.Mission());
+                msg.mission.title = this.mission.title;
+                for (var i = 0; i < this.mission.waypoints.length; i++){
+                    var wp = this.mission.waypoints[i];
+                    msg.mission.add('waypoints', new this.protoPkg.Mission.Waypoint(
+                        wp.title, wp.type, wp.position.lat, wp.position.lng
+                    ));
+                }
+                this.writeOutputData(this.MSG_TYPES.GET_MISSION_RESPONSE, msg.toBuffer(), id);
+                break;
+            }
+            case this.MSG_TYPES.SET_PARAMETERS: {
+                var newParams = this.decodeMsg('SetParameters', data);
+                if (newParams === null){return;}
+                //verify new parameters
+                var paramsToSet = [];
+                var i, j;
+                ParamSearch:
+                for (i = 0; i < newParams.parameters.length; i++){
+                    var newParam = newParams.parameters[i];
+                    for (j = 0; j < this.parameters.length; j++){
+                        var param = this.parameters[j];
+                        if (newParam.section === param[0] &&
+                            newParam.subSection === param[1] &&
+                            newParam.title === param[2]){
+                            // TODO: perform type and value checking
+                            paramsToSet.push(j);
+                            continue ParamSearch;
+                        }
+                    }
+                    this.sendFailureMsg('A parameter was not found', id);
+                    return;
+                }
+                //set parameters
+                for (i = 0; i < newParams.parameters.length; i++){
+                    this.parameters[paramsToSet[i]] = [
+                        newParams.parameters[i].section,
+                        newParams.parameters[i].subSection,
+                        newParams.parameters[i].title,
+                        newParams.parameters[i].type,
+                        newParams.parameters[i].value
+                    ];
+                }
+                this.sendSuccessMsg(id);
+                break;
+            }
+            case this.MSG_TYPES.SET_MISSION: {
+                var newMission = this.decodeMsg('SetMission', data).mission;
+                if (newMission === null){return;}
+                //set mission
+                if (newMission.waypoints.length == 0){
+                    this.sendFailureMsg('Mission has no waypoints', id);
+                } else if (this.mode == this.MODES.AUTO){
+                    this.sendFailureMsg('Currently doing a mission', id);
+                } else {
+                    if (this.mode == this.MODES.PAUSED){
+                        this.mode = this.MODES.STOPPED;
+                    }
+                    this.mission = {
+                        title: newMission.title,
+                        waypoints: newMission.waypoints.map(function(wp){
+                            return {
+                                title: wp.title,
+                                type: wp.type,
+                                position: {lat: wp.latitude, lng: wp.longitude}
+                            }
+                        })
+                    };
+                    this.missionIndex = 0;
+                    this.sendSuccessMsg(id);
+                }
+                break;
+            }
+            default: {
+                this.sendFailureMsg('Vehicle: unexpected message type', id);
+            }
+        }
+    };
+    //periodically update
+    setInterval(function(){
+        var msg = ''; //used to construct an 'Attention' message
         var time = Date.now();
         var dt = (time - this.prevTime) / 1000; //time since last update, in seconds
         this.prevTime = time;
@@ -84,11 +298,16 @@ module.exports = function(){
         } else {
             this.battery -= maxBatDec;
         }
-        //return a message or null
-        return msg === '' ? null : (new this.protoPkg.Attention(msg)).toBuffer();
-    };
-    //returns a Status message
-    this.getStatusData = function(){
+        if (msg.length > 0){
+            this.writeOutputData(
+                this.MSG_TYPES.ATTENTION,
+                (new this.protoPkg.Attention(msg)).toBuffer(),
+                0
+            );
+        }
+    }.bind(this), 100);
+    //periodically send Status messages
+    setInterval(function(){
         var msg = new this.protoPkg.Status(
             this.position.lat,
             this.position.lng,
@@ -99,164 +318,79 @@ module.exports = function(){
             this.mode,
             this.signal
         );
-        return msg.toBuffer();
-    };
-    //return a GetParametersResponse or Failure message
-    this.getParameters = function(){
-        var msg = new this.protoPkg.GetParametersResponse();
-        for (var i = 0; i < this.parameters.length; i++){
-            var param = this.parameters[i];
-            msg.add('parameters', new this.protoPkg.Parameter(
-                param[0], param[1], param[2], param[3], param[4]
-            ));
-        }
-        return ['GetParametersResponse', msg.toBuffer()];
-    };
-    //returns a GetMissionResponse or Failure message
-    this.getMission = function(){
-        if (this.mission === null){
-            return ['Failure', (new this.protoPkg.Failure('No uploaded mission')).toBuffer()];
-        }
-        var msg = new this.protoPkg.GetMissionResponse(new this.protoPkg.Mission());
-        msg.mission.title = this.mission.title;
-        for (var i = 0; i < this.mission.waypoints.length; i++){
-            var wp = this.mission.waypoints[i];
-            msg.mission.add('waypoints', new this.protoPkg.Mission.Waypoint(
-                wp.title, wp.type, wp.position.lat, wp.position.lng
-            ));
-        }
-        return ['GetMissionResponse', msg.toBuffer()];
-    };
-    //set parameters, returning a Success or Failure message
-    this.setParameters = function(setParametersBuf){
-        //decode message
-        var newParams;
-        try {
-            newParams = this.protoPkg.SetParameters.decode(setParametersBuf);
-        } catch (e){
-            console.log('Unable to decode SetParameters message');
-            return ['Failure', (new this.protoPkg.Failure('Invalid message')).toBuffer()];
-        }
-        //verify new parameters
-        var paramsToSet = [];
-        var i, j;
-        ParamSearch:
-        for (i = 0; i < newParams.parameters.length; i++){
-            var newParam = newParams.parameters[i];
-            for (j = 0; j < this.parameters.length; j++){
-                var param = this.parameters[j];
-                if (newParam.section === param[0] &&
-                    newParam.subSection === param[1] &&
-                    newParam.title === param[2]){
-                    // TODO: perform type and value checking
-                    paramsToSet.push(j);
-                    continue ParamSearch;
-                }
-            }
-            return ['Failure', (new this.protoPkg.Failure('A parameter was not found')).toBuffer()];
-        }
-        //set parameters
-        for (i = 0; i < newParams.parameters.length; i++){
-            this.parameters[paramsToSet[i]] = [
-                newParams.parameters[i].section,
-                newParams.parameters[i].subSection,
-                newParams.parameters[i].title,
-                newParams.parameters[i].type,
-                newParams.parameters[i].value
-            ];
-        }
-        return ['Success', null];
-    };
-    //set mission, returning a Success or Failure message
-    this.setMission = function(setMissionBuf){
-        //decode message
-        var newMission;
-        try {
-            newMission = (this.protoPkg.SetMission.decode(setMissionBuf)).mission;
-        } catch (e){
-            console.log('Unable to decode SetMission message');
-            return ['Failure', (new this.protoPkg.Failure('Invalid message')).toBuffer()];
-        }
-        //set mission
-        if (newMission.waypoints.length == 0){
-            return ['Failure', (new this.protoPkg.Failure('Mission has no waypoints')).toBuffer()];
-        }
-        if (this.mode == this.MODES.AUTO){
-            return ['Failure', (new this.protoPkg.Failure('Currently doing a mission')).toBuffer()];
-        }
-        if (this.mode == this.MODES.PAUSED){
-            this.mode = this.MODES.STOPPED;
-        }
-        this.mission = {
-            title: newMission.title,
-            waypoints: newMission.waypoints.map(function(wp){
-                return {
-                    title: wp.title,
-                    type: wp.type,
-                    position: {lat: wp.latitude, lng: wp.longitude}
-                }
-            })
-        };
-        this.missionIndex = 0;
-        return ['Success', null];
-    };
+        this.writeOutputData(this.MSG_TYPES.STATUS, msg.toBuffer(), 0);
+    }.bind(this), 100);
     //arm or disarm, returning a Success or Failure message
-    this.arm = function(arm){
+    this.arm = function(arm, id){
         if (arm == this.armed){
-            return [
-                'Failure',
-                (new this.protoPkg.Failure(arm ? 'Already armed' : 'Already disarmed')).toBuffer()
-            ];
+            this.sendFailureMsg(arm ? 'Already armed' : 'Already disarmed', id);
+        } else if (this.mode == this.MODES.AUTO){
+            this.sendFailureMsg('Currently doing a mission', id);
+        } else {
+            this.armed = arm;
+            this.sendSuccessMsg(id);
         }
-        if (this.mode == this.MODES.AUTO){
-            return ['Failure', (new this.protoPkg.Failure('Currently doing a mission')).toBuffer()];
-        }
-        this.armed = arm;
-        return ['Success', null];
     };
     //start or resume, returning a Success or Failure message
-    this.start = function(fromBeginning){
+    this.start = function(fromBeginning, id){
         if (this.mode == this.MODES.AUTO){
-            return ['Failure', (new this.protoPkg.Failure('Currently doing a mission')).toBuffer()];
+            this.sendFailureMsg('Currently doing a mission', id);
+        } else if (this.mode == this.MODES.KILLED){
+            this.sendFailureMsg('Kill switch is active', id);
+        } else if (this.battery == 0){
+            this.sendFailureMsg('Battery is at 0%', id);
+        } else if (!this.armed){
+            this.sendFailureMsg('Not armed', id);
+        } else if (this.mission == null){
+            this.sendFailureMsg('No uploaded mission', id);
+        } else {
+            if (this.mode == this.MODES.PAUSED && fromBeginning){
+                this.missionIndex = 0;
+            }
+            this.mode = this.MODES.AUTO;
+            this.speed = this.SPEED;
+            this.sendSuccessMsg(id);
         }
-        if (this.mode == this.MODES.KILLED){
-            return ['Failure', (new this.protoPkg.Failure('Kill switch is active')).toBuffer()];
-        }
-        if (this.battery == 0){
-            return ['Failure', (new this.protoPkg.Failure('Battery is at 0%')).toBuffer()];
-        }
-        if (!this.armed){
-            return ['Failure', (new this.protoPkg.Failure('Not armed')).toBuffer()];
-        }
-        if (this.mission == null){
-            return ['Failure', (new this.protoPkg.Failure('No uploaded mission')).toBuffer()];
-        }
-        if (this.mode == this.MODES.PAUSED && fromBeginning){
-            this.missionIndex = 0;
-        }
-        this.mode = this.MODES.AUTO;
-        this.speed = this.SPEED;
-        return ['Success', null];
     };
     //stop, returning a Success or Failure message
-    this.stop = function(){
+    this.stop = function(id){
         if (this.mode != this.MODES.AUTO){
-            return ['Failure', (new this.protoPkg.Failure('Not doing a mission')).toBuffer()];
+            this.sendFailureMsg('Not doing a mission', id);
+        } else {
+            this.mode = this.MODES.PAUSED;
+            this.speed = 0;
+            this.sendSuccessMsg(id);
         }
-        this.mode = this.MODES.PAUSED;
-        this.speed = 0;
-        return ['Success', null];
     };
     //activate or deactivate kill switch, returning a Success or Failure message
-    this.kill = function(kill){
+    this.kill = function(kill, id){
         if (kill === (this.mode == this.MODES.KILLED)){
-            return ['Failure', (new this.protoPkg.Failure(
-                'Kill switch already ' + (kill?'':'in') + 'active'
-            )).toBuffer()];
+            this.sendFailureMsg('Kill switch already ' + (kill ? '' : 'in') + 'active', id);
+        } else {
+            this.mode = kill ? this.MODES.KILLED : this.mode.STOPPED;
+            this.speed = 0;
+            this.missionIndex = 0;
+            this.sendSuccessMsg(id);
         }
-        this.mode = kill ? this.MODES.KILLED : this.mode.STOPPED;
-        this.speed = 0;
-        this.missionIndex = 0;
-        return ['Success', null];
     };
+    //helper functions
+    this.decodeMsg = function(msgType, data){
+        try {
+            return this.protoPkg[msgType].decode(data);
+        } catch (e){
+            console.log('Vehicle: Unable to decode ' + msgType + ' message');
+            this.sendFailureMsg('Invalid message');
+            return null;
+        }
+    }
+    this.sendFailureMsg = function(msg, id){
+        this.writeOutputData(
+            this.MSG_TYPES.FAILURE,
+            (new this.protoPkg.Failure(msg)).toBuffer(),
+            id
+        );
+    }
+    this.sendSuccessMsg = function(id){
+        this.writeOutputData(this.MSG_TYPES.SUCCESS, new Buffer(0), id);
+    }
 };

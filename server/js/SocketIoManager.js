@@ -1,25 +1,41 @@
 var socket_io = require('socket.io');
 var fs = require('fs');
+var path = require('path');
 var protobuf = require('protobufjs');
 var Vehicle = require('./vehicle.js');
 
+//these files are used for vehicle-server communication
+var inputFile  = path.join(__dirname, '../temp/toServer');
+var outputFile = path.join(__dirname, '../temp/toVehicle');
+    //for some reason, if the files are FIFOs, 'npm start' works once, but later attempts exit prematurely
+
 module.exports = function(server){
-    //create fake vehicle
-    this.vehicle = new Vehicle();
-    //periodically update fake vehicle
-    this.attentionMsg = null;
-    updateTimer = setInterval(function(){
-        var msg = this.vehicle.update();
-        if (msg !== null){
-            this.attentionMsg = msg;
-        }
-    }.bind(this), 50);
-    //load .proto messages
-    this.protoBuilder = protobuf.loadProtoFile('./public/assets/proto/Test.proto');
-    if (this.protoBuilder === null){
-        throw new Error ('Unable to load proto messages');
-    }
-    this.protoPkg = this.protoBuilder.build();
+    this.msgId = 0; //used to assign IDs to messages sent to vehicle
+    this.MAX_MSG_ID = 255;
+    this.pending = null; //contains info about the last message sent to the vehicle
+        //{msgType, data, msgId, clientMsgId, socket, timer}
+    this.queued = []; //contains info about messages to be sent to the vehicle
+        //[{msgType, data, msgId, clientMsgId, socket}, ...]
+    this.TIMEOUT = 1000;
+    this.MSG_TYPES = {
+        STATUS:                   0,
+        COMMAND:                  1,
+        GET_PARAMETERS:           2,
+        GET_PARAMETERS_RESPONSE:  3,
+        GET_SETTINGS:             4,
+        GET_SETTINGS_RESPONSE:    5,
+        GET_MISSION:              6,
+        GET_MISSION_RESPONSE:     7,
+        GET_MISSIONS:             8,
+        GET_MISSIONS_RESPONSE:    9,
+        SET_PARAMETERS:          10,
+        SET_SETTINGS:            11,
+        SET_MISSION:             12,
+        SET_MISSIONS:            13,
+        SUCCESS:                 14,
+        FAILURE:                 15,
+        ATTENTION:               16
+    };
     //settings
     this.settings = [
         ['Map',       'key',       'AIzaSyABnCcekyPecGnsA1Rj_NdWjmUafJ1yVqA'],
@@ -28,6 +44,15 @@ module.exports = function(server){
         ['Map',       'zoom',      '19'                                     ],
         ['Section 1', 'Setting 1', 'value 1'                                ]
     ];
+    //contains one socket for each client
+    this.sockets = {}; //{id1: socket1, ...}
+    this.socketId = 0;
+    //load .proto messages
+    this.protoBuilder = protobuf.loadProtoFile('./public/assets/proto/Test.proto');
+    if (this.protoBuilder === null){
+        throw new Error ('Unable to load proto messages');
+    }
+    this.protoPkg = this.protoBuilder.build();
     //missions list
     this.missions = new this.protoPkg.SetMissions(); //mission list stored on server
     this.missionsFile = './data/missions';
@@ -54,37 +79,175 @@ module.exports = function(server){
     }.bind(this);
     process.on('exit', this.saveMissions);
     process.on('SIGINT', this.saveMissions);
-    //handle messages
+    //create fake vehicle
+    this.vehicle = new Vehicle(outputFile, inputFile);
+    //open output file
+    var outputFd = fs.openSync(outputFile, 'a'); //create the file if non-existent
+    if (!fs.statSync(outputFile).isFIFO()){ //if the output file is not a FIFO, truncate it
+        fs.truncateSync(outputFd, 0);
+    }
+    fs.closeSync(outputFd);
+    this.ostream = fs.createWriteStream(outputFile, {flags: 'a'});
+    this.ostream.on('error', function(){throw new Error('Error with writing output file');});
+    //used to send messsages to vehicle
+    this.writeOutputData = function(type, buffer, clientMsgId, socket){
+        if (typeof type !== 'undefined'){
+            //check data size
+            if (buffer.length > Math.pow(2,32)-1){
+                socket.emit(
+                    'Failure',
+                    (new this.protoPkg.Failure('Message too large')).toBuffer(),
+                    clientMsgId
+                );
+                return;
+            }
+            //create message ID
+            var msgId = this.msgId;
+            this.msgId++;
+            if (this.msgId >= this.MAX_MSG_ID){this.msgId = 0;}
+            //create message
+            this.queued.push({
+                msgType: type,
+                data: buffer,
+                msgId: msgId,
+                clientMsgId: clientMsgId,
+                socket: socket
+            });
+        }
+        //if not waiting for a vehicle response, send the next message if any
+        if (this.pending === null && this.queued.length > 0){
+            this.pending = this.queued.shift();
+            //send message
+            var header = new Buffer(6);
+            header.writeUInt8(this.pending.msgType, 0);
+            header.writeUInt8(this.pending.msgId, 1);
+            header.writeUInt32LE(this.pending.data.length, 2);
+            this.ostream.write(header);
+            this.ostream.write(this.pending.data);
+            this.pending.timer = setTimeout(function(){
+                this.pending.socket.emit(
+                    'Failure',
+                    (new this.protoPkg.Failure('Vehicle response timeout reached')).toBuffer(),
+                    this.pending.clientMsgId
+                );
+                this.pending = null;
+                this.writeOutputData();
+            }.bind(this), this.TIMEOUT);
+        }
+    }
+    //open input file
+    if (fs.statSync(inputFile).isFIFO()){
+        var istream = fs.createReadStream(inputFile);
+        istream.on('data', function(){return this.processInputData}.bind(this));
+        istream.on('error', function(){throw new Error('Error with reading input file');});
+    } else {
+        fs.open(inputFile, 'r', function (err, fd){
+            if (err){throw new Error('Error with opening input file');}
+            var bytesRead = 0;
+            var bufSize = 64;
+            var buffer = new Buffer(bufSize);
+            var readBytes = function(){
+                if (fs.statSync(inputFile).size > bytesRead){
+                    fs.read(fd, buffer, 0, bufSize, bytesRead, function (err, n, buffer){
+                        if (err){throw new Error('Vehicle: Error with reading input file');}
+                        this.processInputData(buffer.slice(0,n));
+                        bytesRead += n;
+                        readBytes();
+                    }.bind(this));
+                } else {
+                    setTimeout(readBytes, 100);
+                }
+            }.bind(this);
+            readBytes();
+        }.bind(this));
+    }
+    this.msgBuf = new Buffer(0);
+    this.processInputData = function(buf){
+        this.msgBuf = Buffer.concat([this.msgBuf, buf]);
+        if (this.msgBuf.length >= 6){
+            var msgSize = this.msgBuf.readUInt32LE(2);
+            if (this.msgBuf.length >= 6 + msgSize){
+                var type = this.msgBuf.readUInt8(0);
+                var msgId = this.msgBuf.readUInt8(1);
+                var data = this.msgBuf.slice(6, 6 + msgSize);
+                this.msgBuf = this.msgBuf.slice(6 + msgSize);
+                this.processMsg(type, data, msgId);
+            }
+        }
+    }
+    //processes messages from vehicle
+    this.processMsg = function(type, data, msgId){
+        if (type == this.MSG_TYPES.STATUS){
+            var msg = this.decodeVehicleMsg('Status', data);
+            if (msg === null){return;}
+            for (var socketId in this.sockets){
+                this.sockets[socketId].volatile.emit('Status', data);
+                    //'volatile' allows the message to be dropped
+            }
+        } else if (type == this.MSG_TYPES.ATTENTION){
+            var msg = this.decodeVehicleMsg('Attention', data);
+            if (msg === null){return;}
+            for (var socketId in this.sockets){
+                this.sockets[socketId].emit('Attention', data);
+            }
+        } else {
+            //check if expecting a response
+            if (this.pending === null){
+                console.log('Unexpected message from vehicle');
+                return;
+            }
+            //check message ID
+            if (this.pending.msgId != msgId){
+                console.log('Unexpected message ID from vehicle');
+                return;
+            }
+            //handle message
+            if (type == this.MSG_TYPES.GET_PARAMETERS_RESPONSE){
+                var msg = this.decodeVehicleMsg('GetParametersResponse', data);
+                if (msg === null){return;}
+                this.pending.socket.emit('GetParametersResponse', data, this.pending.clientMsgId);
+            } else if (type == this.MSG_TYPES.GET_MISSION_RESPONSE){
+                var msg = this.decodeVehicleMsg('GetMissionResponse', data);
+                if (msg === null){return;}
+                this.pending.socket.emit('GetMissionResponse', data, this.pending.clientMsgId);
+            } else if (type == this.MSG_TYPES.SUCCESS){
+                var msg = this.decodeVehicleMsg('Success', data);
+                if (msg === null){return;}
+                this.pending.socket.emit('Success', data, this.pending.clientMsgId);
+            } else if (type == this.MSG_TYPES.FAILURE){
+                var msg = this.decodeVehicleMsg('Failure', data);
+                if (msg === null){return;}
+                this.pending.socket.emit('Failure', data, this.pending.clientMsgId);
+            } else {
+                console.log('Unexpected message type from vehicle');
+                return;
+            }
+            //clear message timeout
+            clearTimeout(this.pending.timer);
+            //remove pending message
+            this.pending = null;
+            //if another messages is queued, send it
+            this.writeOutputData();
+        }
+    }
+    //handle messages from clients
     this.io = socket_io(server);
     this.io.on('connection', function(socket){
-        var statusTimer, updateTimer; //used for fake WAM-V
+        var id = this.socketId;
+        this.sockets[id] = socket;
+        this.socketId++;
         //print a message
         var host = socket.client.request.headers.host;
         console.log('connected to: ' + host);
         //when a connection closes, print a message
         socket.on('disconnect', function(){
-            clearInterval(statusTimer);
-            clearInterval(updateTimer);
+            delete this.sockets[id];
             console.log('disconnected from: ' + host);
-        });
-        //periodically check for attention messages from fake vehicle
-        updateTimer = setInterval(function(){
-            if (this.attentionMsg !== null){
-                socket.emit('Attention', this.attentionMsg);
-                this.attentionMsg = null;
-            }
-        }.bind(this), 50);
-        //periodically send vehicle status information
-        statusTimer = setInterval(function(){
-            var msg = this.vehicle.getStatusData();
-            socket.volatile.emit('Status', msg); //'volatile' allows the message to be dropped
-            //console.log('sent status message to: ' + host);
-        }.bind(this), 50);
-        //handle other messages
+        }.bind(this));
+        //handle client messages
         socket.on('GetParameters', function(data, id){
             console.log('got a "GetParameters" message');
-            var msg = this.vehicle.getParameters();
-            socket.emit(msg[0], msg[1], id);
+            this.writeOutputData(this.MSG_TYPES.GET_PARAMETERS, new Buffer(0), id, socket);
         }.bind(this));
         socket.on('GetSettings', function(data, id){
             console.log('got a "GetSettings" message');
@@ -99,30 +262,22 @@ module.exports = function(server){
         }.bind(this));
         socket.on('GetMission', function(data, id){
             console.log('got a "GetMission" message');
-            var msg = this.vehicle.getMission();
-            socket.emit(msg[0], msg[1], id);
+            this.writeOutputData(this.MSG_TYPES.GET_MISSION, new Buffer(0), id, socket);
         }.bind(this));
         socket.on('GetMissions', function(data, id){
             console.log('got a "GetMissions" message');
             socket.emit('GetMissionsResponse', this.missions.toBuffer(), id);
         }.bind(this));
         socket.on('SetParameters', function(data, id){
+            var msg = this.decodeClientMsg('SetParameters', data);
+            if (msg === null){return;}
             console.log('Got "SetParameters" message');
-            var msg = this.vehicle.setParameters(data);
-            socket.emit(msg[0], msg[1], id);
+            this.writeOutputData(this.MSG_TYPES.SET_PARAMETERS, data, id, socket);
         }.bind(this));
         socket.on('SetSettings', function(data, id){
+            var newSettings = this.decodeClientMsg('SetSettings', data);
+            if (newSettings === null){return;}
             console.log('got "SetSettings" message');
-            //decode message
-            var newSettings;
-            try {
-                newSettings = this.protoPkg.SetSettings.decode(data);
-            } catch (e){
-                console.log('Unable to decode SetSettings message');
-                var failureMsg = new this.protoPkg.Failure('Invalid message');
-                socket.emit('Failure', failureMsg.toBuffer(), id);
-                return;
-            }
             //verify new settings
             var settingsToSet = [];
             var i, j;
@@ -153,79 +308,41 @@ module.exports = function(server){
             socket.emit('Success', null, id);
         }.bind(this));
         socket.on('SetMission', function(data, id){
+            var msg = this.decodeClientMsg('SetMission', data);
+            if (msg === null){return;}
             console.log('got "SetMission" message');
-            var msg = this.vehicle.setMission(data);
-            socket.emit(msg[0], msg[1], id);
+            this.writeOutputData(this.MSG_TYPES.SET_MISSION, data, id, socket);
         }.bind(this));
         socket.on('SetMissions', function(data, id){
-            //check message
-            var missionsMsg;
-            try {
-                missionsMsg = this.protoPkg.SetMissions.decode(data);
-            } catch (e){
-                console.log('Unable to decode SetMissions message');
-                socket.emit('Failure', (new this.protoPkg.Failure('Invalid message')).toBuffer(), id);
-                return;
-            }
+            var missionsMsg = this.decodeClientMsg('SetMissions', data);
+            if (missionsMsg === null){return;}
             console.log('got "SetMissions" message');
             this.missions = missionsMsg;
             socket.emit('Success', (new this.protoPkg.Success()).toBuffer(), id);
         }.bind(this));
         socket.on('Command', function(data, id){
-            //decode message
-            var msg;
-            try {
-                msg = this.protoPkg.Command.decode(data);
-            } catch (e){
-                console.log('Unable to decode Command message');
-                socket.emit('Failure', (new this.protoPkg.Failure('Invalid message')).toBuffer(), id);
-                return;
-            }
-            //respond
-            switch (msg.type){
-                case this.protoPkg.Command.Type.ARM: {
-                    console.log('Got "Command" message for arming');
-                    var msg = this.vehicle.arm(true);
-                    socket.emit(msg[0], msg[1], id);
-                    break;
-                }
-                case this.protoPkg.Command.Type.DISARM: {
-                    console.log('Got "Command" message for disarming');
-                    var msg = this.vehicle.arm(false);
-                    socket.emit(msg[0], msg[1], id);
-                    break;
-                }
-                case this.protoPkg.Command.Type.START: {
-                    console.log('Got "Command" message for starting');
-                    var msg = this.vehicle.start(true);
-                    socket.emit(msg[0], msg[1], id);
-                    break;
-                }
-                case this.protoPkg.Command.Type.STOP: {
-                    console.log('Got "Command" message for stopping');
-                    var msg = this.vehicle.stop();
-                    socket.emit(msg[0], msg[1], id);
-                    break;
-                }
-                case this.protoPkg.Command.Type.RESUME: {
-                    console.log('Got "Command" message for resuming');
-                    var msg = this.vehicle.start(false);
-                    socket.emit(msg[0], msg[1], id);
-                    break;
-                }
-                case this.protoPkg.Command.Type.KILL: {
-                    console.log('Got "Command" message for killing');
-                    var msg = this.vehicle.kill(true);
-                    socket.emit(msg[0], msg[1], id);
-                    break;
-                }
-                case this.protoPkg.Command.Type.UNKILL: {
-                    console.log('Got "Command" message for unkilling');
-                    var msg = this.vehicle.kill(false);
-                    socket.emit(msg[0], msg[1], id);
-                    break;
-                }
-            }
+            var msg = this.decodeClientMsg('Command', data);
+            if (msg === null){return;}
+            console.log('Got "Command" message');
+            this.writeOutputData(this.MSG_TYPES.COMMAND, data, id, socket);
         }.bind(this));
     }.bind(this));
+    //helper function
+    this.decodeVehicleMsg = function(msgType, data){
+        try {
+            return this.protoPkg[msgType].decode(data);
+        } catch (e){
+            console.log('Unable to decode ' + msgType + ' message from vehicle');
+            return null;
+        }
+    }
+    this.decodeClientMsg = function(msgType, data, id, socket){
+        try {
+            return this.protoPkg[msgType].decode(data);
+        } catch (e){
+            console.log('Unable to decode ' + msgType + ' message from a client');
+            socket.emit('Failure', (new this.protoPkg.Failure('Invalid message')).toBuffer(), id);
+            return null;
+        }
+    }
 }
