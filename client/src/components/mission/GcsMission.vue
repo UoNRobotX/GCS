@@ -15,11 +15,6 @@
                 ></ui-icon-button>
 
                 <ui-icon-button
-                    type="clear" icon="clear_all" tooltip="Clear all" @click="clearWaypoints"
-                    :disabled="!waypointsVisible"
-                ></ui-icon-button>
-
-                <ui-icon-button
                     type="clear" :icon="waypointsVisible ? 'visibility' : 'visibility_off'"
                     @click="toggleWaypointVisibility"
                     :tooltip="waypointsVisible ? 'Hide waypoints' : 'Show waypoints'"
@@ -92,7 +87,8 @@ export default {
     data() {
         return {
             overflowMenu: [
-                { id: 'edit', text: 'Edit mission' }
+                { id: 'edit', text: 'Edit mission' },
+                { id: 'clear_all', text: 'Clear all waypoints' }
             ],
             waitUploadMission: false
         };
@@ -124,8 +120,11 @@ export default {
         },
 
         clearWaypoints() {
-            this.mission.waypoints = [];
+            if (!this.waypointsVisible) {
+                return;
+            }
 
+            this.mission.waypoints = [];
             this.setWaypointsVisible(true);
         },
 
@@ -137,6 +136,8 @@ export default {
         overflowMenuOptionSelected(option) {
             if (option.id === 'edit') {
                 this.$dispatch('app::show-edit-mission-modal');
+            } else if (option.id === 'clear_all') {
+                this.clearWaypoints();
             }
         }
     },
