@@ -3,7 +3,6 @@
 </template>
 
 <script>
-import copy from 'util/copy-object';
 import loadGoogleMapsAPI from 'load-google-maps-api';
 
 import { setMap, setMapEl, setMapLoaded } from 'store/actions';
@@ -30,13 +29,17 @@ export default {
 
     watch: {
         mapEditing() {
+            if (!this.mapLoaded) {
+                return;
+            }
+
             if (this.mapEditing) {
                 this.map.setOptions({ draggableCursor: 'crosshair' });
             } else {
                 this.map.setOptions({ draggableCursor: 'move' });
             }
         },
-        
+
         settingsLoaded(){
             this.setMapEl(document.getElementById('map'));
 
