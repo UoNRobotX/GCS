@@ -252,6 +252,10 @@ export default {
                     for (let mission of missionsMsg.missions){
                         newMissions.push({
                             title: mission.title,
+                            origin: {
+                                lat: mission.originLatitude,
+                                lng: mission.originLongitude
+                            },
                             waypoints: mission.waypoints.map((wp) => {
                                 return {
                                     title: wp.title,
@@ -287,6 +291,10 @@ export default {
                     //convert received mission into a certain structure, and append it to the list
                     this.missions.push({
                         title: missionMsg.title,
+                        origin: {
+                            lat: missionMsg.originLatitude,
+                            lng: missionMsg.originLongitude
+                        },
                         waypoints: missionMsg.waypoints.map((wp) => {
                             return {
                                 title: wp.title,
@@ -430,6 +438,8 @@ export default {
                     //see elements of 'missions' in store.js for expected 'data' format
                     let missionMsg = new this.protoPkg.SetMission(new this.protoPkg.Mission());
                     missionMsg.mission.title = data.title;
+                    missionMsg.originLatitude = data.origin.lat;
+                    missionMsg.originLongitude = data.origin.lng;
                     for (let waypoint of data.waypoints){
                         missionMsg.mission.add('waypoints', new this.protoPkg.Mission.Waypoint(
                             waypoint.title,
@@ -451,6 +461,8 @@ export default {
                     for (let mission of data){
                         let m = new this.protoPkg.Mission();
                         m.title = mission.title;
+                        m.originLatitude = mission.origin.lat;
+                        m.originLongitude = mission.origin.lng;
                         for (let waypoint of mission.waypoints){
                             m.add('waypoints', new this.protoPkg.Mission.Waypoint(
                                 waypoint.title,

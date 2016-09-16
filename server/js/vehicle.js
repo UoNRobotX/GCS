@@ -38,7 +38,8 @@ module.exports = function(inputFile, outputFile){
     this.mode = this.MODES.STOPPED;
     this.signal = 100; //unrealistically, for the fake WAM-V, this is always 100
     this.mission = null; //the vehicle's current mission
-        //{title: t1, waypoints: [{title: t2, type: t3, position: {lat: lat1, lng: lng1}}, ...]}
+        //{title: t1, origin: {lat: lat1, lng: lng1}, 
+            //waypoints: [{title: t2, type: t3, position: {lat: lat1, lng: lng1}}, ...]}
     this.missionIndex = 0; //if completing a mission, the index of the next waypoint
     this.parameters = [
         ['State Estimator', 'IMU',          'mag_scale',   this.PARAM_TYPES.DOUBLE, '0'                ],
@@ -194,6 +195,8 @@ module.exports = function(inputFile, outputFile){
                 }
                 var msg = new this.protoPkg.GetMissionResponse(new this.protoPkg.Mission());
                 msg.mission.title = this.mission.title;
+                msg.mission.originLatitude = this.mission.origin.lat;
+                msg.mission.originLongitude = this.mission.origin.lng;
                 for (var i = 0; i < this.mission.waypoints.length; i++){
                     var wp = this.mission.waypoints[i];
                     msg.mission.add('waypoints', new this.protoPkg.Mission.Waypoint(
@@ -252,6 +255,10 @@ module.exports = function(inputFile, outputFile){
                     }
                     this.mission = {
                         title: newMission.title,
+                        origin: {
+                            lat: newMission.originLatitude,
+                            lng: newMission.originLongitude
+                        },
                         waypoints: newMission.waypoints.map(function(wp){
                             return {
                                 title: wp.title,

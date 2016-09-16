@@ -47,11 +47,12 @@ import GcsMission from 'mission/GcsMission.vue';
 import GcsMissionRow from 'mission/GcsMissionRow.vue';
 
 import { setMissions, setCurrentMissionIndex } from 'store/actions';
-import { getMissions, getCurrentMissionIndex, getCurrentMission } from 'store/getters';
+import { getWamv, getMissions, getCurrentMissionIndex, getCurrentMission } from 'store/getters';
 
 export default {
     vuex: {
         getters: {
+            wamv:                getWamv,
             missions:            getMissions,
             currentMissionIndex: getCurrentMissionIndex,
             currentMission:      getCurrentMission
@@ -93,7 +94,7 @@ export default {
         addMission(){
             this.missions.push({
                 title: 'Mission ' + (this.missions.length + 1),
-                description: null,
+                origin: {lat: this.wamv.position.lat, lng: this.wamv.position.lng},
                 waypoints: []
             });
         },
@@ -169,9 +170,10 @@ export default {
             for (var i = 0; i < data.length; i++){
                 var mission = data[i];
                 if (typeof mission != 'object' ||
-                    !mission.hasOwnProperty('title') ||
                     typeof mission.title != 'string' ||
-                    !mission.hasOwnProperty('waypoints') ||
+                    typeof mission.origin != 'object' ||
+                    typeof mission.origin.lat != 'number' ||
+                    typeof mission.origin.lng != 'number' ||
                     !Array.isArray(mission.waypoints)){
                     return false;
                 }
