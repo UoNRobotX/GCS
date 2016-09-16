@@ -1,7 +1,6 @@
 # Todo list
 
 ## Stuff that needs doing
-* Fix error that occurs when refreshing while wamv is moving?
 * Allow specification of a GPS origin.
 * Make server obtain data from a serial port.
 * Add a way to specify areas for waypoints.
