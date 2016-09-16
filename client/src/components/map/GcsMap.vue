@@ -30,6 +30,10 @@ export default {
 
     watch: {
         mapEditing() {
+            if (!this.mapLoaded){
+                return;
+            }
+
             if (this.mapEditing) {
                 this.map.setOptions({ draggableCursor: 'crosshair' });
             } else {
