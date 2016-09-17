@@ -5,7 +5,7 @@ var crc32 = require('buffer-crc32');
 
 //constructor for fake WAM-V
 //'inputFile' and 'outputFile' are names of files used to communicate with the server
-module.exports = function(inputFile, outputFile){
+function Vehicle(inputFile, outputFile){
     this.prevTime = Date.now(); //time of last update, in milliseconds since epoch
     this.MSG_TYPES = {
         STATUS:                   0,
@@ -38,7 +38,7 @@ module.exports = function(inputFile, outputFile){
     this.mode = this.MODES.STOPPED;
     this.signal = 100; //unrealistically, for the fake WAM-V, this is always 100
     this.mission = null; //the vehicle's current mission
-        //{title: t1, origin: {lat: lat1, lng: lng1}, 
+        //{title: t1, origin: {lat: lat1, lng: lng1},
             //waypoints: [{title: t2, type: t3, position: {lat: lat1, lng: lng1}}, ...]}
     this.missionIndex = 0; //if completing a mission, the index of the next waypoint
     this.parameters = [
@@ -423,3 +423,5 @@ module.exports = function(inputFile, outputFile){
         this.writeOutputData(this.MSG_TYPES.SUCCESS, new Buffer(0), id);
     }
 };
+
+var vehicle = new Vehicle(process.argv[2], process.argv[3]);

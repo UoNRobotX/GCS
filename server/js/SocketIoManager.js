@@ -1,16 +1,9 @@
 var socket_io = require('socket.io');
 var fs = require('fs');
-var path = require('path');
 var protobuf = require('protobufjs');
-var Vehicle = require('./vehicle.js');
 var crc32 = require('buffer-crc32');
 
-//these files are used for vehicle-server communication
-    // TODO: when the files are FIFOs, 'npm start' works once, but later attempts exit prematurely
-var inputFile  = path.join(__dirname, '../temp/toServer');
-var outputFile = path.join(__dirname, '../temp/toVehicle');
-
-module.exports = function(server){
+module.exports = function(server, inputFile, outputFile){
     this.msgId = 0; //used to assign IDs to messages sent to vehicle
     this.MAX_MSG_ID = 255;
     this.pending = null; //contains info about the last message sent to the vehicle
@@ -71,41 +64,13 @@ module.exports = function(server){
         }
     }.bind(this));
     //save missions on shutdown
-    this.savedOnShutdown = false;
-    this.saveMissions = function(){
-        if (!this.savedOnShutdown){
-            fs.writeFileSync(this.missionsFile, this.missions.toBuffer());
-            this.savedOnShutdown = true;
-        }
+    process.on('exit', function(){
+        fs.writeFileSync(this.missionsFile, this.missions.toBuffer());
+    }.bind(this));
+    process.on('SIGINT', function(){
+        fs.writeFileSync(this.missionsFile, this.missions.toBuffer());
         process.exit();
-    }.bind(this);
-    process.on('exit', this.saveMissions);
-    process.on('SIGINT', this.saveMissions);
-    //create input and output files if non-existent
-    var openAndTruncateInputFile = true;
-    try {
-        var inputStats = fs.statSync(inputFile);
-        if (inputStats.isFIFO()){
-            openAndTruncateInputFile = false;
-        }
-    } catch (e){}
-    if (openAndTruncateInputFile){
-        var inputFd = fs.openSync(inputFile, 'w');
-        fs.closeSync(inputFd);
-    }
-    var openAndTruncateOutputFile = true;
-    try {
-        var outputStats = fs.statSync(outputFile);
-        if (outputStats.isFIFO()){
-            openAndTruncateOutputFile = false;
-        }
-    } catch (e){}
-    if (openAndTruncateOutputFile){
-        var outputFd = fs.openSync(outputFile, 'w');
-        fs.closeSync(outputFd);
-    }
-    //create fake vehicle
-    this.vehicle = new Vehicle(outputFile, inputFile);
+    }.bind(this));
     //open output file
     this.ostream = fs.createWriteStream(outputFile, {flags: 'a'});
     this.ostream.on('error', function(){throw new Error('Error with writing output file');});
