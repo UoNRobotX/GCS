@@ -1,7 +1,9 @@
 var geolib = require('geolib');
 var protobuf = require('protobufjs');
 var fs = require('fs');
+var path = require('path');
 var crc32 = require('buffer-crc32');
+var serialport = require('serialport');
 
 //constructor for fake WAM-V
 //'inputFile' and 'outputFile' are names of files used to communicate with the server
@@ -53,19 +55,33 @@ function Vehicle(inputFile, outputFile){
     ];
     this.magicNumber = new Buffer([0x17, 0xC0, 0x42]); //used in messages
     //load .proto messages
-    this.protoBuilder = protobuf.loadProtoFile('./public/assets/proto/Test.proto');
+    this.protoBuilder = protobuf.loadProtoFile(
+        path.join(__dirname, '../public/assets/proto/Test.proto')
+    );
     if (this.protoBuilder === null){
         throw new Error ('Unable to load proto messages');
     }
     this.protoPkg = this.protoBuilder.build();
     //open output file
-    this.ostream = fs.createWriteStream(outputFile, {flags: 'a'});
-    this.ostream.on('error', function(){throw new Error('Vehicle: Error with writing output file');});
+    var outputFileStats = fs.statSync(outputFile);
+    if (outputFileStats.isCharacterDevice()){
+        this.ostream = new serialport(outputFile, {
+            baudRate: 9600
+        });
+        this.ostream.on('error', function(){throw new Error('Vehicle: Error with writing to port');});
+    } else {
+        this.ostream = fs.createWriteStream(outputFile, {flags: 'a'});
+        this.ostream.on('error', function(){throw new Error('Vehicle: Error with writing output file');});
+    }
     //open input file
-    if (fs.statSync(inputFile).isFIFO()){
-        var istream = fs.createReadStream(inputFile);
-        istream.on('data', function(chunk){this.processInputData(chunk);}.bind(this));
-        istream.on('error', function(){throw new Error('Vehicle: Error with reading input file');});
+    var inputFileStats = fs.statSync(inputFile);
+    if (inputFileStats.isCharacterDevice()){
+        this.istream = this.ostream;
+        this.istream.on('data', function(data){this.processInputData(data)}.bind(this));
+    } else if (fs.statSync(inputFile).isFIFO()){
+        this.istream = fs.createReadStream(inputFile);
+        this.istream.on('data', function(chunk){this.processInputData(chunk);}.bind(this));
+        this.istream.on('error', function(){throw new Error('Vehicle: Error with reading input FIFO');});
     } else {
         fs.open(inputFile, 'r', function (err, fd){
             if (err){throw new Error('Vehicle: Error with opening input file');}

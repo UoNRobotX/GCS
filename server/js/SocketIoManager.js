@@ -2,6 +2,7 @@ var socket_io = require('socket.io');
 var fs = require('fs');
 var protobuf = require('protobufjs');
 var crc32 = require('buffer-crc32');
+var serialport = require('serialport');
 
 module.exports = function(server, inputFile, outputFile){
     this.msgId = 0; //used to assign IDs to messages sent to vehicle
@@ -72,8 +73,16 @@ module.exports = function(server, inputFile, outputFile){
         process.exit();
     }.bind(this));
     //open output file
-    this.ostream = fs.createWriteStream(outputFile, {flags: 'a'});
-    this.ostream.on('error', function(){throw new Error('Error with writing output file');});
+    var outputFileStats = fs.statSync(outputFile);
+    if (outputFileStats.isCharacterDevice()){
+        this.ostream = new serialport(outputFile, {
+            baudRate: 9600
+        });
+        this.ostream.on('error', function(){throw new Error('Error with writing to port');});
+    } else {
+        this.ostream = fs.createWriteStream(outputFile, {flags: 'a'});
+        this.ostream.on('error', function(){throw new Error('Error with writing to output file');});
+    }
     //used to send messsages to vehicle
     this.writeOutputData = function(type, buffer, clientMsgId, socket){
         if (typeof type !== 'undefined'){
@@ -123,10 +132,14 @@ module.exports = function(server, inputFile, outputFile){
         }
     }
     //open input file
-    if (fs.statSync(inputFile).isFIFO()){
-        var istream = fs.createReadStream(inputFile);
-        istream.on('data', function(chunk){this.processInputData(chunk)}.bind(this));
-        istream.on('error', function(){throw new Error('Error with reading input file');});
+    var inputFileStats = fs.statSync(inputFile);
+    if (inputFileStats.isCharacterDevice()){
+        this.istream = this.ostream;
+        this.istream.on('data', function(data){this.processInputData(data)}.bind(this));
+    } else if (inputFileStats.isFIFO()){
+        this.istream = fs.createReadStream(inputFile);
+        this.istream.on('data', function(data){this.processInputData(data)}.bind(this));
+        this.istream.on('error', function(){throw new Error('Error with reading input FIFO');});
     } else {
         fs.open(inputFile, 'r', function (err, fd){
             if (err){throw new Error('Error with opening input file');}
@@ -136,7 +149,7 @@ module.exports = function(server, inputFile, outputFile){
             var readBytes = function(){
                 if (fs.statSync(inputFile).size > bytesRead){
                     fs.read(fd, buffer, 0, bufSize, bytesRead, function (err, n, buffer){
-                        if (err){throw new Error('Vehicle: Error with reading input file');}
+                        if (err){throw new Error('Error with reading input file');}
                         this.processInputData(buffer.slice(0,n));
                         bytesRead += n;
                         readBytes();

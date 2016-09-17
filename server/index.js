@@ -22,13 +22,15 @@ var outputFile = path.join(__dirname, 'temp/toVehicle');
 
 //create input and output files if non-existent, and truncate if non-FIFO
 function createIfNonExistent(file){
-    var openAndTruncate = true;
+    var openAndTruncate = false;
     try {
         var stats = fs.statSync(file);
-        if (stats.isFIFO()){
-            openAndTruncate = false;
+        if (stats.isFile()){
+            openAndTruncate = true;
         }
-    } catch (e){}
+    } catch (e){
+        openAndTruncate = true;
+    }
     if (openAndTruncate){
         var fd = fs.openSync(file, 'w');
         fs.closeSync(fd);
@@ -49,9 +51,16 @@ if (useFakeVehicle){
     );
     childp.stdout.on('data', function(data){console.log(data.toString())});
     childp.stderr.on('data', function(data){console.error(data.toString())});
+    childp.on('error', function(){
+        console.log('Error with spawning or killing fake vehicle process');
+        childp = null;
+        process.exit();
+    })
     //close child process on shutdown
     process.on('exit', function(){
-        childp.kill();
+        if (childp != null){
+            childp.kill();
+        }
     });
 }
 
