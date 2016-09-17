@@ -7,7 +7,7 @@ var serialport = require('serialport');
 
 //constructor for fake WAM-V
 //'inputFile' and 'outputFile' are names of files used to communicate with the server
-function Vehicle(inputFile, outputFile){
+function Vehicle(inputFile, outputFile, baudRate){
     this.prevTime = Date.now(); //time of last update, in milliseconds since epoch
     this.MSG_TYPES = {
         STATUS:                   0,
@@ -66,7 +66,7 @@ function Vehicle(inputFile, outputFile){
     var outputFileStats = fs.statSync(outputFile);
     if (outputFileStats.isCharacterDevice()){
         this.ostream = new serialport(outputFile, {
-            baudRate: 9600
+            baudRate: +baudRate
         });
         this.ostream.on('error', function(){throw new Error('Vehicle: Error with writing to port');});
     } else {
@@ -440,4 +440,4 @@ function Vehicle(inputFile, outputFile){
     }
 };
 
-var vehicle = new Vehicle(process.argv[2], process.argv[3]);
+var vehicle = new Vehicle(process.argv[2], process.argv[3], process.argv[4]);

@@ -15,10 +15,14 @@ app.use(serve(path.join(__dirname, 'public')));
 // Create server
 var server = http.createServer(app.callback());
 
-//obtain names of files used for vehicle-server communication
-    // TODO: when the files are FIFOs, 'npm start' works once, but later attempts exit prematurely
+//names of files used for vehicle-server communication
+//these should be either both regular files, both FIFOs, or both serial ports
 var inputFile  = path.join(__dirname, 'temp/toServer');
 var outputFile = path.join(__dirname, 'temp/toVehicle');
+//if true, a child process will be started, which acts like the WAM-V
+var useFakeVehicle = true;
+//if 'inputFile' and 'outputFile' are serial ports, this is used as the baud rate
+var baudRate = 9600;
 
 //create input and output files if non-existent, and truncate if non-FIFO
 function createIfNonExistent(file){
@@ -40,14 +44,13 @@ createIfNonExistent(inputFile);
 createIfNonExistent(outputFile);
 
 // Setup socket handling
-var sm = new SocketIoManager(server, inputFile, outputFile);
+var sm = new SocketIoManager(server, inputFile, outputFile, baudRate);
 
-var useFakeVehicle = true;
 if (useFakeVehicle){
     //create fake vehicle child process
     var childp = child_process.spawn(
         'node',
-        [path.join(__dirname, 'js/vehicle.js'), outputFile, inputFile]
+        [path.join(__dirname, 'js/vehicle.js'), outputFile, inputFile, baudRate]
     );
     childp.stdout.on('data', function(data){console.log(data.toString())});
     childp.stderr.on('data', function(data){console.error(data.toString())});

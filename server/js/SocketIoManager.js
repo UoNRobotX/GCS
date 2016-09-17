@@ -4,7 +4,7 @@ var protobuf = require('protobufjs');
 var crc32 = require('buffer-crc32');
 var serialport = require('serialport');
 
-module.exports = function(server, inputFile, outputFile){
+module.exports = function(server, inputFile, outputFile, baudRate){
     this.msgId = 0; //used to assign IDs to messages sent to vehicle
     this.MAX_MSG_ID = 255;
     this.pending = null; //contains info about the last message sent to the vehicle
@@ -76,7 +76,7 @@ module.exports = function(server, inputFile, outputFile){
     var outputFileStats = fs.statSync(outputFile);
     if (outputFileStats.isCharacterDevice()){
         this.ostream = new serialport(outputFile, {
-            baudRate: 9600
+            baudRate: baudRate
         });
         this.ostream.on('error', function(){throw new Error('Error with writing to port');});
     } else {
