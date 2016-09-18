@@ -32,7 +32,9 @@ message Mission {
         double longitude = 4;
     }
     string title                = 1;
-    repeated Waypoint waypoints = 2;
+    double originLatitude       = 2;
+    double originLongitude      = 3;
+    repeated Waypoint waypoints = 4;
 }
 
 //sent regularly by the WAM-V to the server, which sends it to clients

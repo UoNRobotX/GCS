@@ -1,13 +1,11 @@
 # Todo list
 
 ## Stuff that needs doing
-* Allow specification of a GPS origin.
-* Make server obtain data from a serial port.
-* Add a way to specify areas for waypoints.
 * Add manual mode that uses the gamepad API.
+* Add a way to specify areas for waypoints.
 * Make server use ECMAScript 2015.
 * Try using written code instead of geolib.
-* Allow for multiple clients.
+* Allow for multiple clients (notify about parameter/setting changes).
 * Determine real protocol buffer messages.
 * Make server validate both ways.
 * Test on multiple platforms.

@@ -3411,6 +3411,9 @@ body,
 .gcs-waypoint-link {
   display: none;
 }
+.gcs-origin {
+  display: none;
+}
 .gcs-mission-row .mission-header,
 .gcs-mission-row .mission-summary p {
   white-space: nowrap;
