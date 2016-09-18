@@ -440,4 +440,35 @@ function Vehicle(inputFile, outputFile, baudRate){
     }
 };
 
-var vehicle = new Vehicle(process.argv[2], process.argv[3], process.argv[4]);
+//variables
+var inputFile  = path.join(__dirname, '../temp/toVehicle');
+var outputFile = path.join(__dirname, '../temp/toServer');
+var baudRate = 9600;
+
+//check command line arguments
+var usage = 'Usage: node vehicle.js [-b baudRate] [inputFile [outputFile]]';
+for (var i = 2; i < process.argv.length; i++){
+    var arg = process.argv[i];
+    if (arg == '-b'){
+        if (i+1 == process.argv.length){
+            console.error('Option -b has no argument');
+            console.error(usage);
+            process.exit();
+        }
+        baudRate = +process.argv[i+1];
+        i++;
+    } else {
+        inputFile = arg;
+        if (i+1 < process.argv.length){
+            outputFile = process.argv[i+1];
+            if (i+2 < process.argv.length){
+                console.log('Unexpected arguments');
+                console.error(usage);
+                process.exit();
+            }
+        }
+        break;
+    }
+}
+
+var vehicle = new Vehicle(inputFile, outputFile, baudRate);
