@@ -23,6 +23,7 @@ const initialState = {
     missions: [],
         //[{
         //    title: t1,
+        //    origin: {lat: lat1, lng: lng1},
         //    waypoints: [
         //        {title: t2, type: t3, visible: v1, position: {lat: lat1, lng: lng1}}, ...]
         //}, ...]

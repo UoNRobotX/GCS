@@ -29,7 +29,7 @@ export default {
 
     watch: {
         mapEditing() {
-            if (!this.mapLoaded) {
+            if (!this.mapLoaded){
                 return;
             }
 
