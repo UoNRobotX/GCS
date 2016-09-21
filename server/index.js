@@ -79,7 +79,7 @@ if (useFakeVehicle){
     //create fake vehicle child process
     var childp = child_process.spawn(
         'node',
-        [path.join(__dirname, 'js/vehicle.js'), '-b', baudRate, outputFile, inputFile]
+        [path.join(__dirname, 'vehicle/index.js'), '-b', baudRate, outputFile, inputFile]
     );
     childp.stdout.on('data', function(data){console.log(data.toString())});
     childp.stderr.on('data', function(data){console.error(data.toString())});
