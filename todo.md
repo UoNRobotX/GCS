@@ -3,7 +3,6 @@
 ## Stuff that needs doing
 * Add manual mode that uses the gamepad API.
 * Add a way to specify areas for waypoints.
-* Make server use ECMAScript 2015.
 * Try using written code instead of geolib.
 * Allow for multiple clients (notify about parameter/setting changes).
 * Determine real protocol buffer messages.
