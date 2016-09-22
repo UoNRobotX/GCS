@@ -5,10 +5,10 @@
                 <span class="title">Params</span>
                 <div class="action-buttons">
                     <ui-button color="primary"
-                        @click="saveParams" :disabled="waitSaveParams"
+                        @click="saveParams"
                     >Save</ui-button>
                     <ui-button
-                        @click="resetParams" :disabled="waitResetParams"
+                        @click="resetParams"
                     >Reset</ui-button>
                 </div>
             </h1>
@@ -44,12 +44,13 @@
 </template>
 
 <script>
-import { getParameters } from 'store/getters';
+import { getParameters, getParametersLastUpdateTime } from 'store/getters';
 
 export default {
     vuex: {
         getters: {
-            parameters: getParameters
+            parameters: getParameters,
+            parametersLastUpdateTime: getParametersLastUpdateTime
         }
     },
 
@@ -57,13 +58,13 @@ export default {
         return {
             currentSectionIndex: 0,
             changedParams: {},
+            lastSetParametersAckTime: null,
             validationRules: {
                 vec3: ['regex:/^(-?\\d*\\.?\\d+,){2}(-?\\d*\\.?\\d+)$/'],
                 double: ['regex:/^(-?\\d*\\.?\\d+)$/'],
                 mat3: ['regex:/^(-?\\d*\\.?\\d+,){8}(-?\\d*\\.?\\d+)$/']
             },
-            waitSaveParams: false,
-            waitResetParams: false
+            TIMEOUT: 1000
         };
     },
 
@@ -125,10 +126,23 @@ export default {
                 }
             }
             this.$dispatch('client::set_parameters', data);
+            //show message on timeout
+            let requestTime = Date.now();
+            setTimeout(() => {
+                if (this.lastSetParametersAckTime < requestTime){
+                    this.$dispatch('app::create-snackbar', 'Parameters not set within timeout');
+                }
+            }, this.TIMEOUT);
         },
 
         resetParams(){
             this.$dispatch('client::get_parameters');
+            let requestTime = Date.now();
+            setTimeout(() => {
+                if (this.parametersLastUpdateTime < requestTime){
+                    this.$dispatch('app::create-snackbar', 'Parameters not received within timeout');
+                }
+            }, this.TIMEOUT);
         },
 
         getValidationRule(type) {
@@ -137,6 +151,12 @@ export default {
             }
 
             return null;
+        }
+    },
+
+    events: {
+        'server::set_parameters_ack'(){
+            this.lastSetParametersAckTime = Date.now();
         }
     }
 };

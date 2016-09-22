@@ -5,10 +5,10 @@
                 Settings
                 <div class="action-buttons">
                     <ui-button color="primary"
-                        @click="saveSettings" :disabled="waitSaveSettings"
+                        @click="saveSettings"
                     >Save</ui-button>
                     <ui-button
-                        @click="resetSettings" :disabled="waitResetSettings"
+                        @click="resetSettings"
                     >Reset</ui-button>
                 </div>
             </h1>
@@ -29,20 +29,21 @@
 </template>
 
 <script>
-import { getSettings } from 'store/getters';
+import { getSettings, getSettingsLastUpdateTime } from 'store/getters';
 
 export default {
     vuex: {
         getters: {
-            settings: getSettings
+            settings: getSettings,
+            settingsLastUpdateTime: getSettingsLastUpdateTime
         }
     },
 
     data() {
         return {
             changedSettings: {},
-            waitSaveSettings: false,
-            waitResetSettings: false
+            lastSetSettingsAckTime: null,
+            TIMEOUT: 1000
         };
     },
 
@@ -67,10 +68,29 @@ export default {
                 }
             }
             this.$dispatch('client::set_settings', data);
+            //show message on timeout
+            let requestTime = Date.now();
+            setTimeout(() => {
+                if (this.lastSetSettingsAckTime < requestTime){
+                    this.$dispatch('app::create-snackbar', 'Settings not set within timeout');
+                }
+            }, this.TIMEOUT);
         },
 
         resetSettings(){
             this.$dispatch('client::get_settings');
+            let requestTime = Date.now();
+            setTimeout(() => {
+                if (this.settingsLastUpdateTime < requestTime){
+                    this.$dispatch('app::create-snackbar', 'Settings not received within timeout');
+                }
+            }, this.TIMEOUT);
+        }
+    },
+
+    events: {
+        'server::set_settings_ack'(){
+            this.lastSetSettingsAckTime = Date.now();
         }
     }
 };

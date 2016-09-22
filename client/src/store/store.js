@@ -19,7 +19,7 @@ const initialState = {
         signal:   100
     },
     settings: [], //[{title: t1, settings: [{title: t2, value: v1}, ...]}, ...]
-    settingsLoaded: false,
+    settingsLastUpdateTime: null,
     missions: [],
         //[{
         //    title: t1,
@@ -27,8 +27,9 @@ const initialState = {
         //    waypoints: [
         //        {title: t2, type: t3, visible: v1, position: {lat: lat1, lng: lng1}}, ...]
         //}, ...]
+    missionsLastUpdateTime: null,
     currentMissionIndex: -1,
-    parameters: []
+    parameters: [],
         //[{
         //    title: t1,
         //    subSections: [{
@@ -36,6 +37,7 @@ const initialState = {
         //        params: [{title: t3, type: t4, value: v1}, ...]
         //    }, ...]
         //}, ...]
+    parametersLastUpdateTime: null
 };
 
 const mutations = {
@@ -72,11 +74,12 @@ const mutations = {
     },
 
     SET_SETTINGS(state, settings) {
-        state.settingsLoaded = true;
+        state.settingsLastUpdateTime = Date.now();
         state.settings = settings;
     },
 
     SET_MISSIONS(state, missions) {
+        state.missionsLastUpdateTime = Date.now();
         state.missions = missions;
     },
 
@@ -89,6 +92,7 @@ const mutations = {
     },
 
     SET_PARAMETERS(state, parameters) {
+        state.parametersLastUpdateTime = Date.now();
         state.parameters = parameters;
     }
 };

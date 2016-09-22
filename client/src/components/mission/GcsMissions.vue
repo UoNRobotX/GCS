@@ -10,7 +10,7 @@
 
                         <ui-icon-button
                             type="clear" icon="file_download" tooltip="Download mission"
-                            @click="downloadMission" :disabled="waitDownloadMission"
+                            @click="downloadMission"
                         ></ui-icon-button>
 
                         <ui-icon-button
@@ -75,8 +75,7 @@ export default {
                 { id: 'import', text: 'Import from file'                 },
                 { id: 'sep2',   text: '',                type: 'divider' },
                 { id: 'clear',  text: 'Clear all'                        }
-            ],
-            waitDownloadMission: false
+            ]
         };
     },
 

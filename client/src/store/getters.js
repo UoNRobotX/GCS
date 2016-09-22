@@ -26,12 +26,16 @@ export function getSettings(state) {
     return state.settings;
 }
 
-export function getSettingsLoaded(state) {
-    return state.settingsLoaded;
+export function getSettingsLastUpdateTime(state) {
+    return state.settingsLastUpdateTime;
 }
 
 export function getMissions(state) {
     return state.missions;
+}
+
+export function getMissionsLastUpdateTime(state) {
+    return state.missionsLastUpdateTime;
 }
 
 export function getCurrentMissionIndex(state) {
@@ -44,4 +48,8 @@ export function getCurrentMission(state) {
 
 export function getParameters(state) {
     return state.parameters;
+}
+
+export function getParametersLastUpdateTime(state) {
+    return state.parametersLastUpdateTime;
 }

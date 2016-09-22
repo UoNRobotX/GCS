@@ -1,17 +1,17 @@
 <template>
     <div class="gcs-commands">
         <ui-button v-if="wamv.mode === 'paused'"
-            @click="startMission" :disabled="waitToggleMission"
+            @click="startMission"
         >Restart</ui-button>
 
         <ui-button
             @click="toggleMission" :text="startButtonText"
-            :disabled="wamv.mode === 'killed' || waitToggleMission"
+            :disabled="wamv.mode === 'killed'"
         ></ui-button>
 
         <ui-button
             color="danger" :text="wamv.mode === 'killed' ? 'Unkill' : 'Kill'"
-            @click="toggleKill" :disabled="waitToggleKill"
+            @click="toggleKill"
         ></ui-button>
 
         <div class="armed-toggle" v-if="wamv.loaded">
@@ -31,13 +31,6 @@ export default {
         getters: {
             wamv: getWamv
         }
-    },
-
-    data(){
-        return {
-            waitToggleMission: false,
-            waitToggleKill: false
-        };
     },
 
     computed: {

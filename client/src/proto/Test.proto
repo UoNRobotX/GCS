@@ -76,7 +76,7 @@ message GetParameters {
     uint64 timestamp = 1;
 }
 
-//sent from the server to the client, in response to a request for parameters
+//sent from the server to the client, and contains vehicle parameters
 message GetParametersResponse {
     uint64 timestamp              = 1;
     repeated Parameter parameters = 2;
@@ -87,7 +87,7 @@ message GetSettings {
     uint64 timestamp = 1;
 }
 
-//sent from the server to the client, in response to a request for settings
+//sent from the server to the client, and contains settings
 message GetSettingsResponse {
     uint64 timestamp          = 1;
     repeated Setting settings = 2;
@@ -98,7 +98,7 @@ message GetMission {
     uint64 timestamp = 1;
 }
 
-//sent from the server to the client, in response to a request for the last uploaded mission
+//sent from the server to the client, and contains the vehicle's mission
 message GetMissionResponse {
     uint64 timestamp = 1;
     Mission mission  = 2;
@@ -109,7 +109,7 @@ message GetMissions {
     uint64 timestamp = 1;
 }
 
-//sent from the server to the client, in response to a request for the server's saved mission list
+//sent from the server to the client, and contains the server's saved mission list
 message GetMissionsResponse {
     uint64 timestamp          = 1;
     repeated Mission missions = 2;
@@ -121,7 +121,7 @@ message SetParameters {
     repeated Parameter parameters = 2;
 }
 
-//sent from the server to the client, indicating that parameters were set
+//sent from the server to the client, and indicates that parameters were set
 message SetParametersAck {
     uint64 timestamp = 1;
 }
@@ -132,7 +132,7 @@ message SetSettings {
     repeated Setting settings = 2;
 }
 
-//sent from the server to the client, indicating that settings were set
+//sent from the server to the client, and indicates that settings were set
 message SetSettingsAck {
     uint64 timestamp = 1;
 }
@@ -143,7 +143,7 @@ message SetMission {
     Mission mission  = 2;
 }
 
-//sent from the server to the client, indicating that mission was set
+//sent from the server to the client, and indicates that the vehicle's mission was set
 message SetMissionAck {
     uint64 timestamp = 1;
 }
@@ -154,7 +154,7 @@ message SetMissions {
     repeated Mission missions = 2;
 }
 
-//sent from the server to the client, indicating that missions were set
+//sent from the server to the client, and indicates that the mission list was set
 message SetMissionsAck {
     uint64 timestamp = 1;
 }

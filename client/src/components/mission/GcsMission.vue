@@ -11,7 +11,7 @@
             <div slot="actions">
                 <ui-icon-button
                     type="clear" icon="file_upload" tooltip="Upload mission" @click="uploadMission"
-                    :disabled="!waypointsVisible || waitUploadMission"
+                    :disabled="!waypointsVisible"
                 ></ui-icon-button>
 
                 <ui-icon-button
@@ -108,7 +108,8 @@ export default {
                 { id: 'clear_all', text: 'Clear all waypoints' }
             ],
             originValid: true,
-            waitUploadMission: false
+            lastSetMissionAckTime: null,
+            TIMEOUT: 1000
         };
     },
 
@@ -153,6 +154,13 @@ export default {
                 return;
             }
             this.$dispatch('client::set_mission', this.missions[this.currentMissionIndex]);
+            //show message on timeout
+            let requestTime = Date.now();
+            setTimeout(() => {
+                if (this.lastSetMissionAckTime < requestTime){
+                    this.$dispatch('app::create-snackbar', 'Mission not uploaded within timeout');
+                }
+            }, this.TIMEOUT);
         },
 
         overflowMenuOptionSelected(option) {
@@ -228,6 +236,10 @@ export default {
                     this.$el.querySelector('#waypoint-' + (index + 1)), this.$els.pageContent, 56
                 );
             });
+        },
+
+        'server::set_mission_ack'(){
+            this.lastSetMissionAckTime = Date.now();
         }
     },
 

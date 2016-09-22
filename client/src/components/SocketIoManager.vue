@@ -16,15 +16,22 @@
 import socket_io_client from 'socket.io-client';
 import protobuf from 'protobufjs';
 
-import { getMissions, getParameters, getSettings } from 'store/getters';
+import {
+    getMissions, getMissionsLastUpdateTime,
+    getParameters, getParametersLastUpdateTime,
+    getSettings, getSettingsLastUpdateTime
+} from 'store/getters';
 import { setWamv, setParameters, setSettings, setMissions } from 'store/actions';
 
 export default {
     vuex: {
         getters: {
-            missions:   getMissions,
-            parameters: getParameters,
-            settings:   getSettings
+            missions:                 getMissions,
+            missionsLastUpdateTime:   getMissionsLastUpdateTime,
+            parameters:               getParameters,
+            parametersLastUpdateTime: getParametersLastUpdateTime,
+            settings:                 getSettings,
+            settingsLastUpdateTime:   getSettingsLastUpdateTime
         },
         actions: {
             setWamv,
@@ -236,30 +243,30 @@ export default {
             //get parameters once at startup
             this.sendMsg('get_parameters', null);
             setTimeout(() => {
-                if (this.parameters.length == 0){
+                if (this.parametersLastUpdateTime === null){
                     this.$dispatch(
                         'app::create-snackbar',
-                        'Parameters list empty (probably failed to load)'
+                        'Parameters list failed to load'
                     );
                 }
             }, this.TIMEOUT);
             //get settings once at startup
             this.sendMsg('get_settings', null);
             setTimeout(() => {
-                if (this.settings.length == 0){
+                if (this.settingsLastUpdateTime === null){
                     this.$dispatch(
                         'app::create-snackbar',
-                        'Settings list empty (probably failed to load)'
+                        'Settings list failed to load'
                     );
                 }
             }, this.TIMEOUT);
             //load missions once at startup
             this.sendMsg('get_missions', null);
             setTimeout(() => {
-                if (this.settings.length == 0){
+                if (this.missionsLastUpdateTime === null){
                     this.$dispatch(
                         'app::create-snackbar',
-                        'Mission list empty (probably failed to load)'
+                        'Mission list failed to load'
                     );
                 }
             }, this.TIMEOUT);
@@ -470,6 +477,7 @@ export default {
             }
             //notify
             this.$dispatch('app::create-snackbar', 'Parameters set on vehicle');
+            this.$dispatch('server::set_parameters_ack');
         },
         handleSetSettingsAck(data){
             //decode message
@@ -482,6 +490,7 @@ export default {
             }
             //notify
             this.$dispatch('app::create-snackbar', 'Settings set on server');
+            this.$dispatch('server::set_settings_ack');
         },
         handleSetMissionAck(data){
             //decode message
@@ -494,6 +503,7 @@ export default {
             }
             //notify
             this.$dispatch('app::create-snackbar', 'Mission set on vehicle');
+            this.$dispatch('server::set_mission_ack');
         },
         handleSetMissionsAck(data){
             //decode message

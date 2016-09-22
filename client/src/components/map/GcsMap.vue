@@ -6,7 +6,7 @@
 import loadGoogleMapsAPI from 'load-google-maps-api';
 
 import { setMap, setMapEl, setMapLoaded } from 'store/actions';
-import { getWamv, getSettings, getSettingsLoaded, getMap, getMapEl, getMapLoaded, getMapEditing } from 'store/getters';
+import { getWamv, getSettings, getSettingsLastUpdateTime, getMap, getMapEl, getMapLoaded, getMapEditing } from 'store/getters';
 
 export default {
     vuex: {
@@ -17,7 +17,7 @@ export default {
             mapEditing: getMapEditing,
             wamv: getWamv,
             settings: getSettings,
-            settingsLoaded: getSettingsLoaded
+            settingsLastUpdateTime: getSettingsLastUpdateTime
         },
 
         actions: {
@@ -40,7 +40,11 @@ export default {
             }
         },
 
-        settingsLoaded(){
+        settingsLastUpdateTime(){
+            if (this.mapLoaded){
+                return;
+            }
+
             this.setMapEl(document.getElementById('map'));
 
             let key = null;

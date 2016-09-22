@@ -159,6 +159,18 @@ export default {
 
         'client::unkill'() {
             this.$broadcast('client::unkill');
+        },
+
+        'server::set_parameters_ack'(){
+            this.$broadcast('server::set_parameters_ack');
+        },
+
+        'server::set_settings_ack'(){
+            this.$broadcast('server::set_settings_ack');
+        },
+
+        'server::set_mission_ack'(){
+            this.$broadcast('server::set_mission_ack');
         }
     },
 
