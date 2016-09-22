@@ -79,21 +79,21 @@ export default {
         },
         sendMsg(msgType, data){
             let timestamp = Date.now();
+            let msg;
             switch (msgType){
-                case 'get_parameters': {
+                case 'get_parameters':
                     this.socket.emit(
                         'GetParameters',
                         (new this.protoPkg.GetParameters(timestamp)).toBuffer()
                     );
                     break;
-                }
-                case 'set_parameters': {
+                case 'set_parameters':
                     //'data' should have this form:
                         //[{section: s1, subsection: s2, title: t1, value: v1}, ...]
-                    let paramsMsg = new this.protoPkg.SetParameters();
-                    paramsMsg.timestamp = timestamp;
+                    msg = new this.protoPkg.SetParameters();
+                    msg.timestamp = timestamp;
                     for (let param of data){
-                        paramsMsg.add('parameters', new this.protoPkg.Parameter(
+                        msg.add('parameters', new this.protoPkg.Parameter(
                             param.section,
                             param.subsection,
                             param.title,
@@ -101,67 +101,61 @@ export default {
                             param.value
                         ));
                     }
-                    this.socket.emit('SetParameters', paramsMsg.toBuffer());
+                    this.socket.emit('SetParameters', msg.toBuffer());
                     break;
-                }
-                case 'get_settings': {
+                case 'get_settings':
                     this.socket.emit(
                         'GetSettings',
                         (new this.protoPkg.GetSettings(timestamp)).toBuffer()
                     );
                     break;
-                }
-                case 'set_settings': {
+                case 'set_settings':
                     //'data' should have this form:
                         //[{section: s1, title: t1, value: v1}, ...]
-                    let settingsMsg = new this.protoPkg.SetSettings();
-                    settingsMsg.timestamp = timestamp;
+                    msg = new this.protoPkg.SetSettings();
+                    msg.timestamp = timestamp;
                     for (let setting of data){
-                        settingsMsg.add('settings', new this.protoPkg.Setting(
+                        msg.add('settings', new this.protoPkg.Setting(
                             setting.section, setting.title, setting.value
                         ));
                     }
-                    this.socket.emit('SetSettings', settingsMsg.toBuffer());
+                    this.socket.emit('SetSettings', msg.toBuffer());
                     break;
-                }
-                case 'get_mission': {
+                case 'get_mission':
                     this.socket.emit(
                         'GetMission',
                         (new this.protoPkg.GetMission(timestamp)).toBuffer()
                     );
                     break;
-                }
-                case 'set_mission': {
+                case 'set_mission':
                     //see elements of 'missions' in store.js for expected 'data' format
-                    let setMissionMsg = new this.protoPkg.SetMission(
+                    msg = new this.protoPkg.SetMission(
                         timestamp,
                         new this.protoPkg.Mission()
                     );
-                    setMissionMsg.mission.title = data.title;
-                    setMissionMsg.mission.originLatitude = data.origin.lat;
-                    setMissionMsg.mission.originLongitude = data.origin.lng;
+                    msg.mission.title = data.title;
+                    msg.mission.originLatitude = data.origin.lat;
+                    msg.mission.originLongitude = data.origin.lng;
                     for (let waypoint of data.waypoints){
-                        setMissionMsg.mission.add('waypoints', new this.protoPkg.Mission.Waypoint(
+                        msg.mission.add('waypoints', new this.protoPkg.Mission.Waypoint(
                             waypoint.title,
                             this.waypointType(waypoint.type),
                             waypoint.position.lat,
                             waypoint.position.lng
                         ));
                     }
-                    this.socket.emit('SetMission', setMissionMsg.toBuffer());
+                    this.socket.emit('SetMission', msg.toBuffer());
                     break;
-                }
-                case 'get_missions': {
+                case 'get_missions':
                     this.socket.emit(
                         'GetMissions',
                         (new this.protoPkg.GetMissions(timestamp)).toBuffer()
                     );
                     break;
-                }
-                case 'set_missions': {
+                case 'set_missions':
                     //see 'missions' in store.js for expected 'data' format
-                    let setMissionsMsg = new this.protoPkg.SetMissions();
-                    setMissionsMsg.timestamp = timestamp;
+                    msg = new this.protoPkg.SetMissions();
+                    msg.timestamp = timestamp;
                     for (let mission of data){
                         let m = new this.protoPkg.Mission();
                         m.title = mission.title;
@@ -175,67 +169,73 @@ export default {
                                 waypoint.position.lng
                             ));
                         }
-                        setMissionsMsg.add('missions', m);
+                        msg.add('missions', m);
                     }
-                    this.socket.emit('SetMissions', setMissionsMsg.toBuffer());
+                    this.socket.emit('SetMissions', msg.toBuffer());
                     break;
-                }
-                case 'arm': {
-                    let cmdMsg = new this.protoPkg.Command(
+                case 'arm':
+                    msg = new this.protoPkg.Command(
                         timestamp,
                         this.protoPkg.Command.Type.ARM
                     );
-                    this.socket.emit('Command', cmdMsg.toBuffer());
+                    this.socket.emit('Command', msg.toBuffer());
                     break;
-                }
-                case 'disarm': {
-                    let cmdMsg = new this.protoPkg.Command(
+                case 'disarm':
+                    msg = new this.protoPkg.Command(
                         timestamp,
                         this.protoPkg.Command.Type.DISARM
                     );
-                    this.socket.emit('Command', cmdMsg.toBuffer());
+                    this.socket.emit('Command', msg.toBuffer());
                     break;
-                }
-                case 'start_mission': {
-                    let cmdMsg = new this.protoPkg.Command(
+                case 'start_mission':
+                    msg = new this.protoPkg.Command(
                         timestamp,
                         this.protoPkg.Command.Type.START
                     );
-                    this.socket.emit('Command', cmdMsg.toBuffer());
+                    this.socket.emit('Command', msg.toBuffer());
                     break;
-                }
-                case 'stop_mission': {
-                    let cmdMsg = new this.protoPkg.Command(
+                case 'stop_mission':
+                    msg = new this.protoPkg.Command(
                         timestamp,
                         this.protoPkg.Command.Type.STOP
                     );
-                    this.socket.emit('Command', cmdMsg.toBuffer());
+                    this.socket.emit('Command', msg.toBuffer());
                     break;
-                }
-                case 'resume_mission': {
-                    let cmdMsg = new this.protoPkg.Command(
+                case 'resume_mission':
+                    msg = new this.protoPkg.Command(
                         timestamp,
                         this.protoPkg.Command.Type.RESUME
                     );
-                    this.socket.emit('Command', cmdMsg.toBuffer());
+                    this.socket.emit('Command', msg.toBuffer());
                     break;
-                }
-                case 'kill': {
-                    let cmdMsg = new this.protoPkg.Command(
+                case 'kill':
+                    msg = new this.protoPkg.Command(
                         timestamp,
                         this.protoPkg.Command.Type.KILL
                     );
-                    this.socket.emit('Command', cmdMsg.toBuffer());
+                    this.socket.emit('Command', msg.toBuffer());
                     break;
-                }
-                case 'unkill': {
-                    let cmdMsg = new this.protoPkg.Command(
+                case 'unkill':
+                    msg = new this.protoPkg.Command(
                         timestamp,
                         this.protoPkg.Command.Type.UNKILL
                     );
-                    this.socket.emit('Command', cmdMsg.toBuffer());
+                    this.socket.emit('Command', msg.toBuffer());
                     break;
-                }
+                case 'manual':
+                    msg = new this.protoPkg.Command(
+                        timestamp,
+                        this.protoPkg.Command.Type.MANUAL
+                    );
+                    this.socket.emit('Command', msg.toBuffer());
+                    break;
+                case 'auto':
+                    msg = new this.protoPkg.Command(
+                        timestamp,
+                        this.protoPkg.Command.Type.AUTOMATIC
+                    );
+                    this.socket.emit('Command', msg.toBuffer());
+                    break;
             }
         },
         handleConnectionEstablished(){
@@ -536,6 +536,7 @@ export default {
                 case this.protoPkg.Status.Mode.AUTO:    return 'auto';
                 case this.protoPkg.Status.Mode.PAUSED:  return 'paused';
                 case this.protoPkg.Status.Mode.KILLED:  return 'killed';
+                case this.protoPkg.Status.Mode.MANUAL:  return 'manual';
                 default: throw new Error('Invalid mode type');
             }
         },
@@ -632,6 +633,14 @@ export default {
 
         'client::unkill'() {
             this.sendMsg('unkill', null);
+        },
+
+        'client::manual'() {
+            this.sendMsg('manual', null);
+        },
+
+        'client::auto'() {
+            this.sendMsg('auto', null);
         }
     }
 };

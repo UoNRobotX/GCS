@@ -107,6 +107,12 @@ class VehicleMessenger extends EventEmitter {
             case this.protoPkg.Command.Type.UNKILL:
                 this.emit('kill', false);
                 break;
+            case this.protoPkg.Command.Type.MANUAL:
+                this.emit('mode', 'manual');
+                break;
+            case this.protoPkg.Command.Type.AUTOMATIC:
+                this.emit('mode', 'automatic');
+                break;
         }
     }
 

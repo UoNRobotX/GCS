@@ -161,6 +161,14 @@ export default {
             this.$broadcast('client::unkill');
         },
 
+        'client::manual'() {
+            this.$broadcast('client::manual');
+        },
+
+        'client::auto'() {
+            this.$broadcast('client::auto');
+        },
+
         'server::set_parameters_ack'(){
             this.$broadcast('server::set_parameters_ack');
         },

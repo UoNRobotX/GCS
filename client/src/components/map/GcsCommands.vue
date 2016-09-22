@@ -4,14 +4,20 @@
             @click="startMission"
         >Restart</ui-button>
 
-        <ui-button
+        <ui-button v-if="wamv.mode !== 'manual'"
             @click="toggleMission" :text="startButtonText"
             :disabled="wamv.mode === 'killed'"
         ></ui-button>
 
-        <ui-button
+        <ui-button v-if="wamv.mode !== 'manual'"
             color="danger" :text="wamv.mode === 'killed' ? 'Unkill' : 'Kill'"
             @click="toggleKill"
+        ></ui-button>
+
+        <ui-button
+            text="Mode"
+            has-dropdown-menu dropdown-position="bottom right" :menu-options="overflowMenu"
+            @menu-option-selected="menuOptionSelected"
         ></ui-button>
 
         <div class="armed-toggle" v-if="wamv.loaded">
@@ -30,6 +36,15 @@ export default {
     vuex: {
         getters: {
             wamv: getWamv
+        }
+    },
+
+    data(){
+        return {
+            overflowMenu: [
+                { id: 'auto',   text: 'Auto'  },
+                { id: 'manual', text: 'Manual'}
+            ]
         }
     },
 
@@ -81,6 +96,25 @@ export default {
 
         toggleKill() {
             this.$dispatch(this.wamv.mode === 'killed' ? 'client::unkill' : 'client::kill');
+        },
+
+        menuOptionSelected(option){
+            switch (option.id){
+                case 'auto':
+                    if (this.wamv.mode !== 'manual'){
+                        this.$dispatch('app::create-snackbar', 'Already in automatic mode');
+                        return;
+                    }
+                    this.$dispatch('client::auto');
+                    break;
+                case 'manual':
+                    if (this.wamv.mode === 'manual'){
+                        this.$dispatch('app::create-snackbar', 'Already in manual mode');
+                        return;
+                    }
+                    this.$dispatch('client::manual');
+                    break;
+            }
         }
     }
 };
@@ -97,7 +131,7 @@ export default {
 
     padding: 8px;
     display: flex;
-    min-width: 300px;
+    min-width: 200px;
     border-radius: 2px;
     background-color: white; // alpha(white, 0.9);
     box-shadow: 0 2px 5px 0 alpha(black, 0.2), 0 2px 10px 0 alpha(black, 0.16);

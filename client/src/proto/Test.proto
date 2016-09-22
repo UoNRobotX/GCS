@@ -44,6 +44,7 @@ message Status {
         AUTO    = 1;
         PAUSED  = 2;
         KILLED  = 3;
+        MANUAL  = 4;
     }
     uint64 timestamp = 1;
     double latitude  = 2;
@@ -59,13 +60,15 @@ message Status {
 //sent from the client to the server, which sends it to the WAM-V
 message Command {
     enum Type {
-        ARM    = 0;
-        DISARM = 1;
-        START  = 2;
-        STOP   = 3;
-        RESUME = 4;
-        KILL   = 5;
-        UNKILL = 6;
+        ARM       = 0;
+        DISARM    = 1;
+        START     = 2;
+        STOP      = 3;
+        RESUME    = 4;
+        KILL      = 5;
+        UNKILL    = 6;
+        MANUAL    = 7; //switch to manual mode
+        AUTOMATIC = 8; //switch to automatic mode
     }
     uint64 timestamp = 1;
     Type type        = 2;

@@ -12,7 +12,8 @@ class Vehicle {
             STOPPED:    0,
             AUTO:       1,
             PAUSED:     2,
-            KILLED:     3
+            KILLED:     3,
+            MANUAL:     4
         };
 
         this.PARAM_TYPES = {
@@ -71,15 +72,31 @@ class Vehicle {
         });
 
         this.messenger.on('start', (fromBeginning) => {
+            if (this.mode === this.MODES.MANUAL){
+                console.log('Ignored a start/resume message while in manual mode')
+                return;
+            }
             this.start(fromBeginning);
         });
 
         this.messenger.on('stop', () => {
+            if (this.mode === this.MODES.MANUAL){
+                console.log('Ignored a stop message while in manual mode')
+                return;
+            }
             this.stop();
         });
 
         this.messenger.on('kill', (shouldKill) => {
+            if (this.mode === this.MODES.MANUAL){
+                console.log('Ignored a kill/unkill message while in manual mode')
+                return;
+            }
             this.kill(shouldKill);
+        });
+
+        this.messenger.on('mode', (mode) => {
+            this.setMode(mode);
         });
 
         this.messenger.on('get_parameters', () => {
@@ -88,7 +105,7 @@ class Vehicle {
 
         this.messenger.on('get_mission', () => {
             if (this.mission === null) {
-                console.log('Unable to respond to GetMission request: No uploaded mission');
+                console.log('Ignored a GetMission request: No uploaded mission');
                 return;
             }
 
@@ -178,6 +195,26 @@ class Vehicle {
         this.speed = 0;
     }
 
+    setMode(mode){
+        if (mode === 'manual'){
+            if (this.mode === this.MODES.MANUAL){
+                console.log('Ignored a manual mode command while in manual mode');
+                return;
+            }
+            this.mode = this.MODES.MANUAL;
+            this.nextWaypointIndex = 0;
+            this.speed = 0;
+        } else if (mode === 'automatic'){
+            if (this.mode !== this.MODES.MANUAL){
+                console.log('Ignored an automatic mode command while in automatic mode');
+                return;
+            }
+            this.mode = this.MODES.STOPPED;
+        } else {
+            console.log('Unexpected target mode');
+        }
+    }
+
     updateState() {
         if (this.currentlyUpdating) {
             return;
@@ -237,7 +274,7 @@ class Vehicle {
             this.battery = 0;
             this.speed = 0;
 
-            if (this.mode == this.MODES.AUTO) {
+            if (this.mode === this.MODES.AUTO) {
                 this.mode = this.MODES.PAUSED;
             }
         } else {

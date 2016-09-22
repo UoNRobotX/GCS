@@ -104,20 +104,17 @@ export default {
 
         menuOptionSelected(option){
             switch (option.id){
-                case 'save': {
+                case 'save':
                     this.$dispatch('client::set_missions', this.missions);
                     break;
-                }
-                case 'load': {
+                case 'load':
                     this.$dispatch('client::get_missions');
                     break;
-                }
-                case 'import': {
+                case 'import':
                     //trigger file select
                     document.getElementById('import_missions_input').click();
                     break;
-                }
-                case 'export': {
+                case 'export':
                     //create data URI
                     let uri = 'data:application/json,';
                     uri += JSON.stringify(this.missions);
@@ -129,10 +126,9 @@ export default {
                     //trigger download
                     link.click();
                     break;
-                }
-                case 'clear': {
+                case 'clear':
                     this.setMissions([]);
-                }
+                    break;
             }
         },
 
