@@ -107,7 +107,6 @@ export default {
                 { id: 'edit', text: 'Edit mission' },
                 { id: 'clear_all', text: 'Clear all waypoints' }
             ],
-            origin: this.mission.origin.lat + ', ' + this.mission.origin.lng,
             originValid: true,
             waitUploadMission: false
         };

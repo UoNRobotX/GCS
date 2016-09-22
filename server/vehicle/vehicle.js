@@ -66,76 +66,76 @@ class Vehicle {
     }
 
     setupEventHandlers() {
-        this.messenger.on('arm', (shouldArm, id) => {
-            this.arm(shouldArm, id);
+        this.messenger.on('arm', (shouldArm) => {
+            this.arm(shouldArm);
         });
 
-        this.messenger.on('start', (fromBeginning, id) => {
-            this.start(fromBeginning, id);
+        this.messenger.on('start', (fromBeginning) => {
+            this.start(fromBeginning);
         });
 
-        this.messenger.on('stop', (id) => {
-            this.stop(id);
+        this.messenger.on('stop', () => {
+            this.stop();
         });
 
-        this.messenger.on('kill', (shouldKill, id) => {
-            this.kill(shouldKill, id);
+        this.messenger.on('kill', (shouldKill) => {
+            this.kill(shouldKill);
         });
 
-        this.messenger.on('get_parameters', (id) => {
-            this.messenger.sendGetParametersResponse(this.parameters, id);
+        this.messenger.on('get_parameters', () => {
+            this.messenger.sendGetParametersResponse(this.parameters);
         });
 
-        this.messenger.on('get_mission', (id) => {
+        this.messenger.on('get_mission', () => {
             if (this.mission === null) {
-                this.messenger.sendFailureMessage('No uploaded mission', id);
+                this.messenger.sendFailureMessage('No uploaded mission');
                 return;
             }
 
-            this.messenger.sendGetMissionResponse(this.mission, id);
+            this.messenger.sendGetMissionResponse(this.mission);
         });
 
-        this.messenger.on('set_parameters', (newParams, id) => {
-            this.setParameters(newParams, id);
+        this.messenger.on('set_parameters', (newParams) => {
+            this.setParameters(newParams);
         });
 
-        this.messenger.on('set_mission', (newMission, id) => {
-            this.setMission(newMission, id);
+        this.messenger.on('set_mission', (newMission) => {
+            this.setMission(newMission);
         });
     }
 
     /**
      * Arm or disarm, sending a Success or Failure message
      */
-    arm(shouldArm, id) {
+    arm(shouldArm) {
         if (shouldArm === this.armed) {
-            this.messenger.sendFailureMessage(shouldArm ? 'Already armed' : 'Already disarmed', id);
+            this.messenger.sendFailureMessage(shouldArm ? 'Already armed' : 'Already disarmed');
             return;
         }
 
         if (this.mode === this.MODES.AUTO) {
-            this.messenger.sendFailureMessage('Currently doing a mission', id);
+            this.messenger.sendFailureMessage('Currently doing a mission');
             return;
         }
 
         this.armed = shouldArm;
-        this.messenger.sendSuccessMessage(id);
+        this.messenger.sendSuccessMessage();
     }
 
     /**
      * Start or resume, sending a Success or Failure message
      */
-    start(fromBeginning, id) {
+    start(fromBeginning) {
         if (this.mode === this.MODES.AUTO) {
-            this.messenger.sendFailureMessage('Currently doing a mission', id);
+            this.messenger.sendFailureMessage('Currently doing a mission');
         } else if (this.mode === this.MODES.KILLED) {
-            this.messenger.sendFailureMessage('Kill switch is active', id);
+            this.messenger.sendFailureMessage('Kill switch is active');
         } else if (this.battery === 0) {
-            this.messenger.sendFailureMessage('Battery is at 0%', id);
+            this.messenger.sendFailureMessage('Battery is at 0%');
         } else if (!this.armed) {
-            this.messenger.sendFailureMessage('Not armed', id);
+            this.messenger.sendFailureMessage('Not armed');
         } else if (this.mission === null){
-            this.messenger.sendFailureMessage('No uploaded mission', id);
+            this.messenger.sendFailureMessage('No uploaded mission');
         } else {
             if (this.mode === this.MODES.PAUSED && fromBeginning) {
                 this.nextWaypointIndex = 0;
@@ -144,31 +144,33 @@ class Vehicle {
             this.mode = this.MODES.AUTO;
             this.speed = this.MAX_SPEED;
 
-            this.messenger.sendSuccessMessage(id);
+            this.messenger.sendSuccessMessage();
         }
     }
 
     /**
      * Stop, sending a Success or Failure message
      */
-    stop(id) {
+    stop() {
         if (this.mode !== this.MODES.AUTO){
-            this.messenger.sendFailureMessage('Not doing a mission', id);
+            this.messenger.sendFailureMessage('Not doing a mission');
             return;
         }
 
         this.mode = this.MODES.PAUSED;
         this.speed = 0;
 
-        this.messenger.sendSuccessMessage(id);
+        this.messenger.sendSuccessMessage();
     }
 
     /**
      * Activate or deactivate kill switch, sending a Success or Failure message
      */
-    kill(shouldKill, id) {
+    kill(shouldKill) {
         if (shouldKill === (this.mode === this.MODES.KILLED)) {
-            this.messenger.sendFailureMessage('Kill switch already ' + (shouldKill ? '' : 'in') + 'active', id);
+            this.messenger.sendFailureMessage(
+                shouldKill ? 'Kill switch already active' : 'Kill switch already inactive'
+            );
             return;
         }
 
@@ -176,7 +178,7 @@ class Vehicle {
         this.nextWaypointIndex = 0;
         this.speed = 0;
 
-        this.messenger.sendSuccessMessage(id);
+        this.messenger.sendSuccessMessage();
     }
 
     updateState() {
@@ -246,14 +248,14 @@ class Vehicle {
         }
 
         if (msg.length > 0) {
-            this.messenger.sendAttentionMessage(msg, 0);
+            this.messenger.sendAttentionMessage(msg);
         }
 
         this.currentlyUpdating = false;
     }
 
     sendStatus() {
-        let status = {
+        this.messenger.sendStatusMessage({
             lat: this.position.lat,
             lng: this.position.lng,
             heading: this.heading,
@@ -262,18 +264,16 @@ class Vehicle {
             armed: this.armed,
             mode: this.mode,
             signal: this.signal
-        };
-
-        this.messenger.sendStatusMessage(status, 0);
+        });
     }
 
-    setMission(newMission, id) {
+    setMission(newMission) {
         if (newMission.waypoints.length === 0) {
-            this.messenger.sendFailureMessage('Mission has no waypoints', id);
-        } else if (this.mode == this.MODES.AUTO) {
-            this.messenger.sendFailureMessage('Currently doing a mission', id);
+            this.messenger.sendFailureMessage('Mission has no waypoints');
+        } else if (this.mode === this.MODES.AUTO) {
+            this.messenger.sendFailureMessage('Currently doing a mission');
         } else {
-            if (this.mode == this.MODES.PAUSED) {
+            if (this.mode === this.MODES.PAUSED) {
                 this.mode = this.MODES.STOPPED;
             }
 
@@ -296,11 +296,11 @@ class Vehicle {
             };
 
             this.nextWaypointIndex = 0;
-            this.messenger.sendSuccessMessage(id);
+            this.messenger.sendSuccessMessage();
         }
     }
 
-    setParameters(newParams, id) {
+    setParameters(newParams) {
         // Verify new parameters
         let paramsToSet = [];
         let i, j;
@@ -321,7 +321,7 @@ class Vehicle {
                 }
             }
 
-            this.messenger.sendFailureMessage('A parameter was not found', id);
+            this.messenger.sendFailureMessage('A parameter was not found');
             return;
         }
 
@@ -336,7 +336,7 @@ class Vehicle {
             ];
         }
 
-        this.messenger.sendSuccessMessage(id);
+        this.messenger.sendSuccessMessage();
     }
 }
 

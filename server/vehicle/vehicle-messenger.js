@@ -11,6 +11,7 @@ class VehicleMessenger extends EventEmitter {
 
         this.protoPkg = null;
         this.serial = new Serial(inputFile, outputFile, baudRate);
+        this.lastTimestamp = null; //timestamp of last message from server, if needed
 
         this.MSG_TYPES = {
             STATUS:                   0,
@@ -49,107 +50,136 @@ class VehicleMessenger extends EventEmitter {
     }
 
     setupEventHandlers() {
-        this.serial.on('packet', (type, data, id) => {
+        this.serial.on('packet', (type, data) => {
             switch (type) {
                 case this.MSG_TYPES.COMMAND:
-                    this.handleCommand(data, id);
+                    this.handleCommand(data);
                     break;
                 case this.MSG_TYPES.GET_PARAMETERS:
-                    this.emit('get_parameters', id);
+                    this.handleGetParameters(data);
                     break;
                 case this.MSG_TYPES.GET_MISSION:
-                    this.emit('get_mission', id);
+                    this.handleGetMission(data);
                     break;
                 case this.MSG_TYPES.SET_PARAMETERS:
-                    this.handleSetParameters(data, id);
+                    this.handleSetParameters(data);
                     break;
                 case this.MSG_TYPES.SET_MISSION:
-                    this.handleSetMission(data, id);
+                    this.handleSetMission(data);
                     break;
                 default:
-                    this.sendFailureMessage('Unexpected message type', id);
+                    console.log('Unexpected message type');
             }
+        });
+
+        this.serial.on('error', (msg) => {
+            console.log('Serial error: ' + msg);
         });
     }
 
-    handleCommand(data, id) {
-        var message = this.decodeMessage('Command', data, id);
-
+    handleCommand(data) {
+        let message = this.decodeMessage('Command', data);
         if (message === null) {
             return;
         }
 
+        this.lastTimestamp = message.timestamp;
+
         switch (message.type) {
             case this.protoPkg.Command.Type.ARM:
-                this.emit('arm', true, id);
+                this.emit('arm', true);
                 break;
             case this.protoPkg.Command.Type.DISARM:
-                this.emit('arm', false, id);
+                this.emit('arm', false);
                 break;
             case this.protoPkg.Command.Type.START:
-                this.emit('start', true, id);
+                this.emit('start', true);
                 break;
             case this.protoPkg.Command.Type.RESUME:
-                this.emit('start', false, id);
+                this.emit('start', false);
                 break;
             case this.protoPkg.Command.Type.STOP:
-                this.emit('stop', id);
+                this.emit('stop');
                 break;
             case this.protoPkg.Command.Type.KILL:
-                this.emit('kill', true, id);
+                this.emit('kill', true);
                 break;
             case this.protoPkg.Command.Type.UNKILL:
-                this.emit('kill', false, id);
+                this.emit('kill', false);
                 break;
         }
     }
 
-    handleSetParameters(data, id) {
-        var newParams = this.decodeMessage('SetParameters', data);
+    handleGetParameters(data){
+        let message = this.decodeMessage('GetParameters', data);
+        if (message === null) {
+            return;
+        }
+
+        this.lastTimestamp = message.timestamp;
+
+        this.emit('get_parameters');
+    }
+
+    handleGetMission(data){
+        let message = this.decodeMessage('GetMission', data);
+        if (message === null) {
+            return;
+        }
+        
+        this.lastTimestamp = message.timestamp;
+
+        this.emit('get_mission');
+    }
+
+    handleSetParameters(data) {
+        let newParams = this.decodeMessage('SetParameters', data);
         if (newParams === null) {
             return;
         }
 
-        this.emit('set_parameters', newParams, id);
+        this.lastTimestamp = newParams.timestamp;
+
+        this.emit('set_parameters', newParams);
     }
 
-    handleSetMission(data, id) {
-        let setMissionMessage = this.decodeMessage('SetMission', data);
-        if (setMissionMessage === null) {
+    handleSetMission(data) {
+        let message = this.decodeMessage('SetMission', data);
+        if (message === null) {
             return;
         }
 
-        let newMission = setMissionMessage.mission;
+        this.lastTimestamp = message.timestamp;
 
-        this.emit('set_mission', newMission, id);
+        this.emit('set_mission', message.mission);
     }
 
     sendSuccessMessage(id) {
         this.serial.writeData(
             this.MSG_TYPES.SUCCESS,
-            (new this.protoPkg.Success()).toBuffer(),
-            id
+            (new this.protoPkg.Success(this.lastTimestamp)).toBuffer()
         );
+        this.lastTimestamp = null;
     }
 
-    sendFailureMessage(message, id) {
+    sendFailureMessage(message) {
         this.serial.writeData(
             this.MSG_TYPES.FAILURE,
-            (new this.protoPkg.Failure(message)).toBuffer(),
-            id
+            (new this.protoPkg.Failure(this.lastTimestamp, message)).toBuffer()
         );
+        this.lastTimestamp = null;
     }
 
-    sendAttentionMessage(message, id) {
+    sendAttentionMessage(message) {
         this.serial.writeData(
             this.MSG_TYPES.ATTENTION,
-            (new this.protoPkg.Attention(message)).toBuffer(),
-            id
+            (new this.protoPkg.Attention(Date.now(), message)).toBuffer()
         );
     }
 
-    sendStatusMessage(status, id) {
+    sendStatusMessage(status) {
         let message = new this.protoPkg.Status(
+            Date.now(),
             status.lat,
             status.lng,
             status.heading,
@@ -160,12 +190,15 @@ class VehicleMessenger extends EventEmitter {
             status.signal
         );
 
-        this.serial.writeData(this.MSG_TYPES.STATUS, message.toBuffer(), 0);
+        this.serial.writeData(this.MSG_TYPES.STATUS, message.toBuffer());
     }
 
-    sendGetParametersResponse(parameters, id) {
+    sendGetParametersResponse(parameters) {
         let message = new this.protoPkg.GetParametersResponse();
         let param;
+
+        message.timestamp = this.lastTimestamp;
+        this.lastTimestamp = null;
 
         for (let i = 0; i < parameters.length; i++) {
             param = parameters[i];
@@ -173,12 +206,16 @@ class VehicleMessenger extends EventEmitter {
                 param[0], param[1], param[2], param[3], param[4]
             ));
         }
-        this.serial.writeData(this.MSG_TYPES.GET_PARAMETERS_RESPONSE, message.toBuffer(), id);
+        this.serial.writeData(this.MSG_TYPES.GET_PARAMETERS_RESPONSE, message.toBuffer());
     }
 
-    sendGetMissionResponse(mission, id) {
-        let msg = new this.protoPkg.GetMissionResponse(new this.protoPkg.Mission());
+    sendGetMissionResponse(mission) {
+        let msg = new this.protoPkg.GetMissionResponse();
 
+        msg.timestamp = this.lastTimestamp;
+        this.lastTimestamp = null;
+
+        msg.mission = new this.protoPkg.Mission();
         msg.mission.title = mission.title;
         msg.mission.originLatitude = mission.origin.lat;
         msg.mission.originLongitude = mission.origin.lng;
@@ -191,16 +228,14 @@ class VehicleMessenger extends EventEmitter {
             ));
         }
 
-        this.serial.writeData(this.MSG_TYPES.GET_MISSION_RESPONSE, msg.toBuffer(), id);
+        this.serial.writeData(this.MSG_TYPES.GET_MISSION_RESPONSE, msg.toBuffer());
     }
 
-    decodeMessage(type, buffer, id) {
+    decodeMessage(type, buffer) {
         try {
             return this.protoPkg[type].decode(buffer);
         } catch (error) {
-            console.log('Vehicle: Unable to decode ' + type + ' message', error);
-            this.sendFailureMessage('Invalid message', id);
-
+            console.log('Unable to decode ' + type + ' message', error);
             return null;
         }
     }

@@ -39,10 +39,8 @@ export default {
     data() {
         return {
             socket: null,
-            msgId: 0, //used to assign IDs to sent messages
-            pending: {}, //contains data for each sent message for which a response is expected
-                //pending[id] = {type, timer, initiator}
-            MAX_MSG_ID: Math.pow(2,53), //this is probably unnecessary
+            pending: null, //describes a sent message      //{type, initiator, timer}
+            queued: [],    //describes messages to be sent //[{type, initiator, timer}, ...]
             TIMEOUT: 1000,
             protoBuilder: null,
             protoPkg: null
@@ -93,7 +91,7 @@ export default {
             });
             this.socket.on('Status', (data) => {
                 //decode message
-                var msg;
+                let msg;
                 try {
                     msg = this.protoPkg.Status.decode(data);
                 } catch (e){
@@ -112,190 +110,175 @@ export default {
                     signal:   msg.signal
                 });
             });
-            this.socket.on('GetParametersResponse', (data, id) => {
+            this.socket.on('GetParametersResponse', (data) => {
+                //check if expected
+                if (this.pending === null || this.pending.type !== 'get_parameters'){
+                    console.log('Unexpected GetParametersResponse message');
+                    return;
+                }
                 //decode message
-                var paramsMsg;
+                let paramsMsg;
                 try {
                     paramsMsg = this.protoPkg.GetParametersResponse.decode(data);
                 } catch (e){
                     console.log('Unable to decode GetParametersResponse message');
                     return;
                 }
-                //set parameters
-                if (id in this.pending){
-                    let msg = this.pending[id];
-                    delete this.pending[id];
-                    clearTimeout(msg.timer);
-                    //convert received parameters into an intermediate structure
-                        //{section1: {subsection1: {param1: {type: t2, value: v1}}, ...}, ...}
-                    let tempParams = {};
-                    for (let p of paramsMsg.parameters){
-                        if (p.section in tempParams){
-                            if (p.subSection in tempParams[p.section]){
-                                if (p.title in tempParams[p.section][p.subSection]){
-                                    console.log('Warning: received duplicate parameter');
-                                } else {
-                                    tempParams[p.section][p.subSection][p.title] = {
-                                        type: this.paramTypeString(p.type),
-                                        value: p.value
-                                    };
-                                }
+                //check timestamp
+                if (Date.now() - paramsMsg.timestamp >= this.TIMEOUT){
+                    return;
+                }
+                //clear timeout
+                clearTimeout(this.pending.timer);
+                //convert received parameters into an intermediate structure
+                    //{section1: {subsection1: {param1: {type: t2, value: v1}}, ...}, ...}
+                let tempParams = {};
+                for (let p of paramsMsg.parameters){
+                    if (p.section in tempParams){
+                        if (p.subSection in tempParams[p.section]){
+                            if (p.title in tempParams[p.section][p.subSection]){
+                                console.log('Warning: received duplicate parameter');
                             } else {
-                                tempParams[p.section][p.subSection] = {
-                                    [p.title]: {
-                                        type: this.paramTypeString(p.type),
-                                        value: p.value
-                                    }
+                                tempParams[p.section][p.subSection][p.title] = {
+                                    type: this.paramTypeString(p.type),
+                                    value: p.value
                                 };
                             }
                         } else {
-                            tempParams[p.section] = {
-                                [p.subSection]: {
-                                    [p.title]: {
-                                        type: this.paramTypeString(p.type),
-                                        value: p.value
-                                    }
+                            tempParams[p.section][p.subSection] = {
+                                [p.title]: {
+                                    type: this.paramTypeString(p.type),
+                                    value: p.value
                                 }
                             };
                         }
-                    }
-                    //convert intermediate structure into one that is convenient for display
-                    let newParams = [];
-                    for (let sectionName of Object.getOwnPropertyNames(tempParams)){
-                        let section = tempParams[sectionName];
-                        let newSection = {title: sectionName, subSections: []};
-                        newParams.push(newSection);
-                        for (let subSectionName of Object.getOwnPropertyNames(section)){
-                            let subSection = section[subSectionName];
-                            let newSubSection = {title: subSectionName, params: []};
-                            newSection.subSections.push(newSubSection);
-                            for (let paramName of Object.getOwnPropertyNames(subSection)){
-                                let param = subSection[paramName];
-                                newSubSection.params.push({
-                                    title: paramName,
-                                    type: param.type,
-                                    value: param.value,
-                                    valid: true // TODO: remove this?
-                                });
+                    } else {
+                        tempParams[p.section] = {
+                            [p.subSection]: {
+                                [p.title]: {
+                                    type: this.paramTypeString(p.type),
+                                    value: p.value
+                                }
                             }
+                        };
+                    }
+                }
+                //convert intermediate structure into one that is convenient for display
+                let newParams = [];
+                for (let sectionName of Object.getOwnPropertyNames(tempParams)){
+                    let section = tempParams[sectionName];
+                    let newSection = {title: sectionName, subSections: []};
+                    newParams.push(newSection);
+                    for (let subSectionName of Object.getOwnPropertyNames(section)){
+                        let subSection = section[subSectionName];
+                        let newSubSection = {title: subSectionName, params: []};
+                        newSection.subSections.push(newSubSection);
+                        for (let paramName of Object.getOwnPropertyNames(subSection)){
+                            let param = subSection[paramName];
+                            newSubSection.params.push({
+                                title: paramName,
+                                type: param.type,
+                                value: param.value,
+                                valid: true // TODO: remove this?
+                            });
                         }
                     }
-                    this.setParameters(newParams);
-                    console.log('Parameters loaded.');
-                    this.$dispatch('server.get_parameters:success', msg.initiator);
                 }
+                //set parameters
+                this.setParameters(newParams);
+                console.log('Parameters loaded.');
+                this.$dispatch('server.get_parameters:success', this.pending.initiator);
+                //remove pending message info, and send a queued message if any
+                this.pending = null;
+                this.sendMsg(null);
             });
-            this.socket.on('GetSettingsResponse', (data, id) => {
+            this.socket.on('GetSettingsResponse', (data) => {
+                //check if expected
+                if (this.pending === null || this.pending.type !== 'get_settings'){
+                    console.log('Unexpected GetSettingsResponse message');
+                    return;
+                }
                 //decode message
-                var settingsMsg;
+                let settingsMsg;
                 try {
                     settingsMsg = this.protoPkg.GetSettingsResponse.decode(data);
                 } catch (e){
                     console.log('Unable to decode GetSettingsResponse message');
                     return;
                 }
-                //set settings
-                if (id in this.pending){
-                    let msg = this.pending[id];
-                    delete this.pending[id];
-                    clearTimeout(msg.timer);
-                    //convert received settings into an intermediate structure
-                        //{section1: {setting1: value1}, ...}
-                    let tempSettings = {};
-                    for (let s of settingsMsg.settings){
-                        if (s.section in tempSettings){
-                            if (s.title in tempSettings[s.section]){
-                                console.log('Warning: received duplicate setting');
-                            } else {
-                                tempSettings[s.section][s.title] = s.value;
-                            }
-                        } else {
-                            tempSettings[s.section] = {
-                                [s.title]: s.value
-                            };
-                        }
-                    }
-                    //convert intermediate structure into one that is convenient for display
-                    let newSettings = [];
-                    for (let sectionName of Object.getOwnPropertyNames(tempSettings)){
-                        let section = tempSettings[sectionName];
-                        let newSection = {title: sectionName, settings: []};
-                        newSettings.push(newSection);
-                        for (let settingName of Object.getOwnPropertyNames(section)){
-                            newSection.settings.push({
-                                title: settingName,
-                                value: section[settingName]
-                            });
-                        }
-                    }
-                    this.setSettings(newSettings);
-                    console.log('Settings loaded.');
-                    this.$dispatch('server.get_settings:success', msg.initiator);
+                //check timestamp
+                if (Date.now() - settingsMsg.timestamp >= this.TIMEOUT){
+                    return;
                 }
+                //clear timeout
+                clearTimeout(this.pending.timer);
+                //convert received settings into an intermediate structure
+                    //{section1: {setting1: value1}, ...}
+                let tempSettings = {};
+                for (let s of settingsMsg.settings){
+                    if (s.section in tempSettings){
+                        if (s.title in tempSettings[s.section]){
+                            console.log('Warning: received duplicate setting');
+                        } else {
+                            tempSettings[s.section][s.title] = s.value;
+                        }
+                    } else {
+                        tempSettings[s.section] = {
+                            [s.title]: s.value
+                        };
+                    }
+                }
+                //convert intermediate structure into one that is convenient for display
+                let newSettings = [];
+                for (let sectionName of Object.getOwnPropertyNames(tempSettings)){
+                    let section = tempSettings[sectionName];
+                    let newSection = {title: sectionName, settings: []};
+                    newSettings.push(newSection);
+                    for (let settingName of Object.getOwnPropertyNames(section)){
+                        newSection.settings.push({
+                            title: settingName,
+                            value: section[settingName]
+                        });
+                    }
+                }
+                //set settings
+                this.setSettings(newSettings);
+                console.log('Settings loaded.');
+                this.$dispatch('server.get_settings:success', this.pending.initiator);
+                //remove pending message info, and send a queued message if any
+                this.pending = null;
+                this.sendMsg(null);
             });
-            this.socket.on('GetMissionsResponse', (data, id) => {
+            this.socket.on('GetMissionsResponse', (data) => {
+                //check if expected
+                if (this.pending === null || this.pending.type !== 'get_missions'){
+                    console.log('Unexpected GetMissionsResponse message');
+                    return;
+                }
                 //decode message
-                var missionsMsg;
+                let missionsMsg;
                 try {
                     missionsMsg = this.protoPkg.GetMissionsResponse.decode(data);
                 } catch (e){
                     console.log('Unable to decode GetMissionsResponse message');
                     return;
                 }
-                //set missions
-                if (id in this.pending){
-                    let msg = this.pending[id];
-                    delete this.pending[id];
-                    clearTimeout(msg.timer);
-                    //convert received missions into a certain structure
-                    let newMissions = [];
-                    for (let mission of missionsMsg.missions){
-                        newMissions.push({
-                            title: mission.title,
-                            origin: {
-                                lat: mission.originLatitude,
-                                lng: mission.originLongitude
-                            },
-                            waypoints: mission.waypoints.map((wp) => {
-                                return {
-                                    title: wp.title,
-                                    type: this.waypointTypeString(wp.type),
-                                    position: {
-                                        lat: wp.latitude,
-                                        lng: wp.longitude
-                                    },
-                                    visible: true // TODO: remove this?
-                                };
-                            })
-                        });
-                    }
-                    this.setMissions(newMissions);
-                    console.log('Missions loaded.');
-                    this.$dispatch('server.get_missions:success', msg.initiator);
-                }
-            });
-            this.socket.on('GetMissionResponse', (data, id) => {
-                //decode message
-                var missionMsg;
-                try {
-                    missionMsg = this.protoPkg.GetMissionResponse.decode(data).mission;
-                } catch (e){
-                    console.log('Unable to decode GetMissionResponse message');
+                //check timestamp
+                if (Date.now() - missionsMsg.timestamp >= this.TIMEOUT){
                     return;
                 }
-                //add mission to mission list
-                if (id in this.pending){
-                    let msg = this.pending[id];
-                    delete this.pending[id];
-                    clearTimeout(msg.timer);
-                    //convert received mission into a certain structure, and append it to the list
-                    this.missions.push({
-                        title: missionMsg.title,
+                //clear timeout
+                clearTimeout(this.pending.timer);
+                //convert received missions into a certain structure
+                let newMissions = [];
+                for (let mission of missionsMsg.missions){
+                    newMissions.push({
+                        title: mission.title,
                         origin: {
-                            lat: missionMsg.originLatitude,
-                            lng: missionMsg.originLongitude
+                            lat: mission.originLatitude,
+                            lng: mission.originLongitude
                         },
-                        waypoints: missionMsg.waypoints.map((wp) => {
+                        waypoints: mission.waypoints.map((wp) => {
                             return {
                                 title: wp.title,
                                 type: this.waypointTypeString(wp.type),
@@ -304,216 +287,344 @@ export default {
                                     lng: wp.longitude
                                 },
                                 visible: true // TODO: remove this?
-                            }
+                            };
                         })
                     });
-                    console.log('Mission downloaded.');
-                    this.$dispatch('server.get_mission:success', msg.initiator);
                 }
+                //set missions
+                this.setMissions(newMissions);
+                console.log('Missions loaded.');
+                this.$dispatch('server.get_missions:success', this.pending.initiator);
+                //remove pending message info, and send a queued message if any
+                this.pending = null;
+                this.sendMsg(null);
             });
-            this.socket.on('Success', (data, id) => {
-                console.log('received "Success" message');
-                if (id in this.pending){
-                    let msg = this.pending[id];
-                    delete this.pending[id];
-                    clearTimeout(msg.timer);
-                    switch (msg.type){
-                        case 'set_parameters': {console.log('Parameters set.');          break;}
-                        case 'set_settings':   {console.log('Settings set.');            break;}
-                        case 'set_missions':  {console.log('Missions saved.');          break;}
-                        case 'set_mission': {console.log('Mission uploaded.');        break;}
-                        case 'arm':            {console.log('Vehicle armed.');           break;}
-                        case 'disarm':         {console.log('Vehicle disarmed.');        break;}
-                        case 'start_mission':  {console.log('Mission started.');         break;}
-                        case 'stop_mission':   {console.log('Mission stopped.');         break;}
-                        case 'resume_mission': {console.log('Mission resumed.');         break;}
-                        case 'kill':           {console.log('Kill switch activated.');   break;}
-                        case 'unkill':         {console.log('Kill switch deactivated.'); break;}
-                    }
-                    this.$dispatch('server.' + msg.type + ':success', msg.initiator);
+            this.socket.on('GetMissionResponse', (data) => {
+                //check if expected
+                if (this.pending === null || this.pending.type !== 'get_mission'){
+                    console.log('Unexpected GetMissionResponse message');
+                    return;
                 }
-            });
-            this.socket.on('Failure', (data, id) => {
                 //decode message
-                var failureMsg;
+                let missionMsg;
+                try {
+                    missionMsg = this.protoPkg.GetMissionResponse.decode(data).mission;
+                } catch (e){
+                    console.log('Unable to decode GetMissionResponse message');
+                    return;
+                }
+                //check timestamp
+                if (Date.now() - missionMsg.timestamp >= this.TIMEOUT){
+                    return;
+                }
+                //clear timeout
+                clearTimeout(this.pending.timer);
+                //convert received mission into a certain structure, and append it to the list
+                this.missions.push({
+                    title: missionMsg.title,
+                    origin: {
+                        lat: missionMsg.originLatitude,
+                        lng: missionMsg.originLongitude
+                    },
+                    waypoints: missionMsg.waypoints.map((wp) => {
+                        return {
+                            title: wp.title,
+                            type: this.waypointTypeString(wp.type),
+                            position: {
+                                lat: wp.latitude,
+                                lng: wp.longitude
+                            },
+                            visible: true // TODO: remove this?
+                        }
+                    })
+                });
+                console.log('Mission downloaded.');
+                this.$dispatch('server.get_mission:success', this.pending.initiator);
+                //remove pending message info, and send a queued message if any
+                this.pending = null;
+                this.sendMsg(null);
+            });
+            this.socket.on('Success', (data) => {
+                //check if expected
+                if (this.pending === null){
+                    console.log('Unexpected Success message');
+                    return;
+                }
+                //decode message
+                let successMsg;
+                try {
+                    successMsg = this.protoPkg.Success.decode(data);
+                } catch (e){
+                    console.log('Unable to decode Success message');
+                    return;
+                }
+                //check timestamp
+                if (Date.now() - successMsg.timestamp >= this.TIMEOUT){
+                    return;
+                }
+                //clear timeout
+                clearTimeout(this.pending.timer);
+                //indicate success
+                switch (this.pending.type){
+                    case 'set_parameters': {console.log('Parameters set.');             break;}
+                    case 'set_settings':   {console.log('Settings set.');               break;}
+                    case 'set_missions':   {console.log('Missions saved.');             break;}
+                    case 'set_mission':    {console.log('Mission uploaded.');           break;}
+                    case 'arm':            {console.log('Vehicle armed.');              break;}
+                    case 'disarm':         {console.log('Vehicle disarmed.');           break;}
+                    case 'start_mission':  {console.log('Mission started.');            break;}
+                    case 'stop_mission':   {console.log('Mission stopped.');            break;}
+                    case 'resume_mission': {console.log('Mission resumed.');            break;}
+                    case 'kill':           {console.log('Kill switch activated.');      break;}
+                    case 'unkill':         {console.log('Kill switch deactivated.');    break;}
+                    default:               {console.log('Unexpected Success Message');  return;}
+                }
+                this.$dispatch('server.' + this.pending.type + ':success', this.pending.initiator);
+                //remove pending message info, and send a queued message if any
+                this.pending = null;
+                this.sendMsg(null);
+            });
+            this.socket.on('Failure', (data) => {
+                //check if expected
+                if (this.pending === null){
+                    console.log('Unexpected Failure message');
+                    return;
+                }
+                //decode message
+                let failureMsg;
                 try {
                     failureMsg = this.protoPkg.Failure.decode(data);
                 } catch (e){
                     console.log('Unable to decode Failure message');
                     return;
                 }
-                //
-                console.log('received "Failure" message');
-                let errorMsg = failureMsg.msg;
-                if (id in this.pending){
-                    let msg = this.pending[id];
-                    delete this.pending[id];
-                    clearTimeout(msg.timer);
-                    switch (msg.type){
-                        case 'get_parameters':   {console.log('Unable to load parameters: '        + errorMsg); break;}
-                        case 'set_parameters':   {console.log('Unable to set parameters: '         + errorMsg); break;}
-                        case 'get_settings':     {console.log('Unable to load settings: '          + errorMsg); break;}
-                        case 'set_settings':     {console.log('Unable to set settings: '           + errorMsg); break;}
-                        case 'set_missions':    {console.log('Unable to save missions: '          + errorMsg); break;}
-                        case 'get_missions':    {console.log('Unable to load missions: '          + errorMsg); break;}
-                        case 'set_mission':   {console.log('Unable to upload mission: '         + errorMsg); break;}
-                        case 'get_mission': {console.log('Unable to download mission: '       + errorMsg); break;}
-                        case 'arm':              {console.log('Unable to arm vehicle: '            + errorMsg); break;}
-                        case 'disarm':           {console.log('Unable to disarm vehicle: '         + errorMsg); break;}
-                        case 'start_mission':    {console.log('Unable to start mission: '          + errorMsg); break;}
-                        case 'stop_mission':     {console.log('Unable to stop mission: '           + errorMsg); break;}
-                        case 'resume_mission':   {console.log('Unable to resume mission: '         + errorMsg); break;}
-                        case 'kill':             {console.log('Unable to activate kill switch: '   + errorMsg); break;}
-                        case 'unkill':           {console.log('Unable to deactivate kill switch: ' + errorMsg); break;}
-                    }
-                    this.$dispatch('server.' + msg.type + ':failure', errorMsg, msg.initiator);
+                //check timestamp
+                if (Date.now() - failureMsg.timestamp >= this.TIMEOUT){
+                    return;
                 }
+                //clear timeout
+                clearTimeout(this.pending.timer);
+                //indicate failure
+                let errorMsg = 'Unable to ';
+                switch (this.pending.type){
+                    case 'get_parameters':   {errorMsg += 'load parameters: ';            break;}
+                    case 'set_parameters':   {errorMsg += 'set parameters: ';             break;}
+                    case 'get_settings':     {errorMsg += 'load settings: ';              break;}
+                    case 'set_settings':     {errorMsg += 'set settings: ';               break;}
+                    case 'set_missions':     {errorMsg += 'save missions: ';              break;}
+                    case 'get_missions':     {errorMsg += 'load missions: ';              break;}
+                    case 'set_mission':      {errorMsg += 'upload mission: ';             break;}
+                    case 'get_mission':      {errorMsg += 'download mission: ';           break;}
+                    case 'arm':              {errorMsg += 'arm vehicle: ';                break;}
+                    case 'disarm':           {errorMsg += 'disarm vehicle: ';             break;}
+                    case 'start_mission':    {errorMsg += 'start mission: ';              break;}
+                    case 'stop_mission':     {errorMsg += 'stop mission: ';               break;}
+                    case 'resume_mission':   {errorMsg += 'resume mission: ';             break;}
+                    case 'kill':             {errorMsg += 'activate kill switch: ';       break;}
+                    case 'unkill':           {errorMsg += 'deactivate kill switch: ';     break;}
+                    default:                 {console.log('Unexpected Failure Message'); return;}
+                }
+                errorMsg += failureMsg.msg;
+                console.log(errorMsg);
+                this.$dispatch('server.' + this.pending.type + ':failure', failureMsg.msg, this.pending.initiator);
+                //remove pending message info, and send a queued message if any
+                this.pending = null;
+                this.sendMsg(null);
             });
             this.socket.on('Attention', (data) => {
                 //decode message
-                var attentionMsg;
+                let attentionMsg;
                 try {
                     attentionMsg = this.protoPkg.Attention.decode(data);
                 } catch (e){
                     console.log('Unable to decode Attention message');
                     return;
                 }
-                //
+                //display message
                 //console.log('Attention: ' + msg);
                 this.$dispatch('app::create-snackbar', attentionMsg.msg);
             });
         },
         sendMsg(msgType, data, initiator){
-            this.pending[this.msgId] = {
-                type: msgType,
-                initiator: initiator,
-                timer: setTimeout(() => {
-                    delete this.pending[this.msgId];
-                    console.log('Timeout reached for a "' + msgType + '" request');
-                    this.$dispatch('server.' + msgType + ':failure', 'Timeout reached.', initiator);
-                }, this.TIMEOUT)
-            };
-            switch (msgType){
-                case 'get_parameters': {
-                    this.socket.emit('GetParameters', null, this.msgId);
-                    break;
-                }
-                case 'set_parameters': {
-                    //'data' should have this form:
-                        //[{section: s1, subsection: s2, title: t1, value: v1}, ...]
-                    let paramsMsg = new this.protoPkg.SetParameters();
-                    for (let param of data){
-                        paramsMsg.add('parameters', new this.protoPkg.Parameter(
-                            param.section,
-                            param.subsection,
-                            param.title,
-                            this.paramType(param.type),
-                            param.value
-                        ));
+            //queue message
+            if (msgType !== null){
+                this.queued.push({
+                    type:      msgType,
+                    initiator: initiator,
+                    timer:     null
+                });
+            }
+            //if not waiting for a response, and a message is queued, send it
+            if (this.pending === null && this.queued.length > 0){
+                this.pending = this.queued.shift();
+                //start timeout timer
+                this.pending.timer = setTimeout(() => {
+                    console.log('Timeout reached for a "' + this.pending.type + '" request');
+                    this.$dispatch('server.' + this.pending.type + ':failure', 'Timeout reached.', initiator);
+                    this.pending = null;
+                    this.sendMsg(null);
+                }, this.TIMEOUT);
+                //send message
+                let timestamp = Date.now();
+                switch (this.pending.type){
+                    case 'get_parameters': {
+                        this.socket.emit(
+                            'GetParameters',
+                            (new this.protoPkg.GetParameters(timestamp)).toBuffer()
+                        );
+                        break;
                     }
-                    this.socket.emit('SetParameters', paramsMsg.toBuffer(), this.msgId);
-                    break;
-                }
-                case 'get_settings': {
-                    this.socket.emit('GetSettings', null, this.msgId);
-                    break;
-                }
-                case 'set_settings': {
-                    //'data' should have this form:
-                        //[{section: s1, title: t1, value: v1}, ...]
-                    let settingsMsg = new this.protoPkg.SetSettings();
-                    for (let setting of data){
-                        settingsMsg.add('settings', new this.protoPkg.Setting(
-                            setting.section, setting.title, setting.value
-                        ));
+                    case 'set_parameters': {
+                        //'data' should have this form:
+                            //[{section: s1, subsection: s2, title: t1, value: v1}, ...]
+                        let paramsMsg = new this.protoPkg.SetParameters();
+                        paramsMsg.timestamp = timestamp;
+                        for (let param of data){
+                            paramsMsg.add('parameters', new this.protoPkg.Parameter(
+                                param.section,
+                                param.subsection,
+                                param.title,
+                                this.paramType(param.type),
+                                param.value
+                            ));
+                        }
+                        this.socket.emit('SetParameters', paramsMsg.toBuffer());
+                        break;
                     }
-                    this.socket.emit('SetSettings', settingsMsg.toBuffer(), this.msgId);
-                    break;
-                }
-                case 'get_mission': {
-                    this.socket.emit('GetMission', null, this.msgId);
-                    break;
-                }
-                case 'set_mission': {
-                    //see elements of 'missions' in store.js for expected 'data' format
-                    let missionMsg = new this.protoPkg.SetMission(new this.protoPkg.Mission());
-                    missionMsg.mission.title = data.title;
-                    missionMsg.originLatitude = data.origin.lat;
-                    missionMsg.originLongitude = data.origin.lng;
-                    for (let waypoint of data.waypoints){
-                        missionMsg.mission.add('waypoints', new this.protoPkg.Mission.Waypoint(
-                            waypoint.title,
-                            this.waypointType(waypoint.type),
-                            waypoint.position.lat,
-                            waypoint.position.lng
-                        ));
+                    case 'get_settings': {
+                        this.socket.emit(
+                            'GetSettings',
+                            (new this.protoPkg.GetSettings(timestamp)).toBuffer()
+                        );
+                        break;
                     }
-                    this.socket.emit('SetMission', missionMsg.toBuffer(), this.msgId);
-                    break;
-                }
-                case 'get_missions': {
-                    this.socket.emit('GetMissions', null, this.msgId);
-                    break;
-                }
-                case 'set_missions': {
-                    //see 'missions' in store.js for expected 'data' format
-                    let missionsMsg = new this.protoPkg.SetMissions();
-                    for (let mission of data){
-                        let m = new this.protoPkg.Mission();
-                        m.title = mission.title;
-                        m.originLatitude = mission.origin.lat;
-                        m.originLongitude = mission.origin.lng;
-                        for (let waypoint of mission.waypoints){
-                            m.add('waypoints', new this.protoPkg.Mission.Waypoint(
+                    case 'set_settings': {
+                        //'data' should have this form:
+                            //[{section: s1, title: t1, value: v1}, ...]
+                        let settingsMsg = new this.protoPkg.SetSettings();
+                        settingsMsg.timestamp = timestamp;
+                        for (let setting of data){
+                            settingsMsg.add('settings', new this.protoPkg.Setting(
+                                setting.section, setting.title, setting.value
+                            ));
+                        }
+                        this.socket.emit('SetSettings', settingsMsg.toBuffer());
+                        break;
+                    }
+                    case 'get_mission': {
+                        this.socket.emit(
+                            'GetMission',
+                            (new this.protoPkg.GetMission(timestamp)).toBuffer()
+                        );
+                        break;
+                    }
+                    case 'set_mission': {
+                        //see elements of 'missions' in store.js for expected 'data' format
+                        let setMissionMsg = new this.protoPkg.SetMission(
+                            timestamp,
+                            new this.protoPkg.Mission()
+                        );
+                        setMissionMsg.mission.title = data.title;
+                        setMissionMsg.mission.originLatitude = data.origin.lat;
+                        setMissionMsg.mission.originLongitude = data.origin.lng;
+                        for (let waypoint of data.waypoints){
+                            setMissionMsg.mission.add('waypoints', new this.protoPkg.Mission.Waypoint(
                                 waypoint.title,
                                 this.waypointType(waypoint.type),
                                 waypoint.position.lat,
                                 waypoint.position.lng
                             ));
                         }
-                        missionsMsg.add('missions', m);
+                        this.socket.emit('SetMission', setMissionMsg.toBuffer());
+                        break;
                     }
-                    this.socket.emit('SetMissions', missionsMsg.toBuffer(), this.msgId);
-                    break;
-                }
-                case 'arm': {
-                    let cmdMsg = new this.protoPkg.Command(this.protoPkg.Command.Type.ARM);
-                    this.socket.emit('Command', cmdMsg.toBuffer(), this.msgId);
-                    break;
-                }
-                case 'disarm': {
-                    let cmdMsg = new this.protoPkg.Command(this.protoPkg.Command.Type.DISARM);
-                    this.socket.emit('Command', cmdMsg.toBuffer(), this.msgId);
-                    break;
-                }
-                case 'start_mission': {
-                    let cmdMsg = new this.protoPkg.Command(this.protoPkg.Command.Type.START);
-                    this.socket.emit('Command', cmdMsg.toBuffer(), this.msgId);
-                    break;
-                }
-                case 'stop_mission': {
-                    let cmdMsg = new this.protoPkg.Command(this.protoPkg.Command.Type.STOP);
-                    this.socket.emit('Command', cmdMsg.toBuffer(), this.msgId);
-                    break;
-                }
-                case 'resume_mission': {
-                    let cmdMsg = new this.protoPkg.Command(this.protoPkg.Command.Type.RESUME);
-                    this.socket.emit('Command', cmdMsg.toBuffer(), this.msgId);
-                    break;
-                }
-                case 'kill': {
-                    let cmdMsg = new this.protoPkg.Command(this.protoPkg.Command.Type.KILL);
-                    this.socket.emit('Command', cmdMsg.toBuffer(), this.msgId);
-                    break;
-                }
-                case 'unkill': {
-                    let cmdMsg = new this.protoPkg.Command(this.protoPkg.Command.Type.UNKILL);
-                    this.socket.emit('Command', cmdMsg.toBuffer(), this.msgId);
-                    break;
+                    case 'get_missions': {
+                        this.socket.emit(
+                            'GetMissions',
+                            (new this.protoPkg.GetMissions(timestamp)).toBuffer()
+                        );
+                        break;
+                    }
+                    case 'set_missions': {
+                        //see 'missions' in store.js for expected 'data' format
+                        let setMissionsMsg = new this.protoPkg.SetMissions();
+                        setMissionsMsg.timestamp = timestamp;
+                        for (let mission of data){
+                            let m = new this.protoPkg.Mission();
+                            m.title = mission.title;
+                            m.originLatitude = mission.origin.lat;
+                            m.originLongitude = mission.origin.lng;
+                            for (let waypoint of mission.waypoints){
+                                m.add('waypoints', new this.protoPkg.Mission.Waypoint(
+                                    waypoint.title,
+                                    this.waypointType(waypoint.type),
+                                    waypoint.position.lat,
+                                    waypoint.position.lng
+                                ));
+                            }
+                            setMissionsMsg.add('missions', m);
+                        }
+                        this.socket.emit('SetMissions', setMissionsMsg.toBuffer());
+                        break;
+                    }
+                    case 'arm': {
+                        let cmdMsg = new this.protoPkg.Command(
+                            timestamp,
+                            this.protoPkg.Command.Type.ARM
+                        );
+                        this.socket.emit('Command', cmdMsg.toBuffer());
+                        break;
+                    }
+                    case 'disarm': {
+                        let cmdMsg = new this.protoPkg.Command(
+                            timestamp,
+                            this.protoPkg.Command.Type.DISARM
+                        );
+                        this.socket.emit('Command', cmdMsg.toBuffer());
+                        break;
+                    }
+                    case 'start_mission': {
+                        let cmdMsg = new this.protoPkg.Command(
+                            timestamp,
+                            this.protoPkg.Command.Type.START
+                        );
+                        this.socket.emit('Command', cmdMsg.toBuffer());
+                        break;
+                    }
+                    case 'stop_mission': {
+                        let cmdMsg = new this.protoPkg.Command(
+                            timestamp,
+                            this.protoPkg.Command.Type.STOP
+                        );
+                        this.socket.emit('Command', cmdMsg.toBuffer());
+                        break;
+                    }
+                    case 'resume_mission': {
+                        let cmdMsg = new this.protoPkg.Command(
+                            timestamp,
+                            this.protoPkg.Command.Type.RESUME
+                        );
+                        this.socket.emit('Command', cmdMsg.toBuffer());
+                        break;
+                    }
+                    case 'kill': {
+                        let cmdMsg = new this.protoPkg.Command(
+                            timestamp,
+                            this.protoPkg.Command.Type.KILL
+                        );
+                        this.socket.emit('Command', cmdMsg.toBuffer());
+                        break;
+                    }
+                    case 'unkill': {
+                        let cmdMsg = new this.protoPkg.Command(
+                            timestamp,
+                            this.protoPkg.Command.Type.UNKILL
+                        );
+                        this.socket.emit('Command', cmdMsg.toBuffer());
+                        break;
+                    }
                 }
             }
-            this.msgId++;
-            if (this.msgId == this.MAX_MSG_ID){this.msgId = 0;} //this is probably unnecessary
         },
         // TODO: make the following methods unnecessary?
         modeString(mode){

@@ -15,11 +15,10 @@ class Serial extends EventEmitter {
         this.serialStream = null;
         this.inputMessageBuffer = new Buffer(0);
 
-        this.HEADER_SIZE = 9;
+        this.HEADER_SIZE = 8;
         this.CHECKSUM_SIZE = 4;
         this.TYPE_OFFSET = 3;
-        this.ID_OFFSET = 4;
-        this.SIZE_OFFSET = 5;
+        this.SIZE_OFFSET = 4;
         this.MAGIC_NUMBER = new Buffer([0x17, 0xC0, 0x42]);
 
         this.initInput(inputFile, baudRate);
@@ -39,7 +38,7 @@ class Serial extends EventEmitter {
             });
 
             this.serialStream.on('error', (e) => {
-                this.emit('serial_error', 'Error reading/writing from/to port', e);
+                this.emit('error', 'Error reading/writing from/to port', e);
             });
 
             return;
@@ -48,7 +47,7 @@ class Serial extends EventEmitter {
         fs.open(inputFile, 'r', (error, fd) => {
             if (error) {
                 console.log(error);
-                throw new Error('Vehicle: Error with opening input file');
+                throw new Error('Error with opening input file');
             }
 
             let bytesRead = 0;
@@ -59,7 +58,7 @@ class Serial extends EventEmitter {
                 if (fs.statSync(inputFile).size > bytesRead) {
                     fs.read(fd, buffer, 0, BUFFER_SIZE, bytesRead, (error, numOfBytesRead, buffer) => {
                         if (error) {
-                            this.emit('serial_error', 'Error with reading input file', error);
+                            this.emit('error', 'Error with reading input file', error);
                         }
 
                         this.processInputData(buffer.slice(0, numOfBytesRead));
@@ -88,7 +87,7 @@ class Serial extends EventEmitter {
         });
 
         this.outputFile.on('error', (error) => {
-            this.emit('serial_error', 'Error with writing output file', error);
+            this.emit('error', 'Error with writing output file', error);
         });
     }
 
@@ -117,12 +116,19 @@ class Serial extends EventEmitter {
 
             if (this.inputMessageBuffer.length >= this.HEADER_SIZE + msgSize + this.CHECKSUM_SIZE) {
                 let type = this.inputMessageBuffer.readUInt8(this.TYPE_OFFSET);
-                let id = this.inputMessageBuffer.readUInt8(this.ID_OFFSET);
-                let data = this.inputMessageBuffer.slice(this.HEADER_SIZE, this.HEADER_SIZE + msgSize);
-                let crc = this.inputMessageBuffer.slice(this.HEADER_SIZE + msgSize, this.HEADER_SIZE + msgSize + this.CHECKSUM_SIZE);
+                let data = this.inputMessageBuffer.slice(
+                    this.HEADER_SIZE,
+                    this.HEADER_SIZE + msgSize
+                );
+                let crc = this.inputMessageBuffer.slice(
+                    this.HEADER_SIZE + msgSize,
+                    this.HEADER_SIZE + msgSize + this.CHECKSUM_SIZE
+                );
 
                 // Remove the processed packet
-                this.inputMessageBuffer = this.inputMessageBuffer.slice(this.HEADER_SIZE + msgSize + this.CHECKSUM_SIZE);
+                this.inputMessageBuffer = this.inputMessageBuffer.slice(
+                    this.HEADER_SIZE + msgSize + this.CHECKSUM_SIZE
+                );
 
                 // Check CRC32
                 if (crc32(data).compare(crc) != 0) {
@@ -130,14 +136,14 @@ class Serial extends EventEmitter {
                 }
 
                 // Emit the processed packet
-                this.emit('packet', type, data, id);
+                this.emit('packet', type, data);
             }
         }
     }
 
     writeData(type, buffer, id) {
         if (buffer.length > Math.pow(2,32) - 1) {
-            console.log('Serial: Message too large');
+            this.emit('error', 'Message too large');
             return;
         }
 
@@ -145,7 +151,6 @@ class Serial extends EventEmitter {
         this.MAGIC_NUMBER.copy(header);
 
         header.writeUInt8(type, this.TYPE_OFFSET);
-        header.writeUInt8(id, this.ID_OFFSET);
         header.writeUInt32LE(buffer.length, this.SIZE_OFFSET);
 
         let output = this.serialStream ? this.serialStream : this.outputFile;
