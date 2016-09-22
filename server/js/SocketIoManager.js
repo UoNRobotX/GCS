@@ -1,10 +1,10 @@
-var socket_io = require('socket.io');
 var fs = require('fs');
+var socket_io = require('socket.io');
 var protobuf = require('protobufjs');
-var crc32 = require('buffer-crc32');
-var serialport = require('serialport');
+var Serial = require('../modules/serial');
 
 module.exports = function(server, inputFile, outputFile, baudRate){
+    this.serial = new Serial(inputFile, outputFile, baudRate);
     this.pending = null; //describes a message sent to the vehicle
         //{msgType, data, timestamp, socket, timer}
     this.queued = []; //describes messages to be sent to the vehicle
@@ -71,17 +71,6 @@ module.exports = function(server, inputFile, outputFile, baudRate){
         fs.writeFileSync(this.missionsFile, this.missions.toBuffer());
         process.exit();
     }.bind(this));
-    //open output file
-    var outputFileStats = fs.statSync(outputFile);
-    if (outputFileStats.isCharacterDevice()){
-        this.ostream = new serialport(outputFile, {
-            baudRate: baudRate
-        });
-        this.ostream.on('error', function(){throw new Error('Error with writing to port');});
-    } else {
-        this.ostream = fs.createWriteStream(outputFile, {flags: 'a'});
-        this.ostream.on('error', function(){throw new Error('Error with writing to output file');});
-    }
     //used to send messsages to vehicle
     this.writeOutputData = function(msgType, buffer, socket, timestamp){
         //queue message
@@ -106,13 +95,7 @@ module.exports = function(server, inputFile, outputFile, baudRate){
         if (this.pending === null && this.queued.length > 0){
             this.pending = this.queued.shift();
             //send message
-            var header = new Buffer(8);
-            this.magicNumber.copy(header);
-            header.writeUInt8(this.pending.msgType, 3);
-            header.writeUInt32LE(this.pending.data.length, 4);
-            this.ostream.write(header);
-            this.ostream.write(this.pending.data);
-            this.ostream.write(crc32(this.pending.data));
+            this.serial.writeData(this.pending.msgType, this.pending.data);
             this.pending.timer = setTimeout(function(){
                 this.pending.socket.emit(
                     'Failure',
@@ -127,68 +110,9 @@ module.exports = function(server, inputFile, outputFile, baudRate){
             }.bind(this), this.TIMEOUT);
         }
     }
-    //open input file
-    var inputFileStats = fs.statSync(inputFile);
-    if (inputFileStats.isCharacterDevice()){
-        this.istream = this.ostream;
-        this.istream.on('data', function(data){this.processInputData(data)}.bind(this));
-    } else {
-        fs.open(inputFile, 'r', function (err, fd){
-            if (err){throw new Error('Error with opening input file');}
-            var bytesRead = 0;
-            var bufSize = 64;
-            var buffer = new Buffer(bufSize);
-            var readBytes = function(){
-                if (fs.statSync(inputFile).size > bytesRead){
-                    fs.read(fd, buffer, 0, bufSize, bytesRead, function (err, n, buffer){
-                        if (err){throw new Error('Error with reading input file');}
-                        this.processInputData(buffer.slice(0,n));
-                        bytesRead += n;
-                        readBytes();
-                    }.bind(this));
-                } else {
-                    setTimeout(readBytes, 100);
-                }
-            }.bind(this);
-            readBytes();
-        }.bind(this));
-    }
-    this.msgBuf = new Buffer(0);
-    this.processInputData = function(buf){
-        this.msgBuf = Buffer.concat([this.msgBuf, buf]);
-        //find magic number prefix
-        var i = 0;
-        while (i+2 < this.msgBuf.length){
-            if (this.msgBuf[i] != this.magicNumber[0] ||
-                this.msgBuf[i+1] != this.magicNumber[1] ||
-                this.msgBuf[i+2] != this.magicNumber[2]){
-                i++;
-            } else {
-                break;
-            }
-        }
-        this.msgBuf = this.msgBuf.slice(i);
-        //check for a complete packet
-        if (this.msgBuf.length >= 8){
-            var msgSize = this.msgBuf.readUInt32LE(4);
-            if (this.msgBuf.length >= 8 + msgSize + 4){
-                var type = this.msgBuf.readUInt8(3);
-                var data = this.msgBuf.slice(8, 8 + msgSize);
-                var crc = this.msgBuf.slice(8 + msgSize, 8 + msgSize + 4);
-                //remove packet
-                this.msgBuf = this.msgBuf.slice(8 + msgSize + 4);
-                //check CRC32
-                if (crc32(data).compare(crc) != 0){
-                    //check for another packet
-                    this.processInputData(new Buffer(0));
-                }
-                //process packet
-                this.processMsg(type, data);
-            }
-        }
-    }
     //processes messages from vehicle
-    this.processMsg = function(msgType, data){
+    this.msgBuf = new Buffer(0);
+    this.serial.on('packet', function(msgType, data){
         if (msgType == this.MSG_TYPES.STATUS){
             var msg = this.decodeVehicleMsg('Status', data);
             if (msg === null){return;}
@@ -241,7 +165,7 @@ module.exports = function(server, inputFile, outputFile, baudRate){
             this.pending = null;
             this.writeOutputData(null);
         }
-    }
+    }.bind(this));
     //handle messages from clients
     this.io = socket_io(server);
     this.io.on('connection', function(socket){

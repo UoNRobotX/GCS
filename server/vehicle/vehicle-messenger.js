@@ -126,7 +126,7 @@ class VehicleMessenger extends EventEmitter {
         if (message === null) {
             return;
         }
-        
+
         this.lastTimestamp = message.timestamp;
 
         this.emit('get_mission');

@@ -141,7 +141,7 @@ class Serial extends EventEmitter {
         }
     }
 
-    writeData(type, buffer, id) {
+    writeData(type, buffer) {
         if (buffer.length > Math.pow(2,32) - 1) {
             this.emit('error', 'Message too large');
             return;

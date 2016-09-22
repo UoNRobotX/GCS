@@ -38,10 +38,10 @@ export default {
 
     data() {
         return {
+            TIMEOUT: 1000,
             socket: null,
             pending: null, //describes a sent message      //{type, initiator, timer}
             queued: [],    //describes messages to be sent //[{type, initiator, timer}, ...]
-            TIMEOUT: 1000,
             protoBuilder: null,
             protoPkg: null
         };

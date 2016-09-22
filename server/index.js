@@ -8,7 +8,7 @@ var child_process = require('child_process');
 var SocketIoManager = require('./js/SocketIoManager.js');
 
 //names of files used for vehicle-server communication
-//these should be either both regular files, both FIFOs, or both serial ports
+//these should be either both regular files, or both serial ports
 var inputFile  = path.join(__dirname, 'temp/toServer');
 var outputFile = path.join(__dirname, 'temp/toVehicle');
 //if true, a child process will be started, which acts like the WAM-V
