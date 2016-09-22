@@ -33,6 +33,7 @@ class VehicleMessenger extends EventEmitter {
             ATTENTION:               16
         };
 
+        this.protoPkg = null;
         this.initProtoFiles();
         this.setupEventHandlers();
     }

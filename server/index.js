@@ -1,25 +1,25 @@
-var http = require('http');
-var koa = require('koa');
-var path = require('path');
-var openUrl = require('openurl');
-var serve = require('koa-static');
-var fs = require('fs');
-var child_process = require('child_process');
-var SocketIoManager = require('./js/SocketIoManager.js');
+'use strict';
 
-//names of files used for vehicle-server communication
-//these should be either both regular files, or both serial ports
-var inputFile  = path.join(__dirname, 'temp/toServer');
-var outputFile = path.join(__dirname, 'temp/toVehicle');
-//if true, a child process will be started, which acts like the WAM-V
-var useFakeVehicle = false;
-//if 'inputFile' and 'outputFile' are serial ports, this is used as the baud rate
-var baudRate = 9600;
+let http = require('http');
+let koa = require('koa');
+let path = require('path');
+let openUrl = require('openurl');
+let serve = require('koa-static');
+let fs = require('fs');
+let child_process = require('child_process');
+let SocketIoManager = require('./js/SocketIoManager');
 
-//check command line arguments
-var usage = 'Usage: node index.js [-f] [-b baudRate] [inputFile [outputFile]]';
-for (var i = 2; i < process.argv.length; i++){
-    var arg = process.argv[i];
+// Variables
+let inputFile  = path.join(__dirname, 'temp/toServer'); //used to get messages from vehicle
+let outputFile = path.join(__dirname, 'temp/toVehicle'); //used to send messages to vehicle
+    //'inputFile' and 'outputFile' should be either both regular files, or both serial ports
+let useFakeVehicle = false; //if true, fake vehicle child process will be started
+let baudRate = 9600; //if using serial ports, used as the baud rate
+
+// Check command line arguments
+let usage = 'Usage: node index.js [-f] [-b baudRate] [inputFile [outputFile]]';
+for (let i = 2; i < process.argv.length; i++){
+    let arg = process.argv[i];
     if (arg == '-f'){
         useFakeVehicle = true;
     } else if (arg == '-b'){
@@ -28,7 +28,7 @@ for (var i = 2; i < process.argv.length; i++){
             console.error(usage);
             process.exit();
         }
-        baudRate = +process.argv[i+1];
+        baudRate = Number(process.argv[i+1]);
         i++;
     } else {
         inputFile = arg;
@@ -45,19 +45,19 @@ for (var i = 2; i < process.argv.length; i++){
 }
 
 // Create Koa application
-var app = koa();
+let app = koa();
 
 // Serve static files from the public directory
 app.use(serve(path.join(__dirname, 'public')));
 
 // Create server
-var server = http.createServer(app.callback());
+let server = http.createServer(app.callback());
 
-//create input and output files if non-existent, and truncate if non-FIFO
+// Create input and output files if non-existent, and truncate if regular file
 function createIfNonExistent(file){
-    var openAndTruncate = false;
+    let openAndTruncate = false;
     try {
-        var stats = fs.statSync(file);
+        let stats = fs.statSync(file);
         if (stats.isFile()){
             openAndTruncate = true;
         }
@@ -65,7 +65,7 @@ function createIfNonExistent(file){
         openAndTruncate = true;
     }
     if (openAndTruncate){
-        var fd = fs.openSync(file, 'w');
+        let fd = fs.openSync(file, 'w');
         fs.closeSync(fd);
     }
 }
@@ -73,23 +73,23 @@ createIfNonExistent(inputFile);
 createIfNonExistent(outputFile);
 
 // Setup socket handling
-var sm = new SocketIoManager(server, inputFile, outputFile, baudRate);
+let sm = new SocketIoManager(server, inputFile, outputFile, baudRate);
 
 if (useFakeVehicle){
     //create fake vehicle child process
-    var childp = child_process.spawn(
+    let childp = child_process.spawn(
         'node',
         [path.join(__dirname, 'vehicle/index.js'), '-b', baudRate, outputFile, inputFile]
     );
-    childp.stdout.on('data', function(data){console.log(data.toString())});
-    childp.stderr.on('data', function(data){console.error(data.toString())});
-    childp.on('error', function(){
+    childp.stdout.on('data', (data) => {console.log(data.toString())});
+    childp.stderr.on('data', (data) => {console.error(data.toString())});
+    childp.on('error', () => {
         console.log('Error with spawning or killing fake vehicle process');
         childp = null;
         process.exit();
-    })
+    });
     //close child process on shutdown
-    process.on('exit', function(){
+    process.on('exit', () => {
         if (childp != null){
             childp.kill();
         }
