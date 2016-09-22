@@ -44,7 +44,9 @@ export default {
             overflowMenu: [
                 { id: 'auto',   text: 'Auto'  },
                 { id: 'manual', text: 'Manual'}
-            ]
+            ],
+            toggleMissionFailureTimer: null,
+            TIMEOUT: 1000
         }
     },
 
@@ -82,9 +84,15 @@ export default {
     methods: {
         toggleMission() {
             if (this.wamv.mode === 'idle') {
-                this.$dispatch('client::start_mission');
+                this.startMission();
             } else if (this.wamv.mode === 'paused') {
                 this.$dispatch('client::resume_mission');
+                clearTimeout(this.toggleMissionFailureTimer);
+                this.toggleMissionFailureTimer = setTimeout(() => {
+                    if (this.wamv.mode !== 'auto'){
+                        this.$dispatch('app::create-snackbar', 'Resuming seems to have failed (Possible reasons: not armed, no battery, ...)');
+                    }
+                }, this.TIMEOUT);
             } else if (this.wamv.mode === 'auto') {
                 this.$dispatch('client::stop_mission');
             }
@@ -92,6 +100,12 @@ export default {
 
         startMission(){
             this.$dispatch('client::start_mission');
+            clearTimeout(this.toggleMissionFailureTimer);
+            this.toggleMissionFailureTimer = setTimeout(() => {
+                if (this.wamv.mode !== 'auto'){
+                    this.$dispatch('app::create-snackbar', 'Starting seems to have failed (Possible reasons: no uploaded mission, not armed, ...)');
+                }
+            }, this.TIMEOUT);
         },
 
         toggleKill() {
