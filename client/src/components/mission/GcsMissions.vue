@@ -100,7 +100,6 @@ export default {
         },
 
         downloadMission() {
-            this.waitDownloadMission = true;
             this.$dispatch('client::get_mission');
         },
 
@@ -111,7 +110,7 @@ export default {
                     break;
                 }
                 case 'load': {
-                    this.$dispatch('client::get_missions', 'GcsMissions');
+                    this.$dispatch('client::get_missions');
                     break;
                 }
                 case 'import': {
@@ -207,37 +206,6 @@ export default {
 
         'delete-waypoint'(index){
             this.currentMission.waypoints.splice(index, 1);
-        },
-
-        'server.set_missions:success'(){
-            this.$dispatch('app::create-snackbar', 'Missions saved');
-        },
-
-        'server.set_missions:failure'(){
-            this.$dispatch('app::create-snackbar', 'Failed to save missions');
-        },
-
-        'server.get_missions:success'(initiator){
-            if (initiator === 'GcsMissions'){
-                this.$dispatch('app::create-snackbar', 'Missions loaded');
-            }
-            return true;
-        },
-
-        'server.get_missions:failure'(msg, initiator){
-            if (initiator === 'GcsMissions'){
-                this.$dispatch('app::create-snackbar', 'Failed to load missions');
-            }
-            return true;
-        },
-
-        'server.get_mission:success'(){
-            this.waitDownloadMission = false;
-        },
-
-        'server.get_mission:failure'(){
-            this.waitDownloadMission = false;
-            this.$dispatch('app::create-snackbar', 'Failed to download mission');
         }
     },
 

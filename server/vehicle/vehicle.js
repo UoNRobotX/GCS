@@ -88,7 +88,7 @@ class Vehicle {
 
         this.messenger.on('get_mission', () => {
             if (this.mission === null) {
-                this.messenger.sendFailureMessage('No uploaded mission');
+                console.log('Unable to respond to GetMission request: No uploaded mission');
                 return;
             }
 
@@ -97,45 +97,46 @@ class Vehicle {
 
         this.messenger.on('set_parameters', (newParams) => {
             this.setParameters(newParams);
+            this.messenger.sendSetParametersAck();
         });
 
         this.messenger.on('set_mission', (newMission) => {
             this.setMission(newMission);
+            this.messenger.sendSetMissionAck();
         });
     }
 
     /**
-     * Arm or disarm, sending a Success or Failure message
+     * Arm or disarm
      */
     arm(shouldArm) {
         if (shouldArm === this.armed) {
-            this.messenger.sendFailureMessage(shouldArm ? 'Already armed' : 'Already disarmed');
+            console.log('Unable to arm: Already ' + (shouldArm ? 'armed' : 'disarmed'));
             return;
         }
 
         if (this.mode === this.MODES.AUTO) {
-            this.messenger.sendFailureMessage('Currently doing a mission');
+            console.log('Unable to arm: Currently doing a mission');
             return;
         }
 
         this.armed = shouldArm;
-        this.messenger.sendSuccessMessage();
     }
 
     /**
-     * Start or resume, sending a Success or Failure message
+     * Start or resume
      */
     start(fromBeginning) {
         if (this.mode === this.MODES.AUTO) {
-            this.messenger.sendFailureMessage('Currently doing a mission');
+            console.log('Unable to start/resume: Currently doing a mission');
         } else if (this.mode === this.MODES.KILLED) {
-            this.messenger.sendFailureMessage('Kill switch is active');
+            console.log('Unable to start/resume: Kill switch is active');
         } else if (this.battery === 0) {
-            this.messenger.sendFailureMessage('Battery is at 0%');
+            console.log('Unable to start/resume: Battery is at 0%');
         } else if (!this.armed) {
-            this.messenger.sendFailureMessage('Not armed');
+            console.log('Unable to start/resume: Not armed');
         } else if (this.mission === null){
-            this.messenger.sendFailureMessage('No uploaded mission');
+            console.log('Unable to start/resume: No uploaded mission');
         } else {
             if (this.mode === this.MODES.PAUSED && fromBeginning) {
                 this.nextWaypointIndex = 0;
@@ -143,42 +144,38 @@ class Vehicle {
 
             this.mode = this.MODES.AUTO;
             this.speed = this.MAX_SPEED;
-
-            this.messenger.sendSuccessMessage();
         }
     }
 
     /**
-     * Stop, sending a Success or Failure message
+     * Stop
      */
     stop() {
         if (this.mode !== this.MODES.AUTO){
-            this.messenger.sendFailureMessage('Not doing a mission');
+            console.log('Unable to stop: Not doing a mission');
             return;
         }
 
         this.mode = this.MODES.PAUSED;
         this.speed = 0;
-
-        this.messenger.sendSuccessMessage();
     }
 
     /**
-     * Activate or deactivate kill switch, sending a Success or Failure message
+     * Activate or deactivate kill switch
      */
     kill(shouldKill) {
         if (shouldKill === (this.mode === this.MODES.KILLED)) {
-            this.messenger.sendFailureMessage(
-                shouldKill ? 'Kill switch already active' : 'Kill switch already inactive'
-            );
+            if (shouldKill){
+                console.log('Unable to kill: Kill switch already active');
+            } else {
+                console.log('Unable to unkill: Kill switch already inactive');
+            }
             return;
         }
 
         this.mode = shouldKill ? this.MODES.KILLED : this.mode.STOPPED;
         this.nextWaypointIndex = 0;
         this.speed = 0;
-
-        this.messenger.sendSuccessMessage();
     }
 
     updateState() {
@@ -269,9 +266,9 @@ class Vehicle {
 
     setMission(newMission) {
         if (newMission.waypoints.length === 0) {
-            this.messenger.sendFailureMessage('Mission has no waypoints');
+            console.log('Unable to set mission: Mission has no waypoints');
         } else if (this.mode === this.MODES.AUTO) {
-            this.messenger.sendFailureMessage('Currently doing a mission');
+            console.log('Unable to set mission: Currently doing a mission');
         } else {
             if (this.mode === this.MODES.PAUSED) {
                 this.mode = this.MODES.STOPPED;
@@ -296,7 +293,6 @@ class Vehicle {
             };
 
             this.nextWaypointIndex = 0;
-            this.messenger.sendSuccessMessage();
         }
     }
 
@@ -321,7 +317,7 @@ class Vehicle {
                 }
             }
 
-            this.messenger.sendFailureMessage('A parameter was not found');
+            console.log('Unable to set parameters: A parameter was not found');
             return;
         }
 
@@ -335,8 +331,6 @@ class Vehicle {
                 newParams.parameters[i].value
             ];
         }
-
-        this.messenger.sendSuccessMessage();
     }
 }
 

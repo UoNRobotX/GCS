@@ -11,7 +11,6 @@ class VehicleMessenger extends EventEmitter {
 
         this.protoPkg = null;
         this.serial = new Serial(inputFile, outputFile, baudRate);
-        this.lastTimestamp = null; //timestamp of last message from server, if needed
 
         this.MSG_TYPES = {
             STATUS:                   0,
@@ -25,12 +24,14 @@ class VehicleMessenger extends EventEmitter {
             GET_MISSIONS:             8,
             GET_MISSIONS_RESPONSE:    9,
             SET_PARAMETERS:          10,
-            SET_SETTINGS:            11,
-            SET_MISSION:             12,
-            SET_MISSIONS:            13,
-            SUCCESS:                 14,
-            FAILURE:                 15,
-            ATTENTION:               16
+            SET_PARAMETERS_ACK:      11,
+            SET_SETTINGS:            12,
+            SET_SETTINGS_ACK:        13,
+            SET_MISSION:             14,
+            SET_MISSION_ACK:         15,
+            SET_MISSIONS:            16,
+            SET_MISSIONS_ACK:        17,
+            ATTENTION:               18
         };
 
         this.protoPkg = null;
@@ -69,7 +70,7 @@ class VehicleMessenger extends EventEmitter {
                     this.handleSetMission(data);
                     break;
                 default:
-                    console.log('Unexpected message type');
+                    console.log('Unexpected message type from server');
             }
         });
 
@@ -83,8 +84,6 @@ class VehicleMessenger extends EventEmitter {
         if (message === null) {
             return;
         }
-
-        this.lastTimestamp = message.timestamp;
 
         switch (message.type) {
             case this.protoPkg.Command.Type.ARM:
@@ -117,8 +116,6 @@ class VehicleMessenger extends EventEmitter {
             return;
         }
 
-        this.lastTimestamp = message.timestamp;
-
         this.emit('get_parameters');
     }
 
@@ -127,8 +124,6 @@ class VehicleMessenger extends EventEmitter {
         if (message === null) {
             return;
         }
-
-        this.lastTimestamp = message.timestamp;
 
         this.emit('get_mission');
     }
@@ -139,8 +134,6 @@ class VehicleMessenger extends EventEmitter {
             return;
         }
 
-        this.lastTimestamp = newParams.timestamp;
-
         this.emit('set_parameters', newParams);
     }
 
@@ -150,25 +143,7 @@ class VehicleMessenger extends EventEmitter {
             return;
         }
 
-        this.lastTimestamp = message.timestamp;
-
         this.emit('set_mission', message.mission);
-    }
-
-    sendSuccessMessage(id) {
-        this.serial.writeData(
-            this.MSG_TYPES.SUCCESS,
-            (new this.protoPkg.Success(this.lastTimestamp)).toBuffer()
-        );
-        this.lastTimestamp = null;
-    }
-
-    sendFailureMessage(message) {
-        this.serial.writeData(
-            this.MSG_TYPES.FAILURE,
-            (new this.protoPkg.Failure(this.lastTimestamp, message)).toBuffer()
-        );
-        this.lastTimestamp = null;
     }
 
     sendAttentionMessage(message) {
@@ -196,11 +171,10 @@ class VehicleMessenger extends EventEmitter {
 
     sendGetParametersResponse(parameters) {
         let message = new this.protoPkg.GetParametersResponse();
+
+        message.timestamp = Date.now();
+
         let param;
-
-        message.timestamp = this.lastTimestamp;
-        this.lastTimestamp = null;
-
         for (let i = 0; i < parameters.length; i++) {
             param = parameters[i];
             message.add('parameters', new this.protoPkg.Parameter(
@@ -213,8 +187,7 @@ class VehicleMessenger extends EventEmitter {
     sendGetMissionResponse(mission) {
         let msg = new this.protoPkg.GetMissionResponse();
 
-        msg.timestamp = this.lastTimestamp;
-        this.lastTimestamp = null;
+        msg.timestamp = Date.now();
 
         msg.mission = new this.protoPkg.Mission();
         msg.mission.title = mission.title;
@@ -230,6 +203,20 @@ class VehicleMessenger extends EventEmitter {
         }
 
         this.serial.writeData(this.MSG_TYPES.GET_MISSION_RESPONSE, msg.toBuffer());
+    }
+
+    sendSetParametersAck(){
+        this.serial.writeData(
+            this.MSG_TYPES.SET_PARAMETERS_ACK,
+            (new this.protoPkg.SetParametersAck(Date.now())).toBuffer()
+        );
+    }
+
+    sendSetMissionAck(){
+        this.serial.writeData(
+            this.MSG_TYPES.SET_MISSION_ACK,
+            (new this.protoPkg.SetMissionAck(Date.now())).toBuffer()
+        );
     }
 
     decodeMessage(type, buffer) {

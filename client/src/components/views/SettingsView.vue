@@ -66,39 +66,11 @@ export default {
                     });
                 }
             }
-            this.waitSaveSettings = true;
-            this.$dispatch('client::set_settings', data, 'settingsView');
+            this.$dispatch('client::set_settings', data);
         },
 
         resetSettings(){
-            this.waitResetSettings = true;
-            this.$dispatch('client::get_settings', 'settingsView');
-        }
-    },
-
-    events: {
-        'server.get_settings:success'(msg, initiator){
-            this.waitResetSettings = false;
-            return true;
-        },
-
-        'server.get_settings:failure'(msg, initiator){
-            if (initiator === 'settingsView'){
-                this.$dispatch('app::create-snackbar', 'Failed to reset settings');
-            }
-            this.waitResetSettings = false;
-            return true;
-        },
-
-        'server.set_settings:success'(){
-            this.changedSettings = {};
-            this.waitSaveSettings = false;
-            this.$dispatch('app::create-snackbar', 'Settings saved');
-        },
-
-        'server.set_settings:failure'(){
-            this.waitSaveSettings = false;
-            this.$dispatch('app::create-snackbar', 'Failed to save settings');
+            this.$dispatch('client::get_settings');
         }
     }
 };

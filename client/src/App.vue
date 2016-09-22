@@ -101,184 +101,64 @@ export default {
             this.$broadcast('map:rightclick', e);
         },
 
-        'client::get_parameters'(initiator) {
-            this.$broadcast('client::get_parameters', initiator);
+        'client::get_parameters'() {
+            this.$broadcast('client::get_parameters');
         },
 
-        'client::set_parameters'(params, initiator) {
-            this.$broadcast('client::set_parameters', params, initiator);
+        'client::set_parameters'(params) {
+            this.$broadcast('client::set_parameters', params);
         },
 
-        'client::get_settings'(initiator) {
-            this.$broadcast('client::get_settings', initiator);
+        'client::get_settings'() {
+            this.$broadcast('client::get_settings');
         },
 
-        'client::set_settings'(settings, initiator) {
-            this.$broadcast('client::set_settings', settings, initiator);
+        'client::set_settings'(settings) {
+            this.$broadcast('client::set_settings', settings);
         },
 
-        'client::set_missions'(missions, initiator) {
-            this.$broadcast('client::set_missions', missions, initiator);
+        'client::set_missions'(missions) {
+            this.$broadcast('client::set_missions', missions);
         },
 
-        'client::get_missions'(initiator) {
-            this.$broadcast('client::get_missions', initiator);
+        'client::get_missions'() {
+            this.$broadcast('client::get_missions');
         },
 
-        'client::set_mission'(mission, initiator) {
-            this.$broadcast('client::set_mission', mission, initiator);
+        'client::set_mission'(mission) {
+            this.$broadcast('client::set_mission', mission);
         },
 
-        'client::get_mission'(initiator) {
-            this.$broadcast('client::get_mission', initiator);
+        'client::get_mission'() {
+            this.$broadcast('client::get_mission');
         },
 
-        'client::arm'(initiator) {
-            this.$broadcast('client::arm', initiator);
+        'client::arm'() {
+            this.$broadcast('client::arm');
         },
 
-        'client::disarm'(initiator) {
-            this.$broadcast('client::disarm', initiator);
+        'client::disarm'() {
+            this.$broadcast('client::disarm');
         },
 
-        'client::start_mission'(initiator) {
-            this.$broadcast('client::start_mission', initiator);
+        'client::start_mission'() {
+            this.$broadcast('client::start_mission');
         },
 
-        'client::stop_mission'(initiator) {
-            this.$broadcast('client::stop_mission', initiator);
+        'client::stop_mission'() {
+            this.$broadcast('client::stop_mission');
         },
 
-        'client::resume_mission'(initiator) {
-            this.$broadcast('client::resume_mission', initiator);
+        'client::resume_mission'() {
+            this.$broadcast('client::resume_mission');
         },
 
-        'client::kill'(initiator) {
-            this.$broadcast('client::kill', initiator);
+        'client::kill'() {
+            this.$broadcast('client::kill');
         },
 
-        'client::unkill'(initiator) {
-            this.$broadcast('client::unkill', initiator);
-        },
-
-        'server.get_parameters:success'(initiator){
-            this.$broadcast('server.get_parameters:success', initiator);
-        },
-
-        'server.get_parameters:failure'(msg, initiator){
-            this.$broadcast('server.get_parameters:failure', msg, initiator);
-        },
-
-        'server.set_parameters:success'(initiator){
-            this.$broadcast('server.set_parameters:success', initiator);
-        },
-
-        'server.set_parameters:failure'(msg, initiator){
-            this.$broadcast('server.set_parameters:failure', msg, initiator);
-        },
-
-        'server.get_settings:success'(initiator){
-            this.$broadcast('server.get_settings:success', initiator);
-        },
-
-        'server.get_settings:failure'(msg, initiator){
-            this.$broadcast('server.get_settings:failure', msg, initiator);
-        },
-
-        'server.set_settings:success'(initiator){
-            this.$broadcast('server.set_settings:success', initiator);
-        },
-
-        'server.set_settings:failure'(msg, initiator){
-            this.$broadcast('server.set_settings:failure', msg, initiator);
-        },
-
-        'server.set_missions:success'(initiator){
-            this.$broadcast('server.set_missions:success', initiator);
-        },
-
-        'server.set_missions:failure'(msg, initiator){
-            this.$broadcast('server.set_missions:failure', msg, initiator);
-        },
-
-        'server.get_missions:success'(initiator){
-            this.$broadcast('server.get_missions:success', initiator);
-        },
-
-        'server.get_missions:failure'(msg, initiator){
-            this.$broadcast('server.get_missions:failure', msg, initiator);
-        },
-
-        'server.set_mission:success'(initiator){
-            this.$broadcast('server.set_mission:success', initiator);
-        },
-
-        'server.set_mission:failure'(msg, initiator){
-            this.$broadcast('server.set_mission:failure', msg, initiator);
-        },
-
-        'server.get_mission:success'(initiator){
-            this.$broadcast('server.get_mission:success', initiator);
-        },
-
-        'server.get_mission:failure'(msg, initiator){
-            this.$broadcast('server.get_mission:failure', msg, initiator);
-        },
-
-        'server.arm:success'(initiator){
-            this.$broadcast('server.arm:success', initiator);
-        },
-
-        'server.arm:failure'(msg, initiator){
-            this.$broadcast('server.arm:failure', msg, initiator);
-        },
-
-        'server.disarm:success'(initiator){
-            this.$broadcast('server.disarm:success', initiator);
-        },
-
-        'server.disarm:failure'(msg, initiator){
-            this.$broadcast('server.disarm:failure', msg, initiator);
-        },
-
-        'server.start_mission:success'(initiator){
-            this.$broadcast('server.start_mission:success', initiator);
-        },
-
-        'server.start_mission:failure'(msg, initiator){
-            this.$broadcast('server.start_mission:failure', msg, initiator);
-        },
-
-        'server.stop_mission:success'(initiator){
-            this.$broadcast('server.stop_mission:success', initiator);
-        },
-
-        'server.stop_mission:failure'(msg, initiator){
-            this.$broadcast('server.stop_mission:failure', msg, initiator);
-        },
-
-        'server.resume_mission:success'(initiator){
-            this.$broadcast('server.resume_mission:success', initiator);
-        },
-
-        'server.resume_mission:failure'(msg, initiator){
-            this.$broadcast('server.resume_mission:failure', msg, initiator);
-        },
-
-        'server.kill:success'(initiator){
-            this.$broadcast('server.kill:success', initiator);
-        },
-
-        'server.kill:failure'(msg, initiator){
-            this.$broadcast('server.kill:failure', msg, initiator);
-        },
-
-        'server.unkill:success'(initiator){
-            this.$broadcast('server.unkill:success', initiator);
-        },
-
-        'server.unkill:failure'(msg, initiator){
-            this.$broadcast('server.unkill:failure', msg, initiator);
+        'client::unkill'() {
+            this.$broadcast('client::unkill');
         }
     },
 

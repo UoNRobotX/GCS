@@ -9,11 +9,7 @@ let Serial = require('../modules/serial');
 class SocketIoManager {
     constructor(server, inputFile, outputFile, baudRate){
         this.serial = new Serial(inputFile, outputFile, baudRate);
-        this.pending = null; //describes a message sent to the vehicle
-            //{msgType, data, timestamp, socket, timer}
-        this.queued = []; //describes messages to be sent to the vehicle
-            //[{msgType, data, timestamp, socket, timer}, ...]
-        this.TIMEOUT = 750; //uses timestamps provided by clients
+        this.TIMEOUT = 1000;
         this.MSG_TYPES = {
             STATUS:                   0,
             COMMAND:                  1,
@@ -26,12 +22,14 @@ class SocketIoManager {
             GET_MISSIONS:             8,
             GET_MISSIONS_RESPONSE:    9,
             SET_PARAMETERS:          10,
-            SET_SETTINGS:            11,
-            SET_MISSION:             12,
-            SET_MISSIONS:            13,
-            SUCCESS:                 14,
-            FAILURE:                 15,
-            ATTENTION:               16
+            SET_PARAMETERS_ACK:      11,
+            SET_SETTINGS:            12,
+            SET_SETTINGS_ACK:        13,
+            SET_MISSION:             14,
+            SET_MISSION_ACK:         15,
+            SET_MISSIONS:            16,
+            SET_MISSIONS_ACK:        17,
+            ATTENTION:               18
         };
         //settings
         this.settings = [
@@ -45,6 +43,8 @@ class SocketIoManager {
         this.io = socket_io(server);
         this.sockets = {}; //contains one socket for each client //{socketId1: socket1, ...}
         this.socketId = 0; //incremented for each client connection
+        this.pendingGetParametersRequests = []; //contains socket IDs for clients requesting params
+        this.pendingGetMissionRequests = [];
         //load .proto messages
         this.protoPkg = null;
         this.initProtoFiles();
@@ -103,35 +103,37 @@ class SocketIoManager {
             //when a connection closes, print a message
             socket.on('disconnect', () => {
                 delete this.sockets[socketId];
+                delete this.pendingGetParametersRequests[socketId];
+                delete this.pendingGetMissionRequests[socketId];
                 console.log('disconnected from: ' + host);
             });
             //client message handlers
             socket.on('GetParameters', (data) => {
-                this.handleClientGetParameters(data, socket);
+                this.handleClientGetParameters(data, socketId);
             });
             socket.on('GetSettings', (data) => {
                 this.handleClientGetSettings(data, socket);
             });
             socket.on('GetMission', (data) => {
-                this.handleClientGetMission(data, socket);
+                this.handleClientGetMission(data, socketId);
             });
             socket.on('GetMissions', (data) => {
                 this.handleClientGetMissions(data, socket);
             });
             socket.on('SetParameters', (data) => {
-                this.handleClientSetParameters(data, socket);
+                this.handleClientSetParameters(data);
             });
             socket.on('SetSettings', (data) => {
                 this.handleClientSetSettings(data, socket);
             });
             socket.on('SetMission', (data) => {
-                this.handleClientSetMission(data, socket);
+                this.handleClientSetMission(data);
             });
             socket.on('SetMissions', (data) => {
-                this.handleClientSetMissions(data, socket);
+                this.handleClientSetMissions(data);
             });
             socket.on('Command', (data) => {
-                this.handleClientCommand(data, socket)
+                this.handleClientCommand(data)
             });
         });
     }
@@ -141,66 +143,53 @@ class SocketIoManager {
             console.log('Serial error: ' + msg);
         });
         this.serial.on('packet', (msgType, data) => {
-            if (msgType == this.MSG_TYPES.STATUS){
-                let msg = this.decodeVehicleMsg('Status', data);
-                if (msg === null){return;}
-                for (let socketId in this.sockets){
-                    this.sockets[socketId].volatile.emit('Status', data);
-                        //'volatile' allows the message to be dropped
-                }
-            } else if (msgType == this.MSG_TYPES.ATTENTION){
-                let msg = this.decodeVehicleMsg('Attention', data);
-                if (msg === null){return;}
-                for (let socketId in this.sockets){
-                    this.sockets[socketId].emit('Attention', data);
-                }
-            } else {
-                //check if expected
-                if (this.pending === null){
-                    console.log('Unexpected message from vehicle');
+            switch (msgType){
+                case this.MSG_TYPES.STATUS:
+                    for (let socketId in this.sockets){
+                        this.sockets[socketId].volatile.emit('Status', data);
+                            //'volatile' allows the message to be dropped
+                    }
+                    break;
+                case this.MSG_TYPES.ATTENTION:
+                    for (let socketId in this.sockets){
+                        this.sockets[socketId].emit('Attention', data);
+                    }
+                    break;
+                case this.MSG_TYPES.GET_PARAMETERS_RESPONSE:
+                    for (let socketId of this.pendingGetParametersRequests){
+                        this.sockets[socketId].emit('GetParametersResponse', data);
+                    }
+                    this.pendingGetParametersRequests = [];
+                    break;
+                case this.MSG_TYPES.GET_MISSION_RESPONSE:
+                    for (let socketId of this.pendingGetMissionRequests){
+                        this.sockets[socketId].emit('GetMissionResponse', data);
+                    }
+                    this.pendingGetMissionRequests = [];
+                    break;
+                case this.MSG_TYPES.SET_PARAMETERS_ACK:
+                    for (let socketId in this.sockets){
+                        this.sockets[socketId].emit('SetParametersAck', data);
+                    }
+                    break;
+                case this.MSG_TYPES.SET_MISSION_ACK:
+                    for (let socketId in this.sockets){
+                        this.sockets[socketId].emit('SetMissionAck', data);
+                    }
+                    break;
+                default:
+                    console.log('Unexpected message type from vehicle');
                     return;
-                }
-                //decode message
-                let msgTypeString;
-                switch (msgType){
-                    case this.MSG_TYPES.GET_PARAMETERS_RESPONSE:
-                        msgTypeString = 'GetParametersResponse';
-                        break;
-                    case this.MSG_TYPES.GET_MISSION_RESPONSE:
-                        msgTypeString = 'GetMissionResponse';
-                        break;
-                    case this.MSG_TYPES.SUCCESS:
-                        msgTypeString = 'Success';
-                        break;
-                    case this.MSG_TYPES.FAILURE:
-                        msgTypeString = 'Failure';
-                        break;
-                    default:
-                        console.log('Unexpected message type from vehicle');
-                        return;
-                }
-                let msg = this.decodeVehicleMsg(msgTypeString, data);
-                if (msg === null){return;}
-                //check timestamp
-                if (Date.now() - msg.timestamp >= this.TIMEOUT){
-                    return;
-                }
-                //clear timeout
-                clearTimeout(this.pending.timer);
-                //send to client
-                this.pending.socket.emit(msgTypeString, data);
-                //remove pending message, and send a queued message if any
-                this.pending = null;
-                this.sendMsgToVehicle(null);
             }
         });
     }
 
-    handleClientGetParameters(data, socket){
+    handleClientGetParameters(data, socketId){
         let msg = this.decodeClientMsg('GetParameters', data);
         if (msg === null){return;}
         console.log('Got a "GetParameters" message');
-        this.sendMsgToVehicle(this.MSG_TYPES.GET_PARAMETERS, data, socket, msg.timestamp);
+        this.pendingGetParametersRequests.push(socketId);
+        this.serial.writeData(this.MSG_TYPES.GET_PARAMETERS, data);
     }
 
     handleClientGetSettings(data, socket){
@@ -208,7 +197,7 @@ class SocketIoManager {
         if (msg === null){return;}
         console.log('Got a "GetSettings" message');
         let response = new this.protoPkg.GetSettingsResponse();
-        response.timestamp = msg.timestamp;
+        response.timestamp = Date.now();
         for (let i = 0; i < this.settings.length; i++){
             let setting = this.settings[i];
             response.add('settings', new this.protoPkg.Setting(
@@ -218,26 +207,27 @@ class SocketIoManager {
         socket.emit('GetSettingsResponse', response.toBuffer());
     }
 
-    handleClientGetMission(data, socket){
+    handleClientGetMission(data, socketId){
         let msg = this.decodeClientMsg('GetMission', data);
         if (msg === null){return;}
         console.log('Got a "GetMission" message');
-        this.sendMsgToVehicle(this.MSG_TYPES.GET_MISSION, data, socket, msg.timestamp);
+        this.pendingGetMissionRequests.push(socketId);
+        this.serial.writeData(this.MSG_TYPES.GET_MISSION, data);
     }
 
     handleClientGetMissions(data, socket){
         let msg = this.decodeClientMsg('GetMissions', data);
         if (msg === null){return;}
         console.log('Got a "GetMissions" message');
-        this.missions.timestamp = msg.timestamp;
+        this.missions.timestamp = Date.now();
         socket.emit('GetMissionsResponse', this.missions.toBuffer());
     }
 
-    handleClientSetParameters(data, socket){
+    handleClientSetParameters(data){
         let msg = this.decodeClientMsg('SetParameters', data);
         if (msg === null){return;}
         console.log('Got a "SetParameters" message');
-        this.sendMsgToVehicle(this.MSG_TYPES.SET_PARAMETERS, data, socket, msg.timestamp);
+        this.serial.writeData(this.MSG_TYPES.SET_PARAMETERS, data);
     }
 
     handleClientSetSettings(data, socket){
@@ -259,11 +249,7 @@ class SocketIoManager {
                     continue SettingSearch;
                 }
             }
-            let failureMsg = new this.protoPkg.Failure(
-                newSettings.timestamp,
-                'A setting was not found'
-            );
-            socket.emit('Failure', failureMsg.toBuffer());
+            console.log('A setting was not found');
             return;
         }
         //set settings
@@ -274,35 +260,41 @@ class SocketIoManager {
                 newSettings.settings[i].value
             ];
         }
-        socket.emit(
-            'Success',
-            (new this.protoPkg.Success(newSettings.timestamp)).toBuffer()
-        );
+        //notify clients
+        for (let socketId in this.sockets){
+            this.sockets[socketId].emit(
+                'SetSettingsAck',
+                (new this.protoPkg.SetSettingsAck(Date.now())).toBuffer()
+            );
+        }
     }
 
-    handleClientSetMission(data, socket){
+    handleClientSetMission(data){
         let msg = this.decodeClientMsg('SetMission', data);
         if (msg === null){return;}
         console.log('Got a "SetMission" message');
-        this.sendMsgToVehicle(this.MSG_TYPES.SET_MISSION, data, socket, msg.timestamp);
+        this.serial.writeData(this.MSG_TYPES.SET_MISSION, data);
     }
 
-    handleClientSetMissions(data, socket){
+    handleClientSetMissions(data){
         let missionsMsg = this.decodeClientMsg('SetMissions', data);
         if (missionsMsg === null){return;}
         console.log('Got a "SetMissions" message');
         this.missions = missionsMsg;
-        socket.emit(
-            'Success',
-            (new this.protoPkg.Success(missionsMsg.timestamp)).toBuffer()
-        );
+        //notify clients
+        for (let socketId in this.sockets){
+            this.sockets[socketId].emit(
+                'SetMissionsAck',
+                (new this.protoPkg.SetMissionsAck(Date.now())).toBuffer()
+            );
+        }
     }
 
-    handleClientCommand(data, socket){
+    handleClientCommand(data){
         let msg = this.decodeClientMsg('Command', data);
         if (msg === null){return;}
         console.log('Got a "Command" message');
-        this.sendMsgToVehicle(this.MSG_TYPES.COMMAND, data, socket, msg.timestamp);
+        this.serial.writeData(this.MSG_TYPES.COMMAND, data);
     }
 
     decodeVehicleMsg(msgType, data){
@@ -320,37 +312,6 @@ class SocketIoManager {
         } catch (e){
             console.log('Unable to decode ' + msgType + ' message from a client');
             return null;
-        }
-    }
-
-    sendMsgToVehicle(msgType, buffer, socket, timestamp){
-        //queue message
-        if (msgType !== null){
-            this.queued.push({
-                msgType:   msgType,
-                data:      buffer,
-                timestamp: timestamp,
-                socket:    socket,
-                timer:     null
-            });
-        }
-        //if not waiting for a vehicle response, and a message is queued, send it
-        if (this.pending === null && this.queued.length > 0){
-            this.pending = this.queued.shift();
-            //send message
-            this.serial.writeData(this.pending.msgType, this.pending.data);
-            this.pending.timer = setTimeout(() => {
-                this.pending.socket.emit(
-                    'Failure',
-                    (new this.protoPkg.Failure(
-                        this.pending.timestamp,
-                        'Vehicle response timeout reached'
-                    )).toBuffer()
-                );
-                //clear pending message info, and send a queued message if any
-                this.pending = null;
-                this.sendMsgToVehicle(null);
-            }, this.TIMEOUT);
         }
     }
 }

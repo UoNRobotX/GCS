@@ -80,65 +80,15 @@ export default {
             } else if (this.wamv.mode === 'auto') {
                 this.$dispatch('client::stop_mission');
             }
-            this.waitToggleMission = true;
         },
 
         startMission(){
             this.$dispatch('client::start_mission');
-            this.waitToggleMission = true;
         },
 
         toggleKill() {
             this.$dispatch(this.wamv.mode === 'killed' ? 'client::unkill' : 'client::kill');
-            this.waitToggleKill = true;
         }
-    },
-
-    events: {
-        'server.start_mission:success'(){
-            this.waitToggleMission = false;
-        },
-
-        'server.start_mission:failure'(msg){
-            this.waitToggleMission = false;
-            this.$dispatch('app::create-snackbar', 'Failed to start mission: ' + msg);
-        },
-
-        'server.stop_mission:success'(){
-            this.waitToggleMission = false;
-        },
-
-        'server.stop_mission:failure'(msg){
-            this.waitToggleMission = false;
-            this.$dispatch('app::create-snackbar', 'Failed to stop mission: ' + msg);
-        },
-
-        'server.resume_mission:success'(){
-            this.waitToggleMission = false;
-        },
-
-        'server.resume_mission:failure'(msg){
-            this.waitToggleMission = false;
-            this.$dispatch('app::create-snackbar', 'Failed to resume mission: ' + msg);
-        },
-
-        'server.kill:success'(){
-            this.waitToggleKill = false;
-        },
-
-        'server.kill:failure'(msg){
-            this.waitToggleKill = false;
-            this.$dispatch('app::create-snackbar', 'Failed to activate kill switch: ' + msg);
-        },
-
-        'server.unkill:success'(){
-            this.waitToggleKill = false;
-        },
-
-        'server.unkill:failure'(msg){
-            this.waitToggleKill = false;
-            this.$dispatch('app::create-snackbar', 'Failed to deactivate kill switch: ' + msg);
-        },
     }
 };
 </script>

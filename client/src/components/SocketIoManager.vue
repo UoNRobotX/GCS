@@ -4,29 +4,27 @@
 
 <script>
 //this component manages communication with the server via a socket
-//it allows for other components to initiate a request to the server, and react to responses
+//it allows for other components to initiate a request to the server
 //these are the requests that can be initiated:
     //status, get_parameters, set_parameters, get_settings, set_settings,
     //set_missions, get_missions, set_mission, get_mission,
     //arm, disarm, start_mission, stop_mission, resume_mission, kill, unkill,
 //a component initiates a request r1 by dispatching an event client::r1
     //the event goes up to App.vue, then down to this component
-    //this components sends a corresponding message to the server
-    //when a response is received, or none is received after a certain timeout:
-        //this component dispatches a server.r1:success or server.r1:failure event
-        //the event goes up to App.vue, then broadcasted to components
-            //a component can use this to react to a response
+    //this component sends a corresponding message to the server
 
 import socket_io_client from 'socket.io-client';
 import protobuf from 'protobufjs';
 
-import { getMissions } from 'store/getters';
+import { getMissions, getParameters, getSettings } from 'store/getters';
 import { setWamv, setParameters, setSettings, setMissions } from 'store/actions';
 
 export default {
     vuex: {
         getters: {
-            missions: getMissions
+            missions:   getMissions,
+            parameters: getParameters,
+            settings:   getSettings
         },
         actions: {
             setWamv,
@@ -40,8 +38,6 @@ export default {
         return {
             TIMEOUT: 1000,
             socket: null,
-            pending: null, //describes a sent message      //{type, initiator, timer}
-            queued: [],    //describes messages to be sent //[{type, initiator, timer}, ...]
             protoBuilder: null,
             protoPkg: null
         };
@@ -63,222 +59,210 @@ export default {
             this.socket.on('disconnect', () => {
                 console.log('disconnected from server');
             });
-            this.socket.on('Status', this.handleStatus);
+            this.socket.on('Status',                this.handleStatus);
             this.socket.on('GetParametersResponse', this.handleGetParametersResponse);
-            this.socket.on('GetSettingsResponse', this.handleGetSettingsResponse);
-            this.socket.on('GetMissionsResponse', this.handleGetMissionsResponse);
-            this.socket.on('GetMissionResponse', this.handleGetMissionResponse);
-            this.socket.on('Success', this.handleSuccess);
-            this.socket.on('Failure', this.handleFailure);
-            this.socket.on('Attention', this.handleAttention);
+            this.socket.on('GetSettingsResponse',   this.handleGetSettingsResponse);
+            this.socket.on('GetMissionsResponse',   this.handleGetMissionsResponse);
+            this.socket.on('GetMissionResponse',    this.handleGetMissionResponse);
+            this.socket.on('SetParametersAck',      this.handleSetParametersAck);
+            this.socket.on('SetSettingsAck',        this.handleSetSettingsAck);
+            this.socket.on('SetMissionAck',         this.handleSetMissionAck);
+            this.socket.on('SetMissionsAck',        this.handleSetMissionsAck);
+            this.socket.on('Attention',             this.handleAttention);
         },
-        sendMsg(msgType, data, initiator){
-            //queue message
-            if (msgType !== null){
-                this.queued.push({
-                    type:      msgType,
-                    initiator: initiator,
-                    timer:     null
-                });
-            }
-            //if not waiting for a response, and a message is queued, send it
-            if (this.pending === null && this.queued.length > 0){
-                this.pending = this.queued.shift();
-                //start timeout timer
-                this.pending.timer = setTimeout(() => {
-                    console.log('Timeout reached for a "' + this.pending.type + '" request');
-                    this.$dispatch('server.' + this.pending.type + ':failure', 'Timeout reached.', initiator);
-                    this.pending = null;
-                    this.sendMsg(null);
-                }, this.TIMEOUT);
-                //send message
-                let timestamp = Date.now();
-                switch (this.pending.type){
-                    case 'get_parameters': {
-                        this.socket.emit(
-                            'GetParameters',
-                            (new this.protoPkg.GetParameters(timestamp)).toBuffer()
-                        );
-                        break;
+        sendMsg(msgType, data){
+            let timestamp = Date.now();
+            switch (msgType){
+                case 'get_parameters': {
+                    this.socket.emit(
+                        'GetParameters',
+                        (new this.protoPkg.GetParameters(timestamp)).toBuffer()
+                    );
+                    break;
+                }
+                case 'set_parameters': {
+                    //'data' should have this form:
+                        //[{section: s1, subsection: s2, title: t1, value: v1}, ...]
+                    let paramsMsg = new this.protoPkg.SetParameters();
+                    paramsMsg.timestamp = timestamp;
+                    for (let param of data){
+                        paramsMsg.add('parameters', new this.protoPkg.Parameter(
+                            param.section,
+                            param.subsection,
+                            param.title,
+                            this.paramType(param.type),
+                            param.value
+                        ));
                     }
-                    case 'set_parameters': {
-                        //'data' should have this form:
-                            //[{section: s1, subsection: s2, title: t1, value: v1}, ...]
-                        let paramsMsg = new this.protoPkg.SetParameters();
-                        paramsMsg.timestamp = timestamp;
-                        for (let param of data){
-                            paramsMsg.add('parameters', new this.protoPkg.Parameter(
-                                param.section,
-                                param.subsection,
-                                param.title,
-                                this.paramType(param.type),
-                                param.value
-                            ));
-                        }
-                        this.socket.emit('SetParameters', paramsMsg.toBuffer());
-                        break;
+                    this.socket.emit('SetParameters', paramsMsg.toBuffer());
+                    break;
+                }
+                case 'get_settings': {
+                    this.socket.emit(
+                        'GetSettings',
+                        (new this.protoPkg.GetSettings(timestamp)).toBuffer()
+                    );
+                    break;
+                }
+                case 'set_settings': {
+                    //'data' should have this form:
+                        //[{section: s1, title: t1, value: v1}, ...]
+                    let settingsMsg = new this.protoPkg.SetSettings();
+                    settingsMsg.timestamp = timestamp;
+                    for (let setting of data){
+                        settingsMsg.add('settings', new this.protoPkg.Setting(
+                            setting.section, setting.title, setting.value
+                        ));
                     }
-                    case 'get_settings': {
-                        this.socket.emit(
-                            'GetSettings',
-                            (new this.protoPkg.GetSettings(timestamp)).toBuffer()
-                        );
-                        break;
+                    this.socket.emit('SetSettings', settingsMsg.toBuffer());
+                    break;
+                }
+                case 'get_mission': {
+                    this.socket.emit(
+                        'GetMission',
+                        (new this.protoPkg.GetMission(timestamp)).toBuffer()
+                    );
+                    break;
+                }
+                case 'set_mission': {
+                    //see elements of 'missions' in store.js for expected 'data' format
+                    let setMissionMsg = new this.protoPkg.SetMission(
+                        timestamp,
+                        new this.protoPkg.Mission()
+                    );
+                    setMissionMsg.mission.title = data.title;
+                    setMissionMsg.mission.originLatitude = data.origin.lat;
+                    setMissionMsg.mission.originLongitude = data.origin.lng;
+                    for (let waypoint of data.waypoints){
+                        setMissionMsg.mission.add('waypoints', new this.protoPkg.Mission.Waypoint(
+                            waypoint.title,
+                            this.waypointType(waypoint.type),
+                            waypoint.position.lat,
+                            waypoint.position.lng
+                        ));
                     }
-                    case 'set_settings': {
-                        //'data' should have this form:
-                            //[{section: s1, title: t1, value: v1}, ...]
-                        let settingsMsg = new this.protoPkg.SetSettings();
-                        settingsMsg.timestamp = timestamp;
-                        for (let setting of data){
-                            settingsMsg.add('settings', new this.protoPkg.Setting(
-                                setting.section, setting.title, setting.value
-                            ));
-                        }
-                        this.socket.emit('SetSettings', settingsMsg.toBuffer());
-                        break;
-                    }
-                    case 'get_mission': {
-                        this.socket.emit(
-                            'GetMission',
-                            (new this.protoPkg.GetMission(timestamp)).toBuffer()
-                        );
-                        break;
-                    }
-                    case 'set_mission': {
-                        //see elements of 'missions' in store.js for expected 'data' format
-                        let setMissionMsg = new this.protoPkg.SetMission(
-                            timestamp,
-                            new this.protoPkg.Mission()
-                        );
-                        setMissionMsg.mission.title = data.title;
-                        setMissionMsg.mission.originLatitude = data.origin.lat;
-                        setMissionMsg.mission.originLongitude = data.origin.lng;
-                        for (let waypoint of data.waypoints){
-                            setMissionMsg.mission.add('waypoints', new this.protoPkg.Mission.Waypoint(
+                    this.socket.emit('SetMission', setMissionMsg.toBuffer());
+                    break;
+                }
+                case 'get_missions': {
+                    this.socket.emit(
+                        'GetMissions',
+                        (new this.protoPkg.GetMissions(timestamp)).toBuffer()
+                    );
+                    break;
+                }
+                case 'set_missions': {
+                    //see 'missions' in store.js for expected 'data' format
+                    let setMissionsMsg = new this.protoPkg.SetMissions();
+                    setMissionsMsg.timestamp = timestamp;
+                    for (let mission of data){
+                        let m = new this.protoPkg.Mission();
+                        m.title = mission.title;
+                        m.originLatitude = mission.origin.lat;
+                        m.originLongitude = mission.origin.lng;
+                        for (let waypoint of mission.waypoints){
+                            m.add('waypoints', new this.protoPkg.Mission.Waypoint(
                                 waypoint.title,
                                 this.waypointType(waypoint.type),
                                 waypoint.position.lat,
                                 waypoint.position.lng
                             ));
                         }
-                        this.socket.emit('SetMission', setMissionMsg.toBuffer());
-                        break;
+                        setMissionsMsg.add('missions', m);
                     }
-                    case 'get_missions': {
-                        this.socket.emit(
-                            'GetMissions',
-                            (new this.protoPkg.GetMissions(timestamp)).toBuffer()
-                        );
-                        break;
-                    }
-                    case 'set_missions': {
-                        //see 'missions' in store.js for expected 'data' format
-                        let setMissionsMsg = new this.protoPkg.SetMissions();
-                        setMissionsMsg.timestamp = timestamp;
-                        for (let mission of data){
-                            let m = new this.protoPkg.Mission();
-                            m.title = mission.title;
-                            m.originLatitude = mission.origin.lat;
-                            m.originLongitude = mission.origin.lng;
-                            for (let waypoint of mission.waypoints){
-                                m.add('waypoints', new this.protoPkg.Mission.Waypoint(
-                                    waypoint.title,
-                                    this.waypointType(waypoint.type),
-                                    waypoint.position.lat,
-                                    waypoint.position.lng
-                                ));
-                            }
-                            setMissionsMsg.add('missions', m);
-                        }
-                        this.socket.emit('SetMissions', setMissionsMsg.toBuffer());
-                        break;
-                    }
-                    case 'arm': {
-                        let cmdMsg = new this.protoPkg.Command(
-                            timestamp,
-                            this.protoPkg.Command.Type.ARM
-                        );
-                        this.socket.emit('Command', cmdMsg.toBuffer());
-                        break;
-                    }
-                    case 'disarm': {
-                        let cmdMsg = new this.protoPkg.Command(
-                            timestamp,
-                            this.protoPkg.Command.Type.DISARM
-                        );
-                        this.socket.emit('Command', cmdMsg.toBuffer());
-                        break;
-                    }
-                    case 'start_mission': {
-                        let cmdMsg = new this.protoPkg.Command(
-                            timestamp,
-                            this.protoPkg.Command.Type.START
-                        );
-                        this.socket.emit('Command', cmdMsg.toBuffer());
-                        break;
-                    }
-                    case 'stop_mission': {
-                        let cmdMsg = new this.protoPkg.Command(
-                            timestamp,
-                            this.protoPkg.Command.Type.STOP
-                        );
-                        this.socket.emit('Command', cmdMsg.toBuffer());
-                        break;
-                    }
-                    case 'resume_mission': {
-                        let cmdMsg = new this.protoPkg.Command(
-                            timestamp,
-                            this.protoPkg.Command.Type.RESUME
-                        );
-                        this.socket.emit('Command', cmdMsg.toBuffer());
-                        break;
-                    }
-                    case 'kill': {
-                        let cmdMsg = new this.protoPkg.Command(
-                            timestamp,
-                            this.protoPkg.Command.Type.KILL
-                        );
-                        this.socket.emit('Command', cmdMsg.toBuffer());
-                        break;
-                    }
-                    case 'unkill': {
-                        let cmdMsg = new this.protoPkg.Command(
-                            timestamp,
-                            this.protoPkg.Command.Type.UNKILL
-                        );
-                        this.socket.emit('Command', cmdMsg.toBuffer());
-                        break;
-                    }
+                    this.socket.emit('SetMissions', setMissionsMsg.toBuffer());
+                    break;
+                }
+                case 'arm': {
+                    let cmdMsg = new this.protoPkg.Command(
+                        timestamp,
+                        this.protoPkg.Command.Type.ARM
+                    );
+                    this.socket.emit('Command', cmdMsg.toBuffer());
+                    break;
+                }
+                case 'disarm': {
+                    let cmdMsg = new this.protoPkg.Command(
+                        timestamp,
+                        this.protoPkg.Command.Type.DISARM
+                    );
+                    this.socket.emit('Command', cmdMsg.toBuffer());
+                    break;
+                }
+                case 'start_mission': {
+                    let cmdMsg = new this.protoPkg.Command(
+                        timestamp,
+                        this.protoPkg.Command.Type.START
+                    );
+                    this.socket.emit('Command', cmdMsg.toBuffer());
+                    break;
+                }
+                case 'stop_mission': {
+                    let cmdMsg = new this.protoPkg.Command(
+                        timestamp,
+                        this.protoPkg.Command.Type.STOP
+                    );
+                    this.socket.emit('Command', cmdMsg.toBuffer());
+                    break;
+                }
+                case 'resume_mission': {
+                    let cmdMsg = new this.protoPkg.Command(
+                        timestamp,
+                        this.protoPkg.Command.Type.RESUME
+                    );
+                    this.socket.emit('Command', cmdMsg.toBuffer());
+                    break;
+                }
+                case 'kill': {
+                    let cmdMsg = new this.protoPkg.Command(
+                        timestamp,
+                        this.protoPkg.Command.Type.KILL
+                    );
+                    this.socket.emit('Command', cmdMsg.toBuffer());
+                    break;
+                }
+                case 'unkill': {
+                    let cmdMsg = new this.protoPkg.Command(
+                        timestamp,
+                        this.protoPkg.Command.Type.UNKILL
+                    );
+                    this.socket.emit('Command', cmdMsg.toBuffer());
+                    break;
                 }
             }
         },
         handleConnectionEstablished(){
             console.log('connected to server');
             //get parameters once at startup
-            this.sendMsg('get_parameters', null, 'init');
-            this.$once('server.get_parameters:failure', function(initiator){
-                if (initiator === 'init'){
-                    this.$dispatch('app::create-snackbar', 'Failed to load parameters');
+            this.sendMsg('get_parameters', null);
+            setTimeout(() => {
+                if (this.parameters.length == 0){
+                    this.$dispatch(
+                        'app::create-snackbar',
+                        'Parameters list empty (probably failed to load)'
+                    );
                 }
-                return true;
-            });
+            }, this.TIMEOUT);
             //get settings once at startup
-            this.sendMsg('get_settings', null, 'init');
-            this.$once('server.get_settings:failure', function(initiator){
-                if (initiator === 'init'){
-                    this.$dispatch('app::create-snackbar', 'Failed to load settings');
+            this.sendMsg('get_settings', null);
+            setTimeout(() => {
+                if (this.settings.length == 0){
+                    this.$dispatch(
+                        'app::create-snackbar',
+                        'Settings list empty (probably failed to load)'
+                    );
                 }
-                return true;
-            });
+            }, this.TIMEOUT);
             //load missions once at startup
-            this.sendMsg('get_missions', null, 'init');
-            this.$once('server.get_missions:failure', function(initiator){
-                if (initiator === 'init'){
-                    this.$dispatch('app::create-snackbar', 'Failed to load missions');
+            this.sendMsg('get_missions', null);
+            setTimeout(() => {
+                if (this.settings.length == 0){
+                    this.$dispatch(
+                        'app::create-snackbar',
+                        'Mission list empty (probably failed to load)'
+                    );
                 }
-                return true;
-            });
+            }, this.TIMEOUT);
         },
         handleStatus(data){
             //decode message
@@ -302,11 +286,6 @@ export default {
             });
         },
         handleGetParametersResponse(data){
-            //check if expected
-            if (this.pending === null || this.pending.type !== 'get_parameters'){
-                console.log('Unexpected GetParametersResponse message');
-                return;
-            }
             //decode message
             let paramsMsg;
             try {
@@ -315,12 +294,6 @@ export default {
                 console.log('Unable to decode GetParametersResponse message');
                 return;
             }
-            //check timestamp
-            if (Date.now() - paramsMsg.timestamp >= this.TIMEOUT){
-                return;
-            }
-            //clear timeout
-            clearTimeout(this.pending.timer);
             //convert received parameters into an intermediate structure
                 //{section1: {subsection1: {param1: {type: t2, value: v1}}, ...}, ...}
             let tempParams = {};
@@ -378,17 +351,8 @@ export default {
             //set parameters
             this.setParameters(newParams);
             console.log('Parameters loaded.');
-            this.$dispatch('server.get_parameters:success', this.pending.initiator);
-            //remove pending message info, and send a queued message if any
-            this.pending = null;
-            this.sendMsg(null);
         },
         handleGetSettingsResponse(data){
-            //check if expected
-            if (this.pending === null || this.pending.type !== 'get_settings'){
-                console.log('Unexpected GetSettingsResponse message');
-                return;
-            }
             //decode message
             let settingsMsg;
             try {
@@ -397,12 +361,6 @@ export default {
                 console.log('Unable to decode GetSettingsResponse message');
                 return;
             }
-            //check timestamp
-            if (Date.now() - settingsMsg.timestamp >= this.TIMEOUT){
-                return;
-            }
-            //clear timeout
-            clearTimeout(this.pending.timer);
             //convert received settings into an intermediate structure
                 //{section1: {setting1: value1}, ...}
             let tempSettings = {};
@@ -435,17 +393,8 @@ export default {
             //set settings
             this.setSettings(newSettings);
             console.log('Settings loaded.');
-            this.$dispatch('server.get_settings:success', this.pending.initiator);
-            //remove pending message info, and send a queued message if any
-            this.pending = null;
-            this.sendMsg(null);
         },
         handleGetMissionsResponse(data){
-            //check if expected
-            if (this.pending === null || this.pending.type !== 'get_missions'){
-                console.log('Unexpected GetMissionsResponse message');
-                return;
-            }
             //decode message
             let missionsMsg;
             try {
@@ -454,12 +403,6 @@ export default {
                 console.log('Unable to decode GetMissionsResponse message');
                 return;
             }
-            //check timestamp
-            if (Date.now() - missionsMsg.timestamp >= this.TIMEOUT){
-                return;
-            }
-            //clear timeout
-            clearTimeout(this.pending.timer);
             //convert received missions into a certain structure
             let newMissions = [];
             for (let mission of missionsMsg.missions){
@@ -485,17 +428,8 @@ export default {
             //set missions
             this.setMissions(newMissions);
             console.log('Missions loaded.');
-            this.$dispatch('server.get_missions:success', this.pending.initiator);
-            //remove pending message info, and send a queued message if any
-            this.pending = null;
-            this.sendMsg(null);
         },
         handleGetMissionResponse(data){
-            //check if expected
-            if (this.pending === null || this.pending.type !== 'get_mission'){
-                console.log('Unexpected GetMissionResponse message');
-                return;
-            }
             //decode message
             let missionMsg;
             try {
@@ -504,12 +438,6 @@ export default {
                 console.log('Unable to decode GetMissionResponse message');
                 return;
             }
-            //check timestamp
-            if (Date.now() - missionMsg.timestamp >= this.TIMEOUT){
-                return;
-            }
-            //clear timeout
-            clearTimeout(this.pending.timer);
             //convert received mission into a certain structure, and append it to the list
             this.missions.push({
                 title: missionMsg.title,
@@ -530,97 +458,54 @@ export default {
                 })
             });
             console.log('Mission downloaded.');
-            this.$dispatch('server.get_mission:success', this.pending.initiator);
-            //remove pending message info, and send a queued message if any
-            this.pending = null;
-            this.sendMsg(null);
         },
-        handleSuccess(data){
-            //check if expected
-            if (this.pending === null){
-                console.log('Unexpected Success message');
-                return;
-            }
+        handleSetParametersAck(data){
             //decode message
-            let successMsg;
+            let msg;
             try {
-                successMsg = this.protoPkg.Success.decode(data);
+                msg = this.protoPkg.SetParametersAck.decode(data);
             } catch (e){
-                console.log('Unable to decode Success message');
+                console.log('Unable to decode SetParametersAck message');
                 return;
             }
-            //check timestamp
-            if (Date.now() - successMsg.timestamp >= this.TIMEOUT){
-                return;
-            }
-            //clear timeout
-            clearTimeout(this.pending.timer);
-            //indicate success
-            switch (this.pending.type){
-                case 'set_parameters': {console.log('Parameters set.');             break;}
-                case 'set_settings':   {console.log('Settings set.');               break;}
-                case 'set_missions':   {console.log('Missions saved.');             break;}
-                case 'set_mission':    {console.log('Mission uploaded.');           break;}
-                case 'arm':            {console.log('Vehicle armed.');              break;}
-                case 'disarm':         {console.log('Vehicle disarmed.');           break;}
-                case 'start_mission':  {console.log('Mission started.');            break;}
-                case 'stop_mission':   {console.log('Mission stopped.');            break;}
-                case 'resume_mission': {console.log('Mission resumed.');            break;}
-                case 'kill':           {console.log('Kill switch activated.');      break;}
-                case 'unkill':         {console.log('Kill switch deactivated.');    break;}
-                default:               {console.log('Unexpected Success Message');  return;}
-            }
-            this.$dispatch('server.' + this.pending.type + ':success', this.pending.initiator);
-            //remove pending message info, and send a queued message if any
-            this.pending = null;
-            this.sendMsg(null);
+            //notify
+            this.$dispatch('app::create-snackbar', 'Parameters set on vehicle');
         },
-        handleFailure(data){
-            //check if expected
-            if (this.pending === null){
-                console.log('Unexpected Failure message');
-                return;
-            }
+        handleSetSettingsAck(data){
             //decode message
-            let failureMsg;
+            let msg;
             try {
-                failureMsg = this.protoPkg.Failure.decode(data);
+                msg = this.protoPkg.SetSettingsAck.decode(data);
             } catch (e){
-                console.log('Unable to decode Failure message');
+                console.log('Unable to decode SetSettingsAck message');
                 return;
             }
-            //check timestamp
-            if (Date.now() - failureMsg.timestamp >= this.TIMEOUT){
+            //notify
+            this.$dispatch('app::create-snackbar', 'Settings set on server');
+        },
+        handleSetMissionAck(data){
+            //decode message
+            let msg;
+            try {
+                msg = this.protoPkg.SetMissionAck.decode(data);
+            } catch (e){
+                console.log('Unable to decode SetMissionAck message');
                 return;
             }
-            //clear timeout
-            clearTimeout(this.pending.timer);
-            //indicate failure
-            let errorMsg = 'Unable to ';
-            switch (this.pending.type){
-                case 'get_parameters':   {errorMsg += 'load parameters: ';            break;}
-                case 'set_parameters':   {errorMsg += 'set parameters: ';             break;}
-                case 'get_settings':     {errorMsg += 'load settings: ';              break;}
-                case 'set_settings':     {errorMsg += 'set settings: ';               break;}
-                case 'set_missions':     {errorMsg += 'save missions: ';              break;}
-                case 'get_missions':     {errorMsg += 'load missions: ';              break;}
-                case 'set_mission':      {errorMsg += 'upload mission: ';             break;}
-                case 'get_mission':      {errorMsg += 'download mission: ';           break;}
-                case 'arm':              {errorMsg += 'arm vehicle: ';                break;}
-                case 'disarm':           {errorMsg += 'disarm vehicle: ';             break;}
-                case 'start_mission':    {errorMsg += 'start mission: ';              break;}
-                case 'stop_mission':     {errorMsg += 'stop mission: ';               break;}
-                case 'resume_mission':   {errorMsg += 'resume mission: ';             break;}
-                case 'kill':             {errorMsg += 'activate kill switch: ';       break;}
-                case 'unkill':           {errorMsg += 'deactivate kill switch: ';     break;}
-                default:                 {console.log('Unexpected Failure Message'); return;}
+            //notify
+            this.$dispatch('app::create-snackbar', 'Mission set on vehicle');
+        },
+        handleSetMissionsAck(data){
+            //decode message
+            let msg;
+            try {
+                msg = this.protoPkg.SetMissionsAck.decode(data);
+            } catch (e){
+                console.log('Unable to decode SetMissionsAck message');
+                return;
             }
-            errorMsg += failureMsg.msg;
-            console.log(errorMsg);
-            this.$dispatch('server.' + this.pending.type + ':failure', failureMsg.msg, this.pending.initiator);
-            //remove pending message info, and send a queued message if any
-            this.pending = null;
-            this.sendMsg(null);
+            //notify
+            this.$dispatch('app::create-snackbar', 'Mission list set on server');
         },
         handleAttention(data){
             //decode message
@@ -632,7 +517,6 @@ export default {
                 return;
             }
             //display message
-            //console.log('Attention: ' + msg);
             this.$dispatch('app::create-snackbar', attentionMsg.msg);
         },
         // TODO: make the following methods unnecessary?
@@ -680,64 +564,64 @@ export default {
     },
 
     events: {
-        'client::get_parameters'(initiator) {
-            this.sendMsg('get_parameters', null, initiator);
+        'client::get_parameters'() {
+            this.sendMsg('get_parameters', null);
         },
 
-        'client::set_parameters'(params, initiator) {
-            this.sendMsg('set_parameters', params, initiator);
+        'client::set_parameters'(params) {
+            this.sendMsg('set_parameters', params);
         },
 
-        'client::get_settings'(initiator) {
-            this.sendMsg('get_settings', null, initiator);
+        'client::get_settings'() {
+            this.sendMsg('get_settings', null);
         },
 
-        'client::set_settings'(settings, initiator) {
-            this.sendMsg('set_settings', settings, initiator);
+        'client::set_settings'(settings) {
+            this.sendMsg('set_settings', settings);
         },
 
-        'client::set_missions'(missions, initiator) {
-            this.sendMsg('set_missions', missions, initiator);
+        'client::set_missions'(missions) {
+            this.sendMsg('set_missions', missions);
         },
 
-        'client::get_missions'(initiator) {
-            this.sendMsg('get_missions', null, initiator);
+        'client::get_missions'() {
+            this.sendMsg('get_missions', null);
         },
 
-        'client::set_mission'(mission, initiator) {
-            this.sendMsg('set_mission', mission, initiator);
+        'client::set_mission'(mission) {
+            this.sendMsg('set_mission', mission);
         },
 
-        'client::get_mission'(initiator) {
-            this.sendMsg('get_mission', null, initiator);
+        'client::get_mission'() {
+            this.sendMsg('get_mission', null);
         },
 
-        'client::arm'(initiator) {
-            this.sendMsg('arm', null, initiator);
+        'client::arm'() {
+            this.sendMsg('arm', null);
         },
 
-        'client::disarm'(initiator) {
-            this.sendMsg('disarm', null, initiator);
+        'client::disarm'() {
+            this.sendMsg('disarm', null);
         },
 
-        'client::start_mission'(initiator) {
-            this.sendMsg('start_mission', null, initiator);
+        'client::start_mission'() {
+            this.sendMsg('start_mission', null);
         },
 
-        'client::stop_mission'(initiator) {
-            this.sendMsg('stop_mission', null, initiator);
+        'client::stop_mission'() {
+            this.sendMsg('stop_mission', null);
         },
 
-        'client::resume_mission'(initiator) {
-            this.sendMsg('resume_mission', null, initiator);
+        'client::resume_mission'() {
+            this.sendMsg('resume_mission', null);
         },
 
-        'client::kill'(initiator) {
-            this.sendMsg('kill', null, initiator);
+        'client::kill'() {
+            this.sendMsg('kill', null);
         },
 
-        'client::unkill'(initiator) {
-            this.sendMsg('unkill', null, initiator);
+        'client::unkill'() {
+            this.sendMsg('unkill', null);
         }
     }
 };

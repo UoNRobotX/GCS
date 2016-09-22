@@ -121,10 +121,20 @@ message SetParameters {
     repeated Parameter parameters = 2;
 }
 
+//sent from the server to the client, indicating that parameters were set
+message SetParametersAck {
+    uint64 timestamp = 1;
+}
+
 //sent from the client to the server, specifying settings to be set
 message SetSettings {
     uint64 timestamp          = 1;
     repeated Setting settings = 2;
+}
+
+//sent from the server to the client, indicating that settings were set
+message SetSettingsAck {
+    uint64 timestamp = 1;
 }
 
 //sent from the client to the server, specifying a mission to upload
@@ -133,21 +143,20 @@ message SetMission {
     Mission mission  = 2;
 }
 
+//sent from the server to the client, indicating that mission was set
+message SetMissionAck {
+    uint64 timestamp = 1;
+}
+
 //sent from the client to the server, specifying a mission list to save
 message SetMissions {
     uint64 timestamp          = 1;
     repeated Mission missions = 2;
 }
 
-//sent from the server to the client, in response to a Command or Set* message
-message Success {
+//sent from the server to the client, indicating that missions were set
+message SetMissionsAck {
     uint64 timestamp = 1;
-}
-
-//sent from the server to the client, in response to a Command or Get* or Set* message
-message Failure {
-    uint64 timestamp = 1;
-    string msg       = 2;
 }
 
 //sent from the server to the client, intended to notify the user

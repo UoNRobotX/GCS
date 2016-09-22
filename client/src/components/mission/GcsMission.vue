@@ -152,7 +152,6 @@ export default {
                 this.$dispatch('app::create-snackbar', 'Mission origin is out of range');
                 return;
             }
-            this.waitUploadMission = true;
             this.$dispatch('client::set_mission', this.missions[this.currentMissionIndex]);
         },
 
@@ -229,16 +228,6 @@ export default {
                     this.$el.querySelector('#waypoint-' + (index + 1)), this.$els.pageContent, 56
                 );
             });
-        },
-
-        'server.set_mission:success'(){
-            this.waitUploadMission = false;
-            this.$dispatch('app::create-snackbar', 'Mission uploaded');
-        },
-
-        'server.set_mission:failure'(){
-            this.waitUploadMission = false;
-            this.$dispatch('app::create-snackbar', 'Failed to upload mission');
         }
     },
 
