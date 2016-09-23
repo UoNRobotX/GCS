@@ -81,6 +81,10 @@ export default {
             let timestamp = Date.now();
             let msg;
             switch (msgType){
+                case 'controller_event':
+                    this.socket.emit('ControllerAction', data);
+                break;
+
                 case 'get_parameters':
                     this.socket.emit(
                         'GetParameters',
@@ -641,6 +645,9 @@ export default {
 
         'client::auto'() {
             this.sendMsg('auto', null);
+        },
+        'client::controller_event'(data) {
+            this.sendMsg('controller_event',data);
         }
     }
 };

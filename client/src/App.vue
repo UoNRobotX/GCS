@@ -185,7 +185,7 @@ export default {
     methods: {
         controllerEvent(event, data) {
             console.info(event, data);
-
+            this.$broadcast('client::controller_event', data);
             // TODO: do something with the event (e.g. send it to server)
         },
 

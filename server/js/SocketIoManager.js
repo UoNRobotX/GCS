@@ -29,7 +29,8 @@ class SocketIoManager {
             SET_MISSION_ACK:         15,
             SET_MISSIONS:            16,
             SET_MISSIONS_ACK:        17,
-            ATTENTION:               18
+            ATTENTION:               18,
+            CONTROLLER_COMMAND:      19,
         };
         //settings
         this.settings = [
@@ -56,6 +57,8 @@ class SocketIoManager {
         this.setupClientMessageHandlers();
         //setup handlers for vehicle messages
         this.setupVehicleMessageHandlers();
+
+        this.protoMessages = {};
     }
 
     initProtoFiles(){
@@ -66,6 +69,15 @@ class SocketIoManager {
             throw new Error ('Unable to load proto messages');
         }
         this.protoPkg = protoBuilder.build();
+
+
+        protoBuilder = protobuf.loadProtoFile(path.join(__dirname, '../public/assets/proto/ControllerCommand.proto'));
+        if (protoBuilder === null){
+            throw new Error ('Unable to load Controller Command proto message');
+        }
+        let ControllerCommand = protoBuilder.build('ControllerCommand');
+        this.controllerCommand = new ControllerCommand();
+        this.lastControllerCommandMessageTS = 0;
     }
 
     initMissions(){
@@ -135,6 +147,9 @@ class SocketIoManager {
             socket.on('Command', (data) => {
                 this.handleClientCommand(data)
             });
+            socket.on('ControllerAction', (data) => {
+                this.handelClientControllerAction(data);
+            });
         });
     }
 
@@ -182,6 +197,35 @@ class SocketIoManager {
                     return;
             }
         });
+    }
+
+    handelClientControllerAction(data){
+        if (this.controllerCommand) {
+            this.controllerCommand.time_stamp_ms = (new Date).getTime();
+            switch(data.name) {
+
+                case 'LEFT_ANALOG_STICK':
+                    this.controllerCommand.motor1_thrust = -data.position.y;
+                    this.controllerCommand.motor1_angle = data.position.x;
+                break;
+
+                case 'RIGHT_ANALOG_STICK':
+                   this.controllerCommand.motor2_thrust = -data.position.y;
+                   this.controllerCommand.motor2_angle = data.position.x;
+                break;
+
+                default:
+                return;
+            }
+
+            //Avoid spamming the serial port
+            if (this.controllerCommand.time_stamp_ms - this.lastControllerCommandMessageTS > 100) {
+                console.log(this.controllerCommand);
+                let buffer = this.controllerCommand.encode().buffer;
+                this.serial.writeData(this.MSG_TYPES.CONTROLLER_COMMAND, buffer);
+                this.lastControllerCommandMessageTS = this.controllerCommand.time_stamp_ms;
+            }
+        }
     }
 
     handleClientGetParameters(data, socketId){

@@ -44,6 +44,8 @@ for (let i = 2; i < process.argv.length; i++){
     }
 }
 
+console.log('serial',inputFile,'baud',baudRate);
+
 // Create Koa application
 let app = koa();
 
@@ -98,4 +100,4 @@ if (useFakeVehicle){
 
 server.listen(3000);
 
-openUrl.open('http://localhost:3000');
+//openUrl.open('http://localhost:3000');
