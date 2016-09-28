@@ -52,7 +52,7 @@ for (let i = 2; i < process.argv.length; i++) {
     }
 }
 
-console.log('serial', inputFile, 'baud', baudRate);
+// console.log('serial', inputFile, 'baud', baudRate);
 
 // Create Koa application
 let app = koa();
