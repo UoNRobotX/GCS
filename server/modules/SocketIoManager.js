@@ -55,8 +55,13 @@ class SocketIoManager {
         this.initProtoFiles();
 
         // Load mission list
-        this.missions = new this.protoPkg.SetMissions(); // Mission list stored on server
-        // TODO: use a more verbose format intead of a .proto message object
+        this.missions = []; // Mission list stored on server
+            //[{
+            //    title: t1,
+            //    origin: {lat: lat1, lng: lng1},
+            //    waypoints: [
+            //        {title: t2, type: t3, position: {lat: lat1, lng: lng1}}, ...]
+            //}, ...]
         this.initMissions();
 
         // Setup handlers for client messages
@@ -88,14 +93,14 @@ class SocketIoManager {
     }
 
     initMissions() {
-        let missionsFile = path.join(__dirname, '../data/missions');
+        let missionsFile = path.join(__dirname, '../data/missions.json');
         // Load missions
         fs.readFile(missionsFile, (error, data) => {
             if (error) {
                 console.log('Unable to read missions file. Using empty missions list.');
             } else {
                 try {
-                    this.missions = this.protoPkg.SetMissions.decode(data);
+                    this.missions = JSON.parse(data);
                 } catch (e) {
                     console.log('Missions file is invalid. Using empty missions list.');
                 }
@@ -103,10 +108,10 @@ class SocketIoManager {
         });
         // Save missions on shutdown
         process.on('exit', () => {
-            fs.writeFileSync(missionsFile, this.missions.toBuffer());
+            fs.writeFileSync(missionsFile, JSON.stringify(this.missions));
         });
         process.on('SIGINT', () => {
-            fs.writeFileSync(missionsFile, this.missions.toBuffer());
+            fs.writeFileSync(missionsFile, JSON.stringify(this.missions));
             process.exit();
         });
     }
@@ -278,8 +283,24 @@ class SocketIoManager {
             return;
         }
         console.log('Got a "GetMissions" message');
-        this.missions.timestamp = Date.now();
-        socket.emit('GetMissionsResponse', this.missions.toBuffer());
+        let response = new this.protoPkg.GetMissionsResponse();
+        response.timestamp = Date.now();
+        for (let mission of this.missions){
+            let m = new this.protoPkg.Mission();
+            m.title = mission.title;
+            m.originLatitude = mission.origin.lat;
+            m.originLongitude = mission.origin.lng;
+            for (let waypoint of mission.waypoints){
+                m.add('waypoints', new this.protoPkg.Mission.Waypoint(
+                    waypoint.title,
+                    waypoint.type,
+                    waypoint.position.lat,
+                    waypoint.position.lng
+                ));
+            }
+            response.add('missions', m);
+        }
+        socket.emit('GetMissionsResponse', response.toBuffer());
     }
 
     handleClientSetParameters(data) {
@@ -347,7 +368,27 @@ class SocketIoManager {
             return;
         }
         console.log('Got a "SetMissions" message');
-        this.missions = missionsMsg;
+        // Convert received missions into a certain structure
+        this.missions = [];
+        for (let mission of missionsMsg.missions){
+            this.missions.push({
+                title: mission.title,
+                origin: {
+                    lat: mission.originLatitude,
+                    lng: mission.originLongitude
+                },
+                waypoints: mission.waypoints.map((wp) => {
+                    return {
+                        title: wp.title,
+                        type: wp.type,
+                        position: {
+                            lat: wp.latitude,
+                            lng: wp.longitude
+                        }
+                    };
+                })
+            });
+        }
         // Notify clients
         for (let socketId in this.sockets) {
             this.sockets[socketId].emit(
