@@ -3,15 +3,15 @@
 </template>
 
 <script>
-//this component manages communication with the server via a socket
-//it allows for other components to initiate a request to the server
-//these are the requests that can be initiated:
-    //status, get_parameters, set_parameters, get_settings, set_settings,
-    //set_missions, get_missions, set_mission, get_mission,
-    //arm, disarm, start_mission, stop_mission, resume_mission, kill, unkill,
-//a component initiates a request r1 by dispatching an event client::r1
-    //the event goes up to App.vue, then down to this component
-    //this component sends a corresponding message to the server
+// This component manages communication with the server via a socket
+// It allows for other components to initiate a request to the server
+// These are the requests that can be initiated:
+    // Status, get_parameters, set_parameters, get_settings, set_settings,
+    // Set_missions, get_missions, set_mission, get_mission,
+    // Arm, disarm, start_mission, stop_mission, resume_mission, kill, unkill,
+// A component initiates a request r1 by dispatching an event client::r1
+    // The event goes up to App.vue, then down to this component
+    // This component sends a corresponding message to the server
 
 import socket_io_client from 'socket.io-client';
 import protobuf from 'protobufjs';
@@ -51,7 +51,7 @@ export default {
     },
 
     ready() {
-        //load .proto files
+        // Load .proto files
         this.protoBuilder = protobuf.newBuilder();
         protobuf.loadProtoFile('assets/proto/Test.proto', () => {
             this.protoPkg = this.protoBuilder.build();
@@ -83,8 +83,7 @@ export default {
             switch (msgType){
                 case 'controller_event':
                     this.socket.emit('ControllerAction', data);
-                break;
-
+                    break;
                 case 'get_parameters':
                     this.socket.emit(
                         'GetParameters',
@@ -92,8 +91,8 @@ export default {
                     );
                     break;
                 case 'set_parameters':
-                    //'data' should have this form:
-                        //[{section: s1, subsection: s2, title: t1, value: v1}, ...]
+                    // 'data' should have this form:
+                        // [{section: s1, subsection: s2, title: t1, value: v1}, ...]
                     msg = new this.protoPkg.SetParameters();
                     msg.timestamp = timestamp;
                     for (let param of data){
@@ -114,8 +113,8 @@ export default {
                     );
                     break;
                 case 'set_settings':
-                    //'data' should have this form:
-                        //[{section: s1, title: t1, value: v1}, ...]
+                    // 'data' should have this form:
+                        // [{section: s1, title: t1, value: v1}, ...]
                     msg = new this.protoPkg.SetSettings();
                     msg.timestamp = timestamp;
                     for (let setting of data){
@@ -132,7 +131,7 @@ export default {
                     );
                     break;
                 case 'set_mission':
-                    //see elements of 'missions' in store.js for expected 'data' format
+                    // See elements of 'missions' in store.js for expected 'data' format
                     msg = new this.protoPkg.SetMission(
                         timestamp,
                         new this.protoPkg.Mission()
@@ -157,7 +156,7 @@ export default {
                     );
                     break;
                 case 'set_missions':
-                    //see 'missions' in store.js for expected 'data' format
+                    // See 'missions' in store.js for expected 'data' format
                     msg = new this.protoPkg.SetMissions();
                     msg.timestamp = timestamp;
                     for (let mission of data){
@@ -244,7 +243,7 @@ export default {
         },
         handleConnectionEstablished(){
             console.log('connected to server');
-            //get parameters once at startup
+            // Get parameters once at startup
             this.sendMsg('get_parameters', null);
             setTimeout(() => {
                 if (this.parametersLastUpdateTime === null){
@@ -254,7 +253,7 @@ export default {
                     );
                 }
             }, this.TIMEOUT);
-            //get settings once at startup
+            // Get settings once at startup
             this.sendMsg('get_settings', null);
             setTimeout(() => {
                 if (this.settingsLastUpdateTime === null){
@@ -264,7 +263,7 @@ export default {
                     );
                 }
             }, this.TIMEOUT);
-            //load missions once at startup
+            // Load missions once at startup
             this.sendMsg('get_missions', null);
             setTimeout(() => {
                 if (this.missionsLastUpdateTime === null){
@@ -276,7 +275,7 @@ export default {
             }, this.TIMEOUT);
         },
         handleStatus(data){
-            //decode message
+            // Decode message
             let msg;
             try {
                 msg = this.protoPkg.Status.decode(data);
@@ -284,7 +283,7 @@ export default {
                 console.log('Unable to decode Status message');
                 return;
             }
-            //update wamv
+            // Update wamv
             this.setWamv({
                 loaded:   true,
                 position: {lat: msg.latitude, lng: msg.longitude},
@@ -297,7 +296,7 @@ export default {
             });
         },
         handleGetParametersResponse(data){
-            //decode message
+            // Decode message
             let paramsMsg;
             try {
                 paramsMsg = this.protoPkg.GetParametersResponse.decode(data);
@@ -305,8 +304,8 @@ export default {
                 console.log('Unable to decode GetParametersResponse message');
                 return;
             }
-            //convert received parameters into an intermediate structure
-                //{section1: {subsection1: {param1: {type: t2, value: v1}}, ...}, ...}
+            // Convert received parameters into an intermediate structure
+                // {section1: {subsection1: {param1: {type: t2, value: v1}}, ...}, ...}
             let tempParams = {};
             for (let p of paramsMsg.parameters){
                 if (p.section in tempParams){
@@ -338,7 +337,7 @@ export default {
                     };
                 }
             }
-            //convert intermediate structure into one that is convenient for display
+            // Convert intermediate structure into one that is convenient for display
             let newParams = [];
             for (let sectionName of Object.getOwnPropertyNames(tempParams)){
                 let section = tempParams[sectionName];
@@ -359,12 +358,12 @@ export default {
                     }
                 }
             }
-            //set parameters
+            // Set parameters
             this.setParameters(newParams);
             console.log('Parameters loaded.');
         },
         handleGetSettingsResponse(data){
-            //decode message
+            // Decode message
             let settingsMsg;
             try {
                 settingsMsg = this.protoPkg.GetSettingsResponse.decode(data);
@@ -372,8 +371,8 @@ export default {
                 console.log('Unable to decode GetSettingsResponse message');
                 return;
             }
-            //convert received settings into an intermediate structure
-                //{section1: {setting1: value1}, ...}
+            // Convert received settings into an intermediate structure
+                // {section1: {setting1: value1}, ...}
             let tempSettings = {};
             for (let s of settingsMsg.settings){
                 if (s.section in tempSettings){
@@ -388,7 +387,7 @@ export default {
                     };
                 }
             }
-            //convert intermediate structure into one that is convenient for display
+            // Convert intermediate structure into one that is convenient for display
             let newSettings = [];
             for (let sectionName of Object.getOwnPropertyNames(tempSettings)){
                 let section = tempSettings[sectionName];
@@ -401,12 +400,12 @@ export default {
                     });
                 }
             }
-            //set settings
+            // Set settings
             this.setSettings(newSettings);
             console.log('Settings loaded.');
         },
         handleGetMissionsResponse(data){
-            //decode message
+            // Decode message
             let missionsMsg;
             try {
                 missionsMsg = this.protoPkg.GetMissionsResponse.decode(data);
@@ -414,7 +413,7 @@ export default {
                 console.log('Unable to decode GetMissionsResponse message');
                 return;
             }
-            //convert received missions into a certain structure
+            // Convert received missions into a certain structure
             let newMissions = [];
             for (let mission of missionsMsg.missions){
                 newMissions.push({
@@ -436,12 +435,12 @@ export default {
                     })
                 });
             }
-            //set missions
+            // Set missions
             this.setMissions(newMissions);
             console.log('Missions loaded.');
         },
         handleGetMissionResponse(data){
-            //decode message
+            // Decode message
             let missionMsg;
             try {
                 missionMsg = this.protoPkg.GetMissionResponse.decode(data).mission;
@@ -449,7 +448,7 @@ export default {
                 console.log('Unable to decode GetMissionResponse message');
                 return;
             }
-            //convert received mission into a certain structure, and append it to the list
+            // Convert received mission into a certain structure, and append it to the list
             this.missions.push({
                 title: missionMsg.title,
                 origin: {
@@ -465,64 +464,60 @@ export default {
                             lng: wp.longitude
                         },
                         visible: true // TODO: remove this?
-                    }
+                    };
                 })
             });
             console.log('Mission downloaded.');
         },
         handleSetParametersAck(data){
-            //decode message
-            let msg;
+            // Decode message
             try {
-                msg = this.protoPkg.SetParametersAck.decode(data);
+                this.protoPkg.SetParametersAck.decode(data);
             } catch (e){
                 console.log('Unable to decode SetParametersAck message');
                 return;
             }
-            //notify
+            // Notify
             this.$dispatch('app::create-snackbar', 'Parameters set on vehicle');
             this.$dispatch('server::set_parameters_ack');
         },
         handleSetSettingsAck(data){
-            //decode message
-            let msg;
+            // Decode message
             try {
-                msg = this.protoPkg.SetSettingsAck.decode(data);
+                this.protoPkg.SetSettingsAck.decode(data);
             } catch (e){
                 console.log('Unable to decode SetSettingsAck message');
                 return;
             }
-            //notify
+            // Notify
             this.$dispatch('app::create-snackbar', 'Settings set on server');
             this.$dispatch('server::set_settings_ack');
         },
         handleSetMissionAck(data){
-            //decode message
-            let msg;
+            // Decode message
             try {
-                msg = this.protoPkg.SetMissionAck.decode(data);
+                this.protoPkg.SetMissionAck.decode(data);
             } catch (e){
                 console.log('Unable to decode SetMissionAck message');
                 return;
             }
-            //notify
+            // Notify
             this.$dispatch('app::create-snackbar', 'Mission set on vehicle');
             this.$dispatch('server::set_mission_ack');
         },
         handleSetMissionsAck(data){
-            //decode message
-            let msg;
+            // Decode message
             try {
-                msg = this.protoPkg.SetMissionsAck.decode(data);
+                this.protoPkg.SetMissionsAck.decode(data);
             } catch (e){
                 console.log('Unable to decode SetMissionsAck message');
                 return;
             }
-            //notify
+            // Notify
             this.$dispatch('app::create-snackbar', 'Mission list set on server');
         },
         handleAttention(data){
-            //decode message
+            // Decode message
             let attentionMsg;
             try {
                 attentionMsg = this.protoPkg.Attention.decode(data);
@@ -530,7 +525,7 @@ export default {
                 console.log('Unable to decode Attention message');
                 return;
             }
-            //display message
+            // Display message
             this.$dispatch('app::create-snackbar', attentionMsg.msg);
         },
         // TODO: make the following methods unnecessary?
