@@ -28,7 +28,7 @@
         </ui-toolbar>
 
         <div class="sidebar-page-content" v-el:page-content>
-            <div class="row">
+            <div class="row origin-row">
                 <ui-textbox
                     class="column one-half" label="Origin Latitude" name="latitude"
                     :value.sync="mission.origin.lat" type="number" :step="0.00001"
@@ -263,6 +263,11 @@ export default {
         &:last-child {
             margin-bottom: 0;
         }
+    }
+
+    .origin-row {
+        padding: 16px;
+        padding-bottom: 0;
     }
 
     .ui-toolbar-brand {
