@@ -19,13 +19,23 @@ export default {
             required: true
         },
 
-        start: {
-            type: Object,
+        startLat: {
+            type: Number,
             required: true
         },
 
-        end: {
-            type: Object,
+        startLng: {
+            type: Number,
+            required: true
+        },
+
+        endLat: {
+            type: Number,
+            required: true
+        },
+
+        endLng: {
+            type: Number,
             required: true
         },
 
@@ -66,15 +76,27 @@ export default {
             }
         },
 
-        start(){
+        startLat(){
             if (this.link){
-                this.link.getPath().setAt(0, new google.maps.LatLng(this.start.lat, this.start.lng));
+                this.link.getPath().setAt(0, new google.maps.LatLng(this.startLat, this.startLng));
             }
         },
 
-        end(){
+        startLng(){
             if (this.link){
-                this.link.getPath().setAt(1, new google.maps.LatLng(this.end.lat, this.end.lng));
+                this.link.getPath().setAt(0, new google.maps.LatLng(this.startLat, this.startLng));
+            }
+        },
+
+        endLat(){
+            if (this.link){
+                this.link.getPath().setAt(1, new google.maps.LatLng(this.endLat, this.endLng));
+            }
+        },
+
+        endLng(){
+            if (this.link){
+                this.link.getPath().setAt(1, new google.maps.LatLng(this.endLat, this.endLng));
             }
         },
 
@@ -88,7 +110,10 @@ export default {
     methods: {
         initializeLink() {
             this.link = new google.maps.Polyline({
-                path: [this.start, this.end],
+                path: [
+                    {lat: this.startLat, lng: this.startLng},
+                    {lat: this.endLat, lng: this.endLng}
+                ],
                 strokeColor: this.strokeColor.normal,
                 strokeOpacity: 1,
                 strokeWeight: 5,
@@ -110,24 +135,6 @@ export default {
                     this.link.setOptions({strokeColor: this.strokeColor.normal});
                 }
             });
-        }
-    },
-
-    events: {
-        'waypointLink:drag_start'(index, lat, lng){
-            if (this.index === index){
-                this.start = {lat: lat, lng: lng};
-            } else {
-                return true;
-            }
-        },
-
-        'waypointLink:drag_end'(index, lat, lng){
-            if (this.index === index){
-                this.end = {lat: lat, lng: lng};
-            } else {
-                return true;
-            }
         }
     }
 };

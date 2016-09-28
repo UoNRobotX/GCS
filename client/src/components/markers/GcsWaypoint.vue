@@ -26,7 +26,6 @@
                     type="number" :step="0.00001"
                 ></ui-textbox>
             </div>
-            <!-- TODO: updating lat/lng with buttons doesn't update waypoint links -->
 
             <div class="row">
                 <ui-select
@@ -84,7 +83,6 @@ export default {
         drag(e) {
             this.lat = Number( parseFloat(e.latLng.lat()).toFixed(7) );
             this.lng = Number( parseFloat(e.latLng.lng()).toFixed(7) );
-            this.$dispatch('waypoint:drag', this.index, this.lat, this.lng);
         },
 
         mouseover() {

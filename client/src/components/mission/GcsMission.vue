@@ -58,10 +58,16 @@
                     @delete="deleteWaypoint(index)"
                 ></gcs-waypoint>
 
+                <!--
+                    it seems, when waypoint.position is used, instead of waypoint.position.lat/lng,
+                    changing the waypoint.position.lat/lng elsewhere won't trigger updates here
+                -->
                 <gcs-waypoint-link
                     v-for="(index, waypoint) in mission.waypoints" :index="index"
-                    :start="waypoint.position"
-                    :end="mission.waypoints[(index+1) % mission.waypoints.length].position;"
+                    :start-lat="waypoint.position.lat"
+                    :start-lng="waypoint.position.lng"
+                    :end-lat="mission.waypoints[(index+1) % mission.waypoints.length].position.lat;"
+                    :end-lng="mission.waypoints[(index+1) % mission.waypoints.length].position.lng;"
                     :visible="waypointsVisible"
                 ></gcs-waypoint-link>
             </div>
@@ -204,13 +210,6 @@ export default {
 
         'map:rightclick'(e) {
             console.log('Map right-clicked', e);
-        },
-
-        'waypoint:drag'(index, lat, lng){
-            // Update waypoint links
-            this.$broadcast('waypointLink:drag_start', index, lat, lng);
-            let nextIndex = (index > 0 ? index - 1 : this.mission.waypoints.length - 1);
-            this.$broadcast('waypointLink:drag_end', nextIndex, lat, lng);
         },
 
         'waypointLink:click'(index, lat, lng){
