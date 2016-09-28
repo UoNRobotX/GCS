@@ -353,7 +353,7 @@ export default {
                             title: paramName,
                             type: param.type,
                             value: param.value,
-                            valid: true // TODO: remove this?
+                            valid: true
                         });
                     }
                 }
@@ -429,8 +429,7 @@ export default {
                             position: {
                                 lat: wp.latitude,
                                 lng: wp.longitude
-                            },
-                            visible: true // TODO: remove this?
+                            }
                         };
                     })
                 });
@@ -462,8 +461,7 @@ export default {
                         position: {
                             lat: wp.latitude,
                             lng: wp.longitude
-                        },
-                        visible: true // TODO: remove this?
+                        }
                     };
                 })
             });
@@ -528,7 +526,7 @@ export default {
             // Display message
             this.$dispatch('app::create-snackbar', attentionMsg.msg);
         },
-        // TODO: make the following methods unnecessary?
+        // Used for conversion from protocol buffer values to/from strings used by components
         modeString(mode){
             switch (mode){
                 case this.protoPkg.Status.Mode.STOPPED: return 'idle';

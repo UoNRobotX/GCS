@@ -34,7 +34,6 @@
                                 @changed="paramChanged(currentSection.title, section.title, param.title, param.type, param.value, param.valid)"
                                 :validation-rules="getValidationRule(param.type)"
                             ></ui-textbox>
-                            <!-- TODO: decide if using 'param.valid' is appropriate -->
                         </div>
                     </ui-collapsible>
                 </div>
@@ -80,7 +79,7 @@ export default {
         },
 
         isArray(x){
-            return Array.isArray(x); //Vue doesn't like it if I use this directly
+            return Array.isArray(x); // Vue doesn't like it if I use this directly
         },
 
         paramChanged(section, subsection, title, type, value, valid){
@@ -126,7 +125,7 @@ export default {
                 }
             }
             this.$dispatch('client::set_parameters', data);
-            //show message on timeout
+            // Show message on timeout
             let requestTime = Date.now();
             setTimeout(() => {
                 if (this.lastSetParametersAckTime < requestTime){

@@ -18,14 +18,14 @@ const initialState = {
         mode:     'idle',
         signal:   100
     },
-    settings: [], //[{title: t1, settings: [{title: t2, value: v1}, ...]}, ...]
+    settings: [], // [{title: t1, settings: [{title: t2, value: v1}, ...]}, ...]
     settingsLastUpdateTime: null,
     missions: [],
         //[{
         //    title: t1,
         //    origin: {lat: lat1, lng: lng1},
         //    waypoints: [
-        //        {title: t2, type: t3, visible: v1, position: {lat: lat1, lng: lng1}}, ...]
+        //        {title: t2, type: t3, position: {lat: lat1, lng: lng1}}, ...]
         //}, ...]
     missionsLastUpdateTime: null,
     currentMissionIndex: -1,
@@ -34,7 +34,7 @@ const initialState = {
         //    title: t1,
         //    subSections: [{
         //        title: t2,
-        //        params: [{title: t3, type: t4, value: v1}, ...]
+        //        params: [{title: t3, type: t4, value: v1, valid: v2}, ...]
         //    }, ...]
         //}, ...]
     parametersLastUpdateTime: null

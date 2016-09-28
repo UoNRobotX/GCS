@@ -154,7 +154,7 @@ export default {
                 return;
             }
             this.$dispatch('client::set_mission', this.missions[this.currentMissionIndex]);
-            //show message on timeout
+            // Show message on timeout
             let requestTime = Date.now();
             setTimeout(() => {
                 if (this.lastSetMissionAckTime < requestTime){
@@ -184,7 +184,6 @@ export default {
             let newWaypoint = {
                 title: '',
                 type: 'go_to_point',
-                visible: true,
                 position: {
                     lat,
                     lng
@@ -208,7 +207,7 @@ export default {
         },
 
         'waypoint:drag'(index, lat, lng){
-            //update waypoint links
+            // Update waypoint links
             this.$broadcast('waypointLink:drag_start', index, lat, lng);
             let nextIndex = (index > 0 ? index - 1 : this.mission.waypoints.length - 1);
             this.$broadcast('waypointLink:drag_end', nextIndex, lat, lng);
@@ -218,11 +217,10 @@ export default {
             if (!this.mapEditing) {
                 return;
             }
-            //insert new waypoint
+            // Insert new waypoint
             let newWaypoint = {
                 title: '',
                 type: 'go_to_point',
-                visible: true,
                 position: {
                     lat,
                     lng

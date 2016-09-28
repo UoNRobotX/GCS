@@ -68,7 +68,7 @@ export default {
                 }
             }
             this.$dispatch('client::set_settings', data);
-            //show message on timeout
+            // Show message on timeout
             let requestTime = Date.now();
             setTimeout(() => {
                 if (this.lastSetSettingsAckTime < requestTime){

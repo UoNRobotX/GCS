@@ -36,22 +36,22 @@ export default {
 
     computed: {
         heading() {
-            let deg = Math.round(this.wamv.heading); //0 decimal places
+            let deg = Math.round(this.wamv.heading); // 0 decimal places
             return deg + '&deg; ' + this.degreeToToCardinal(this.wamv.heading);
         },
 
         speed() {
-            let spd = Math.round(this.wamv.speed*100)/100; //2 decimal places
+            let spd = Math.round(this.wamv.speed*100)/100; // 2 decimal places
             return spd + ' K';
         },
 
         battery() {
-            let perc = Math.round(this.wamv.battery*100)/100; //2 decimal places
+            let perc = Math.round(this.wamv.battery*100)/100; // 2 decimal places
             return perc + '%';
         },
 
         signal() {
-            let perc = Math.round(this.wamv.signal*100)/100; //2 decimal places
+            let perc = Math.round(this.wamv.signal*100)/100; // 2 decimal places
             return perc + '%';
         }
     },
