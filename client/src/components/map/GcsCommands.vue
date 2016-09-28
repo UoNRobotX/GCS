@@ -15,7 +15,7 @@
         ></ui-button>
 
         <ui-button
-            text="Mode"
+            :text="modeButtonText"
             has-dropdown-menu dropdown-position="bottom right" :menu-options="overflowMenu"
             @menu-option-selected="menuOptionSelected"
         ></ui-button>
@@ -47,10 +47,18 @@ export default {
             ],
             toggleMissionFailureTimer: null,
             TIMEOUT: 1000
-        }
+        };
     },
 
     computed: {
+        modeButtonText() {
+            if (this.wamv.mode === 'manual') {
+                return 'Mode: M';
+            } else {
+                return 'Mode: A';
+            }
+        },
+
         startButtonText() {
             switch (this.wamv.mode) {
                 case 'idle':
@@ -167,6 +175,11 @@ export default {
         height: 32px;
         margin-right: 8px;
         line-height: 1;
+    }
+
+    .ui-button-dropdown-icon {
+        font-size: 18px;
+        margin-top: -2px;
     }
 }
 </style>
