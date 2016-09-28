@@ -131,3 +131,6 @@ $RECYCLE.BIN/
 # Node
 node_modules
 npm-debug.log
+
+server/temp/toServer
+server/temp/toVehicle
