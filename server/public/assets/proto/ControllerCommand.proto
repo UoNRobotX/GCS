@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package message.communication;
+
 message ControllerCommand {
     uint64 time_stamp_ms = 1;
 

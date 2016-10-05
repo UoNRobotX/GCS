@@ -75,7 +75,7 @@ class SocketIoManager {
         if (protoBuilder === null){
             throw new Error ('Unable to load Controller Command proto message');
         }
-        let ControllerCommand = protoBuilder.build('ControllerCommand');
+        let ControllerCommand = protoBuilder.build('message.communication.ControllerCommand');
         this.controllerCommand = new ControllerCommand();
         this.lastControllerCommandMessageTS = 0;
     }
@@ -219,12 +219,13 @@ class SocketIoManager {
             }
 
             //Avoid spamming the serial port
-            if (this.controllerCommand.time_stamp_ms - this.lastControllerCommandMessageTS > 100) {
+           // if (this.controllerCommand.time_stamp_ms - this.lastControllerCommandMessageTS > 100) {
+                console.log('Controller Command');
                 console.log(this.controllerCommand);
                 let buffer = this.controllerCommand.encode().buffer;
                 this.serial.writeData(this.MSG_TYPES.CONTROLLER_COMMAND, buffer);
                 this.lastControllerCommandMessageTS = this.controllerCommand.time_stamp_ms;
-            }
+            //}
         }
     }
 

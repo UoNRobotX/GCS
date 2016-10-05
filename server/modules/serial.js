@@ -155,9 +155,10 @@ class Serial extends EventEmitter {
 
         let output = this.serialStream ? this.serialStream : this.outputFile;
 
+        let crc = crc32(buffer);
         output.write(header);
         output.write(buffer);
-        output.write(crc32(buffer));
+        output.write(crc);
     }
 }
 
