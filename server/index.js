@@ -7,7 +7,7 @@ let openUrl = require('openurl');
 let serve = require('koa-static');
 let fs = require('fs');
 let child_process = require('child_process');
-let SocketIoManager = require('./modules/SocketIoManager');
+let SocketIoManager = require('./modules/SocketIoManager.js');
 
 // Variables
 let inputFile  = path.join(__dirname, 'temp/toServer'); //used to get messages from vehicle

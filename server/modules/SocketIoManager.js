@@ -236,7 +236,8 @@ class SocketIoManager {
                 console.log(this.controllerCommand);
 
                 let buffer = this.controllerCommand.encode().buffer;
-                this.serial.writeData(this.MSG_TYPES.CONTROLLER_COMMAND, buffer);
+                let typeName = this.controllerCommand.$type.toString().substr(1)
+                this.serial.writeData(typeName, buffer);
                 this.lastControllerCommandMessageTS = this.controllerCommand.time_stamp_ms;
             //}
         }
@@ -249,7 +250,7 @@ class SocketIoManager {
         }
         console.log('Got a "GetParameters" message');
         this.pendingGetParametersRequests.push(socketId);
-        this.serial.writeData(this.MSG_TYPES.GET_PARAMETERS, data);
+        //this.serial.writeData(this.MSG_TYPES.GET_PARAMETERS, data);
     }
 
     handleClientGetSettings(data, socket) {
@@ -274,9 +275,9 @@ class SocketIoManager {
         if (msg === null) {
             return;
         }
-        console.log('Got a "GetMission" message');
-        this.pendingGetMissionRequests.push(socketId);
-        this.serial.writeData(this.MSG_TYPES.GET_MISSION, data);
+       // console.log('Got a "GetMission" message');
+        //this.pendingGetMissionRequests.push(socketId);
+        //this.serial.writeData(this.MSG_TYPES.GET_MISSION, data);
     }
 
     handleClientGetMissions(data, socket) {
@@ -311,7 +312,7 @@ class SocketIoManager {
             return;
         }
         console.log('Got a "SetParameters" message');
-        this.serial.writeData(this.MSG_TYPES.SET_PARAMETERS, data);
+        //this.serial.writeData(this.MSG_TYPES.SET_PARAMETERS, data);
     }
 
     handleClientSetSettings(data) {
@@ -361,7 +362,7 @@ class SocketIoManager {
             return;
         }
         console.log('Got a "SetMission" message');
-        this.serial.writeData(this.MSG_TYPES.SET_MISSION, data);
+        //this.serial.writeData(this.MSG_TYPES.SET_MISSION, data);
     }
 
     handleClientSetMissions(data) {
@@ -406,7 +407,7 @@ class SocketIoManager {
             return;
         }
         console.log('Got a "Command" message');
-        this.serial.writeData(this.MSG_TYPES.COMMAND, data);
+        //this.serial.writeData(this.MSG_TYPES.COMMAND, data);
     }
 
     decodeVehicleMsg(msgType, data) {

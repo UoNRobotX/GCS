@@ -5,6 +5,7 @@ let path = require('path');
 let crc32 = require('buffer-crc32');
 let EventEmitter = require('events');
 let serialport = require('serialport');
+var murmurhash3 = require('murmurhash-native').murmurHash128x64;
 
 class Serial extends EventEmitter {
     constructor(inputFile, outputFile, baudRate) {
@@ -15,10 +16,10 @@ class Serial extends EventEmitter {
         this.serialStream = null;
         this.inputMessageBuffer = new Buffer(0);
 
-        this.HEADER_SIZE = 8;
+        this.HEADER_SIZE = 11;
         this.CHECKSUM_SIZE = 4;
         this.TYPE_OFFSET = 3;
-        this.SIZE_OFFSET = 4;
+        this.SIZE_OFFSET = 7;
         this.MAGIC_NUMBER = new Buffer([0x17, 0xC0, 0x42]);
 
         this.initInput(inputFile, baudRate);
@@ -149,12 +150,10 @@ class Serial extends EventEmitter {
 
         let header = new Buffer(this.HEADER_SIZE); // magic number, type, message ID, size
         this.MAGIC_NUMBER.copy(header);
-
-        header.writeUInt8(type, this.TYPE_OFFSET);
+        var hash = murmurhash3(type, 'ascii', 0x4e55436c);
+        hash.copy(header, this.TYPE_OFFSET, 0, 4);
         header.writeUInt32LE(buffer.length, this.SIZE_OFFSET);
-
         let output = this.serialStream ? this.serialStream : this.outputFile;
-
         let crc = crc32(buffer);
         output.write(header);
         output.write(buffer);
