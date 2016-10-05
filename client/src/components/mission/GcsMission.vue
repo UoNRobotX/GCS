@@ -28,7 +28,7 @@
         </ui-toolbar>
 
         <div class="sidebar-page-content" v-el:page-content>
-            <div class="row">
+            <div class="row origin-row">
                 <ui-textbox
                     class="column one-half" label="Origin Latitude" name="latitude"
                     :value.sync="mission.origin.lat" type="number" :step="0.00001"
@@ -58,10 +58,16 @@
                     @delete="deleteWaypoint(index)"
                 ></gcs-waypoint>
 
+                <!--
+                    it seems, when waypoint.position is used, instead of waypoint.position.lat/lng,
+                    changing the waypoint.position.lat/lng elsewhere won't trigger updates here
+                -->
                 <gcs-waypoint-link
                     v-for="(index, waypoint) in mission.waypoints" :index="index"
-                    :start="waypoint.position"
-                    :end="mission.waypoints[(index+1) % mission.waypoints.length].position;"
+                    :start-lat="waypoint.position.lat"
+                    :start-lng="waypoint.position.lng"
+                    :end-lat="mission.waypoints[(index+1) % mission.waypoints.length].position.lat;"
+                    :end-lng="mission.waypoints[(index+1) % mission.waypoints.length].position.lng;"
                     :visible="waypointsVisible"
                 ></gcs-waypoint-link>
             </div>
@@ -154,7 +160,7 @@ export default {
                 return;
             }
             this.$dispatch('client::set_mission', this.missions[this.currentMissionIndex]);
-            //show message on timeout
+            // Show message on timeout
             let requestTime = Date.now();
             setTimeout(() => {
                 if (this.lastSetMissionAckTime < requestTime){
@@ -184,7 +190,6 @@ export default {
             let newWaypoint = {
                 title: '',
                 type: 'go_to_point',
-                visible: true,
                 position: {
                     lat,
                     lng
@@ -207,22 +212,14 @@ export default {
             console.log('Map right-clicked', e);
         },
 
-        'waypoint:drag'(index, lat, lng){
-            //update waypoint links
-            this.$broadcast('waypointLink:drag_start', index, lat, lng);
-            let nextIndex = (index > 0 ? index - 1 : this.mission.waypoints.length - 1);
-            this.$broadcast('waypointLink:drag_end', nextIndex, lat, lng);
-        },
-
         'waypointLink:click'(index, lat, lng){
             if (!this.mapEditing) {
                 return;
             }
-            //insert new waypoint
+            // Insert new waypoint
             let newWaypoint = {
                 title: '',
                 type: 'go_to_point',
-                visible: true,
                 position: {
                     lat,
                     lng
@@ -263,6 +260,11 @@ export default {
         &:last-child {
             margin-bottom: 0;
         }
+    }
+
+    .origin-row {
+        padding: 16px;
+        padding-bottom: 0;
     }
 
     .ui-toolbar-brand {

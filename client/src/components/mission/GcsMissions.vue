@@ -111,19 +111,19 @@ export default {
                     this.$dispatch('client::get_missions');
                     break;
                 case 'import':
-                    //trigger file select
+                    // Trigger file select
                     document.getElementById('import_missions_input').click();
                     break;
                 case 'export':
-                    //create data URI
+                    // Create data URI
                     let uri = 'data:application/json,';
                     uri += JSON.stringify(this.missions);
                     uri = encodeURI(uri);
-                    //get link to use for download
+                    // Get link to use for download
                     let link = document.getElementById('export_missions_link');
                     link.href = uri;
                     link.download = 'missions.json';
-                    //trigger download
+                    // Trigger download
                     link.click();
                     break;
                 case 'clear':
@@ -134,11 +134,11 @@ export default {
 
         importMission(){
             let files = document.getElementById('import_missions_input').files;
-            //get file contents
+            // Get file contents
             if (files.length > 0){
                 let file = files[0];
                 let reader = new FileReader();
-                //specify function to call when file has been read
+                // Specify function to call when file has been read
                 reader.onload = (e) => {
                     let contents = e.target.result;
                     try {
@@ -152,7 +152,7 @@ export default {
                         console.log('File content is not valid JSON: ' + e.message);
                     }
                 };
-                //start file read
+                // Start file read
                 reader.readAsText(file);
             }
         },
@@ -178,8 +178,6 @@ export default {
                         typeof wp.title != 'string' ||
                         !wp.hasOwnProperty('type') ||
                         typeof wp.type != 'string' ||
-                        !wp.hasOwnProperty('visible') ||
-                        typeof wp.visible != 'boolean' ||
                         !wp.hasOwnProperty('position') ||
                         typeof wp.position != 'object' ||
                         !wp.position.hasOwnProperty('lat') ||

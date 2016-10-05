@@ -39,4 +39,4 @@ for (let i = 2; i < process.argv.length; i++) {
     }
 }
 
-let vehicle = new Vehicle(inputFile, outputFile, baudRate);
+new Vehicle(inputFile, outputFile, baudRate);

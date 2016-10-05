@@ -1,16 +1,13 @@
 # Todo list
 
 ## Stuff that needs doing
-* Add manual mode that uses the gamepad API.
-* Add a way to specify areas for waypoints.
-* Try using written code instead of geolib.
+* Prevent client sending controller/non-controller messages when in auto/manual mode.
 * Allow for multiple clients (notify about parameter/setting changes).
-* Determine real protocol buffer messages.
-* Make server validate both ways.
-* Test on multiple platforms.
+* Decide upon protocol buffer message types.
+* Add a way to specify areas for waypoints.
 * Add judges display.
 * Add functionality for specifying RobotX tasks/courses.
-* Make stuff look better.
+* Make server validate both ways?
 * Resolve TODO comment lines.
 
 ## Stuff that may need doing

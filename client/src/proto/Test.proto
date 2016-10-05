@@ -1,4 +1,4 @@
-//This file defines messages for testing (the real ones will be different).
+// This file defines messages for testing (the real ones will be different).
 
 syntax = "proto3";
 
@@ -37,7 +37,7 @@ message Mission {
     repeated Waypoint waypoints = 4;
 }
 
-//sent regularly by the WAM-V to the server, which sends it to clients
+// Sent regularly by the WAM-V to the server, which sends it to clients
 message Status {
     enum Mode {
         STOPPED = 0;
@@ -49,15 +49,15 @@ message Status {
     uint64 timestamp = 1;
     double latitude  = 2;
     double longitude = 3;
-    double heading   = 4; //0-360
-    double speed     = 5; //kmph
-    double battery   = 6; //0-100
+    double heading   = 4; // 0-360
+    double speed     = 5; // kmph
+    double battery   = 6; // 0-100
     bool armed       = 7;
     Mode mode        = 8;
-    double signal    = 9; //0-100
+    double signal    = 9; // 0-100
 }
 
-//sent from the client to the server, which sends it to the WAM-V
+// Sent from the client to the server, which sends it to the WAM-V
 message Command {
     enum Type {
         ARM       = 0;
@@ -67,103 +67,103 @@ message Command {
         RESUME    = 4;
         KILL      = 5;
         UNKILL    = 6;
-        MANUAL    = 7; //switch to manual mode
-        AUTOMATIC = 8; //switch to automatic mode
+        MANUAL    = 7; // Switch to manual mode
+        AUTOMATIC = 8; // Switch to automatic mode
     }
     uint64 timestamp = 1;
     Type type        = 2;
 }
 
-//sent from the client to the server, and requests parameters
+// Sent from the client to the server, and requests parameters
 message GetParameters {
     uint64 timestamp = 1;
 }
 
-//sent from the server to the client, and contains vehicle parameters
+// Sent from the server to the client, and contains vehicle parameters
 message GetParametersResponse {
     uint64 timestamp              = 1;
     repeated Parameter parameters = 2;
 }
 
-//sent from the client to the server, and requests settings
+// Sent from the client to the server, and requests settings
 message GetSettings {
     uint64 timestamp = 1;
 }
 
-//sent from the server to the client, and contains settings
+// Sent from the server to the client, and contains settings
 message GetSettingsResponse {
     uint64 timestamp          = 1;
     repeated Setting settings = 2;
 }
 
-//sent from the client to the server, and requests the last uploaded mission
+// Sent from the client to the server, and requests the last uploaded mission
 message GetMission {
     uint64 timestamp = 1;
 }
 
-//sent from the server to the client, and contains the vehicle's mission
+// Sent from the server to the client, and contains the vehicle's mission
 message GetMissionResponse {
     uint64 timestamp = 1;
     Mission mission  = 2;
 }
 
-//sent from the client to the server, and requests the server's saved mission list
+// Sent from the client to the server, and requests the server's saved mission list
 message GetMissions {
     uint64 timestamp = 1;
 }
 
-//sent from the server to the client, and contains the server's saved mission list
+// Sent from the server to the client, and contains the server's saved mission list
 message GetMissionsResponse {
     uint64 timestamp          = 1;
     repeated Mission missions = 2;
 }
 
-//sent from the client to the server, specifying parameters to be set
+// Sent from the client to the server, specifying parameters to be set
 message SetParameters {
     uint64 timestamp              = 1;
     repeated Parameter parameters = 2;
 }
 
-//sent from the server to the client, and indicates that parameters were set
+// Sent from the server to the client, and indicates that parameters were set
 message SetParametersAck {
     uint64 timestamp = 1;
 }
 
-//sent from the client to the server, specifying settings to be set
+// Sent from the client to the server, specifying settings to be set
 message SetSettings {
     uint64 timestamp          = 1;
     repeated Setting settings = 2;
 }
 
-//sent from the server to the client, and indicates that settings were set
+// Sent from the server to the client, and indicates that settings were set
 message SetSettingsAck {
     uint64 timestamp = 1;
 }
 
-//sent from the client to the server, specifying a mission to upload
+// Sent from the client to the server, specifying a mission to upload
 message SetMission {
     uint64 timestamp = 1;
     Mission mission  = 2;
 }
 
-//sent from the server to the client, and indicates that the vehicle's mission was set
+// Sent from the server to the client, and indicates that the vehicle's mission was set
 message SetMissionAck {
     uint64 timestamp = 1;
 }
 
-//sent from the client to the server, specifying a mission list to save
+// Sent from the client to the server, specifying a mission list to save
 message SetMissions {
     uint64 timestamp          = 1;
     repeated Mission missions = 2;
 }
 
-//sent from the server to the client, and indicates that the mission list was set
+// Sent from the server to the client, and indicates that the mission list was set
 message SetMissionsAck {
     uint64 timestamp = 1;
 }
 
-//sent from the server to the client, intended to notify the user
-//example messages: Mission completed. Battery is at 0%. Parameters changed by another client.
+// Sent from the server to the client, intended to notify the user
+// Example messages: Mission completed. Battery is at 0%. Parameters changed by another client.
 message Attention {
     uint64 timestamp = 1;
     string msg       = 2;

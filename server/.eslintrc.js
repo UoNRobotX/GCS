@@ -4,12 +4,13 @@ module.exports = {
 
     parserOptions: {
         ecmaFeatures: {
-            modules: true // Allows ESLint to understand ES6+ module syntax
+            modules: true, // Allows ESLint to understand ES6+ module syntax
         }
     },
 
     // Specify environment for built-in functions
     env: {
+        es6: true,
         node: true
     },
 

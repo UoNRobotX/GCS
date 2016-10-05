@@ -73,7 +73,7 @@ class Vehicle {
 
         this.messenger.on('start', (fromBeginning) => {
             if (this.mode === this.MODES.MANUAL){
-                console.log('Ignored a start/resume message while in manual mode')
+                console.log('Ignored a start/resume message while in manual mode');
                 return;
             }
             this.start(fromBeginning);
@@ -81,7 +81,7 @@ class Vehicle {
 
         this.messenger.on('stop', () => {
             if (this.mode === this.MODES.MANUAL){
-                console.log('Ignored a stop message while in manual mode')
+                console.log('Ignored a stop message while in manual mode');
                 return;
             }
             this.stop();
@@ -89,7 +89,7 @@ class Vehicle {
 
         this.messenger.on('kill', (shouldKill) => {
             if (this.mode === this.MODES.MANUAL){
-                console.log('Ignored a kill/unkill message while in manual mode')
+                console.log('Ignored a kill/unkill message while in manual mode');
                 return;
             }
             this.kill(shouldKill);
@@ -325,7 +325,7 @@ class Vehicle {
                             lat: wp.latitude,
                             lng: wp.longitude
                         }
-                    }
+                    };
                 })
             };
 
