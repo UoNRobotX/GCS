@@ -184,7 +184,7 @@ export default {
 
     methods: {
         controllerEvent(event, data) {
-            // console.info(event, data);
+            console.info(event, data);
             this.$broadcast('client::controller_event', data);
         },
 

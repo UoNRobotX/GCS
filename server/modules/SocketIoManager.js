@@ -81,15 +81,22 @@ class SocketIoManager {
         }
 
         this.protoPkg = protoBuilder.build();
-        protoBuilder = protobuf.loadProtoFile(path.join(__dirname, '../public/assets/proto/ControllerCommand.proto'));
+        protoBuilder = protobuf.loadProtoFile(path.join(__dirname, '../public/assets/proto/GamePad.proto'));
 
         if (protoBuilder === null) {
             throw new Error('Unable to load Controller Command proto message');
         }
 
-        let ControllerCommand = protoBuilder.build('message.communication.ControllerCommand');
-        this.controllerCommand = new ControllerCommand();
-        this.lastControllerCommandMessageTS = 0;
+        let GamePad = protoBuilder.build('message.communication.GamePad');
+        this.gamePad = new GamePad();
+
+        setInterval(this.sendGamePad.bind(this), 100, this);
+    }
+
+    sendGamePad(){
+        let buffer = this.gamePad.encode().buffer;
+        let typeName = this.gamePad.$type.toString().substr(1);
+        this.serial.writeData(typeName, buffer);
     }
 
     initMissions() {
@@ -212,34 +219,72 @@ class SocketIoManager {
     }
 
     handelClientControllerAction(data) {
-        if (this.controllerCommand) {
-            this.controllerCommand.time_stamp_ms = (new Date).getTime();
+        if (this.gamePad) {
             switch (data.name) {
 
                 case 'LEFT_ANALOG_STICK':
-                    this.controllerCommand.motor1_thrust = -data.position.y;
-                    this.controllerCommand.motor1_angle = data.position.x;
+                    this.gamePad.left_analog_stick = data.position;
                     break;
 
                 case 'RIGHT_ANALOG_STICK':
-                    this.controllerCommand.motor2_thrust = -data.position.y;
-                    this.controllerCommand.motor2_angle = data.position.x;
+                    this.gamePad.right_analog_stick = data.position;
                     break;
 
+                case 'FACE_1': // A
+                    this.gamePad.A = data.pressed;
+                    break;
+                case 'FACE_3': // X
+                    this.gamePad.X = data.pressed;
+                    break;
+                case 'FACE_2': // B
+                    this.gamePad.B = data.pressed;
+                    break;
+                case 'FACE_4': // Y
+                    this.gamePad.Y = data.pressed;
+                    break;
+                case 'RIGHT_SHOULDER': // RB
+                    this.gamePad.RB = data.pressed;
+                    break;
+                case 'LEFT_SHOULDER': // LB
+                    this.gamePad.LB = data.pressed;
+                    break;
+                case 'DPAD_UP' :  // PAD UP
+                    this.gamePad.up = data.pressed;
+                    break;
+                case 'DPAD_DOWN': // PAD DOWN
+                    this.gamePad.down = data.pressed;
+                    break;
+                case 'DPAD_LEFT': // PAD LEFT
+                    this.gamePad.left = data.pressed;
+                    break;
+                case 'DPAD_RIGHT':  // PAD RIGHT
+                    this.gamePad.right = data.pressed;
+                    break;
+                case 'START': // START BTN
+                    this.gamePad.start = data.pressed;
+                    break;
+                case 'SELECT': // BACK BTN
+                    this.gamePad.back = data.pressed;
+                    break;
+                case 'HOME': // HOME BTN
+                    this.gamePad.home = data.pressed;
+                    break;
+                case 'LEFT_ANALOG_BUTTON':
+                    this.gamePad.left_analog_button = data.pressed;
+                    break;
+                case 'RIGHT_ANALOG_BUTTON':
+                    this.gamePad.right_analog_button = data.pressed;
+                    break;
+                case 'RIGHT_SHOULDER_BOTTOM':
+                    this.gamePad.RT = data.value;
+                    break;
+                case 'LEFT_SHOULDER_BOTTOM':
+                    this.gamePad.LT = data.value;
+                    break;
                 default:
+                    console.log('NOOOB', data.name);
                     return;
             }
-
-            //Avoid spamming the serial port
-           // if (this.controllerCommand.time_stamp_ms - this.lastControllerCommandMessageTS > 100) {
-                console.log('Controller Command');
-                console.log(this.controllerCommand);
-
-                let buffer = this.controllerCommand.encode().buffer;
-                let typeName = this.controllerCommand.$type.toString().substr(1)
-                this.serial.writeData(typeName, buffer);
-                this.lastControllerCommandMessageTS = this.controllerCommand.time_stamp_ms;
-            //}
         }
     }
 

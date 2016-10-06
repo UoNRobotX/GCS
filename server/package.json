@@ -4,16 +4,18 @@
   "description": "GCS server",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js -f",
+    "start": "node index.js -b 115200 /dev/ttyUSB0",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "UON",
   "license": "ISC",
   "dependencies": {
     "buffer-crc32": "^0.2.5",
+    "extend": "^3.0.0",
     "geolib": "^2.0.21",
     "koa": "^1.2.1",
     "koa-static": "^2.0.0",
+    "murmurhash-native": "1.0.1",
     "openurl": "^1.1.1",
     "protobufjs": "^5.0.1",
     "serialport": "^4.0.1",
