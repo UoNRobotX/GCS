@@ -15,7 +15,7 @@ const initialState = {
         speed:    0,
         battery:  100,
         armed:    false,
-        mode:     'idle',
+        mode:     'manual',
         signal:   100
     },
     settings: [], // [{title: t1, settings: [{title: t2, value: v1}, ...]}, ...]

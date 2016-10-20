@@ -153,7 +153,7 @@ export default {
 
     padding: 8px;
     display: flex;
-    min-width: 200px;
+    min-width: 120px;
     border-radius: 2px;
     background-color: white; // alpha(white, 0.9);
     box-shadow: 0 2px 5px 0 alpha(black, 0.2), 0 2px 10px 0 alpha(black, 0.16);
