@@ -74,37 +74,51 @@ export default {
 
     events: {
         'map::pan-up'() {
-            this.map.panBy(0, -1 * (this.mapEl.clientHeight / 4));
+            if (this.mapLoaded){
+                this.map.panBy(0, -1 * (this.mapEl.clientHeight / 4));
+            }
         },
 
         'map::pan-down'() {
-            this.map.panBy(0, this.mapEl.clientHeight / 4);
+            if (this.mapLoaded){
+                this.map.panBy(0, this.mapEl.clientHeight / 4);
+            }
         },
 
         'map::pan-left'() {
-            this.map.panBy(-1 * (this.mapEl.clientWidth / 4), 0);
+            if (this.mapLoaded){
+                this.map.panBy(-1 * (this.mapEl.clientWidth / 4), 0);
+            }
         },
 
         'map::pan-right'() {
-            this.map.panBy(this.mapEl.clientWidth / 4, 0);
+            if (this.mapLoaded){
+                this.map.panBy(this.mapEl.clientWidth / 4, 0);
+            }
         },
 
         'map::pan-center'() {
-            if (this.wamv.loaded){
+            if (this.mapLoaded && this.wamv.loaded){
                 this.map.panTo(this.wamv.position);
             }
         },
 
         'map::zoom-in'() {
-            this.map.setZoom(this.map.getZoom() + 1);
+            if (this.mapLoaded && this.wamv.loaded){
+                this.map.setZoom(this.map.getZoom() + 1);
+            }
         },
 
         'map::zoom-out'() {
-            this.map.setZoom(this.map.getZoom() - 1);
+            if (this.mapLoaded && this.wamv.loaded){
+                this.map.setZoom(this.map.getZoom() - 1);
+            }
         },
 
         'map::change-type'(newType) {
-            this.map.setMapTypeId(google.maps.MapTypeId[newType]);
+            if (this.mapLoaded && this.wamv.loaded){
+                this.map.setMapTypeId(google.maps.MapTypeId[newType]);
+            }
         }
     },
 
