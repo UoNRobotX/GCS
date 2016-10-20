@@ -94,7 +94,7 @@ class SocketIoManager {
     }
 
     sendGamePad(){
-        let buffer = this.gamePad.encode().buffer;
+        let buffer = this.gamePad.toBuffer();
         let typeName = this.gamePad.$type.toString().substr(1);
         this.serial.writeData(typeName, buffer);
     }
@@ -167,7 +167,7 @@ class SocketIoManager {
                 this.handleClientCommand(data);
             });
             socket.on('ControllerAction', (data) => {
-                this.handelClientControllerAction(data);
+                this.handleClientControllerAction(data);
             });
         });
     }
@@ -218,7 +218,7 @@ class SocketIoManager {
         });
     }
 
-    handelClientControllerAction(data) {
+    handleClientControllerAction(data) {
         if (this.gamePad) {
             switch (data.name) {
 
@@ -281,6 +281,44 @@ class SocketIoManager {
                 case 'LEFT_SHOULDER_BOTTOM':
                     this.gamePad.LT = data.value;
                     break;
+                /*
+                case 'MISCBUTTON_1':
+                    this.gamePad.X = data.pressed;
+                    break;
+                case 'MISCBUTTON_2':
+                    this.gamePad.A = data.pressed;
+                    break;
+                case 'MISCBUTTON_3':
+                    this.gamePad.B = data.pressed;
+                    break;
+                case 'MISCBUTTON_4':
+                    this.gamePad.Y = data.pressed;
+                    break;
+                case 'MISCBUTTON_5':
+                    this.gamePad.LB = data.pressed;
+                    break;
+                case 'MISCBUTTON_6':
+                    this.gamePad.RB = data.pressed;
+                    break;
+                case 'MISCBUTTON_7':
+                    this.gamePad.LT = data.value;
+                    break;
+                case 'MISCBUTTON_8':
+                    this.gamePad.RT = data.value;
+                    break;
+                case 'MISCBUTTON_9':
+                    this.gamePad.back = data.pressed;
+                    break;
+                case 'MISCBUTTON_10':
+                    this.gamePad.start = data.pressed;
+                    break;
+                case 'MISCBUTTON_11':
+                    this.gamePad.left_analog_button = data.pressed;
+                    break;
+                case 'MISCBUTTON_12':
+                    this.gamePad.right_analog_button = data.pressed;
+                    break;
+                */
                 default:
                     console.log('NOOOB', data.name);
                     return;
