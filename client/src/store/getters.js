@@ -15,7 +15,7 @@ export function getWayPointsVisible(state){
 }
 
 export function getMapEditing(state) {
-    return state.wamv.mode != 'auto' && state.waypointsVisible;
+    return state.mapLoaded && state.wamv.mode != 'auto' && state.waypointsVisible;
 }
 
 export function getWamv(state) {

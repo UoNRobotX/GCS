@@ -58,8 +58,8 @@ var mainConfig = {
 
     vue: {
         loaders: {
-            css: ExtractTextPlugin.extract('css'), // extract css and stylus files to a single file
-            stylus: ExtractTextPlugin.extract('css!stylus')
+            css: ExtractTextPlugin.extract('css?-url'), // extract css and stylus files to a single file
+            stylus: ExtractTextPlugin.extract('css?-url!stylus')
         },
 
         autoprefixer: {
