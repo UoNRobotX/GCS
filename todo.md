@@ -1,7 +1,6 @@
 # Todo list
 
 ## Stuff that needs doing
-* Make icons available when offline.
 * Prevent client sending controller/non-controller messages when in auto/manual mode.
 * Allow for multiple clients (notify about parameter/setting changes).
 * Decide upon protocol buffer message types.
