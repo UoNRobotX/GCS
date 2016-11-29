@@ -6,6 +6,8 @@ let socket_io = require('socket.io');
 let protobuf = require('protobufjs');
 let Serial = require('../modules/serial');
 
+let GPSTelemetry = null;
+
 class SocketIoManager {
     constructor(server, inputFile, outputFile, baudRate) {
         this.serial = new Serial(inputFile, outputFile, baudRate);
@@ -31,7 +33,8 @@ class SocketIoManager {
             SET_MISSIONS: 16,
             SET_MISSIONS_ACK: 17,
             ATTENTION: 18,
-            CONTROLLER_COMMAND: 19
+            CONTROLLER_COMMAND: 19,
+            GPSTELEMETRY: 2206923273,
         };
 
         // Settings
@@ -89,8 +92,10 @@ class SocketIoManager {
 
         let GamePad = protoBuilder.build('message.communication.GamePad');
         this.gamePad = new GamePad();
-
         setInterval(this.sendGamePad.bind(this), 100, this);
+
+        protoBuilder = protobuf.loadProtoFile(path.join(__dirname, '../public/assets/proto/GPSTelemetry.proto'));
+        GPSTelemetry = protoBuilder.build('message.communication.GPSTelemetry');
     }
 
     sendGamePad(){
@@ -177,6 +182,7 @@ class SocketIoManager {
             console.log('Serial error: ' + msg);
         });
         this.serial.on('packet', (msgType, data) => {
+
             switch (msgType) {
                 case this.MSG_TYPES.STATUS:
                     for (let socketId in this.sockets) {
@@ -210,6 +216,10 @@ class SocketIoManager {
                     for (let socketId in this.sockets) {
                         this.sockets[socketId].emit('SetMissionAck', data);
                     }
+                    break;
+                case this.MSG_TYPES.GPSTELEMETRY:
+                    let gps = GPSTelemetry.decode(data);
+                    console.log('GPS MESSAGE', gps);
                     break;
                 default:
                     console.log('Unexpected message type from vehicle');

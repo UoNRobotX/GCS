@@ -116,7 +116,7 @@ class Serial extends EventEmitter {
             let msgSize = this.inputMessageBuffer.readUInt32LE(this.SIZE_OFFSET);
 
             if (this.inputMessageBuffer.length >= this.HEADER_SIZE + msgSize + this.CHECKSUM_SIZE) {
-                let type = this.inputMessageBuffer.readUInt8(this.TYPE_OFFSET);
+                let type = this.inputMessageBuffer.readUInt32LE(this.TYPE_OFFSET);
                 let data = this.inputMessageBuffer.slice(
                     this.HEADER_SIZE,
                     this.HEADER_SIZE + msgSize
