@@ -192,7 +192,7 @@ class SocketIoManager {
                     for (let socketId in this.sockets) {
                         let status = BoatStatus.decode(data);
                         console.log('Boat Status', status);
-                        this.sockets[socketId].emit('Status', status);
+                        this.sockets[socketId].volatile.emit('Status', status);
                         // 'volatile' allows the message to be dropped
                     }
                     break;

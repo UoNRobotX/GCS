@@ -28579,21 +28579,14 @@
 	            }, this.TIMEOUT);
 	        },
 	        handleStatus: function handleStatus(data) {
-	            var msg = void 0;
-	            try {
-	                msg = this.protoPkg.Status.decode(data);
-	            } catch (e) {
-	                console.log('Unable to decode Status message');
-	                return;
-	            }
 	
 	            this.setWamv({
 	                loaded: true,
-	                position: { lat: msg.lat, lng: msg.lng },
-	                heading: msg.heading,
-	                speed: msg.surge_vel,
+	                position: { lat: data.lat, lng: data.lng },
+	                heading: data.heading,
+	                speed: data.surge_vel,
 	                battery: 100,
-	                armed: msg.armed,
+	                armed: data.armed,
 	                mode: 'manual',
 	                signal: 100
 	            });
