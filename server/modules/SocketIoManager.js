@@ -6,7 +6,7 @@ let socket_io = require('socket.io');
 let protobuf = require('protobufjs');
 let Serial = require('../modules/serial');
 
-let GPSTelemetry = null;
+let BoatStatus = null;
 
 class SocketIoManager {
     constructor(server, inputFile, outputFile, baudRate) {
@@ -14,7 +14,7 @@ class SocketIoManager {
         this.TIMEOUT = 1000;
 
         this.MSG_TYPES = {
-            STATUS: 0,
+            STATUS: 1584580608,
             COMMAND: 1,
             GET_PARAMETERS: 2,
             GET_PARAMETERS_RESPONSE: 3,
@@ -93,9 +93,13 @@ class SocketIoManager {
         let GamePad = protoBuilder.build('message.communication.GamePad');
         this.gamePad = new GamePad();
         setInterval(this.sendGamePad.bind(this), 100, this);
+        console.log('moo moo');
 
-        protoBuilder = protobuf.loadProtoFile(path.join(__dirname, '../public/assets/proto/GPSTelemetry.proto'));
-        GPSTelemetry = protoBuilder.build('message.communication.GPSTelemetry');
+        let fname = path.join(__dirname, '../public/assets/proto/Status.proto');
+        console.log(fname);
+        protoBuilder = protobuf.loadProtoFile(fname);
+
+        BoatStatus = protoBuilder.build('message.communication.Status');
     }
 
     sendGamePad(){
@@ -186,7 +190,9 @@ class SocketIoManager {
             switch (msgType) {
                 case this.MSG_TYPES.STATUS:
                     for (let socketId in this.sockets) {
-                        this.sockets[socketId].volatile.emit('Status', data);
+                        let status = BoatStatus.decode(data);
+                        console.log('Boat Status', status);
+                        this.sockets[socketId].emit('Status', status);
                         // 'volatile' allows the message to be dropped
                     }
                     break;
@@ -217,12 +223,12 @@ class SocketIoManager {
                         this.sockets[socketId].emit('SetMissionAck', data);
                     }
                     break;
-                case this.MSG_TYPES.GPSTELEMETRY:
-                    let gps = GPSTelemetry.decode(data);
-                    console.log('GPS MESSAGE', gps);
+                case this.MSG_TYPES.STATUS:
+                    let status = BoatStatus.decode(data);
+                    console.log('Boat Status', status);
                     break;
                 default:
-                    console.log('Unexpected message type from vehicle');
+                    console.log('Unexpected message type from vehicle', msgType);
                     return;
             }
         });
@@ -230,6 +236,7 @@ class SocketIoManager {
 
     handleClientControllerAction(data) {
         if (this.gamePad) {
+            console.log(data.name, data.position);
             switch (data.name) {
 
                 case 'LEFT_ANALOG_STICK':
