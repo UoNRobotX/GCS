@@ -14,4 +14,9 @@ message Status {
     double surge_vel = 9;
     double sway_vel = 10;
     double yaw_rate = 11;
+    int32 mode = 12;
+    uint32 imu_feq = 13;
+    uint32 gps_feq = 14;
+    uint32 state_est_feq = 15;
+    uint32 num = 16;
 }
