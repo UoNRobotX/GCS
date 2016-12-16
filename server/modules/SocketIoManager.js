@@ -7,6 +7,7 @@ let protobuf = require('protobufjs');
 let Serial = require('../modules/serial');
 
 let BoatStatus = null;
+let GCSMessage = null;
 
 class SocketIoManager {
     constructor(server, inputFile, outputFile, baudRate) {
@@ -35,6 +36,7 @@ class SocketIoManager {
             ATTENTION: 18,
             CONTROLLER_COMMAND: 19,
             GPSTELEMETRY: 2206923273,
+            GCSMESSAGE: 538772623,
         };
 
         // Settings
@@ -100,6 +102,10 @@ class SocketIoManager {
         protoBuilder = protobuf.loadProtoFile(fname);
 
         BoatStatus = protoBuilder.build('message.communication.Status');
+
+        protoBuilder = protobuf.loadProtoFile(path.join(__dirname, '../public/assets/proto/GCSMessage.proto'));
+        GCSMessage = protoBuilder.build('message.communication.GCSMessage');
+
     }
 
     sendGamePad(){
@@ -188,6 +194,10 @@ class SocketIoManager {
         this.serial.on('packet', (msgType, data) => {
 
             switch (msgType) {
+                case this.MSG_TYPES.GCSMESSAGE:
+                    let gcsmsg = GCSMessage.decode(data);
+                    console.log(gcsmsg);
+                    break;
                 case this.MSG_TYPES.STATUS:
                     for (let socketId in this.sockets) {
                         let status = BoatStatus.decode(data);
